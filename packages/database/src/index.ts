@@ -11,3 +11,5 @@
 export * from './schema';
 export * from './repositories';
 export * from './dynamo';
+export * from './connection';
+export * from './client';

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Drizzle Kit Migrations
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** database-administrator
 - **Parent User Story:** [Configure Drizzle ORM with Neon](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -14,6 +14,7 @@
 Set up Drizzle Kit as the migration tool for managing PostgreSQL schema changes. Drizzle Kit generates SQL migration files by comparing the current Drizzle schema definitions with the previous migration state, producing deterministic and reviewable SQL migration files.
 
 The configuration should support:
+
 - Generating migrations from Drizzle TypeScript schema definitions
 - Applying migrations to the database (both local dev and CI environments)
 - Dropping and recreating the database for testing (via a reset script)
@@ -42,6 +43,7 @@ The configuration should support:
 ## Technical Notes
 
 - Drizzle Kit configuration:
+
   ```typescript
   // packages/database/drizzle.config.ts
   // Drizzle Kit configuration for PostgreSQL migration generation and management
@@ -63,6 +65,7 @@ The configuration should support:
     strict: true,
   });
   ```
+
 - Use `DATABASE_DIRECT_URL` (direct Neon connection) for migrations instead of the pooled `DATABASE_URL` — DDL operations (CREATE TABLE, ALTER TABLE) should bypass the connection pooler
 - Migration files follow a naming convention: `0000_initial.sql`, `0001_add_workers_table.sql`, etc.
 - Drizzle Kit's `generate` command compares the current TypeScript schema against the snapshot in `drizzle/meta/` to produce differential SQL
