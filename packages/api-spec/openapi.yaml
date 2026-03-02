@@ -7,9 +7,2880 @@ info:
   version: 0.1.0
   description: >
     Contract-first REST API specification for the laila.works orchestration
-    service. TypeScript types are generated from this spec using
-    openapi-typescript to keep server and client implementations in sync.
-paths: {}
+    service. This API powers an AI work orchestration platform where human
+    operators manage projects, epics, user stories, and tasks, while AI worker
+    agents poll for and execute work assignments. TypeScript types are generated
+    from this spec using openapi-typescript to keep server and client
+    implementations in sync.
+  contact:
+    name: laila.works Engineering
+    url: https://laila.works
+
+servers:
+  - url: /api/v1
+    description: API v1 base path
+
+# ---------------------------------------------------------------------------
+# Security schemes
+# ---------------------------------------------------------------------------
+security:
+  - sessionAuth: []
+
+tags:
+  - name: Projects
+    description: Manage top-level organizational units
+  - name: Epics
+    description: Manage large bodies of work within projects
+  - name: User Stories
+    description: Manage discrete deliverables within epics
+  - name: Tasks
+    description: Manage actionable work items within user stories
+  - name: Task Dependencies
+    description: Manage dependency relationships between tasks
+  - name: Workers
+    description: Manage AI worker agents
+  - name: Personas
+    description: Manage role definitions for task assignment
+  - name: Work Orchestration
+    description: Work assignment and completion protocol for worker agents
+  - name: Audit
+    description: Query audit trail events for entities
+
+# ===========================================================================
+# PATHS
+# ===========================================================================
+paths:
+  # -------------------------------------------------------------------------
+  # Projects
+  # -------------------------------------------------------------------------
+  /projects:
+    get:
+      operationId: listProjects
+      summary: List projects
+      description: >
+        Returns a paginated list of projects for the authenticated tenant.
+        Supports filtering by lifecycle status and standard pagination/sorting.
+      tags:
+        - Projects
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+        - name: status
+          in: query
+          description: Filter by project lifecycle status
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProjectLifecycleStatus'
+      responses:
+        '200':
+          description: Paginated list of projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      operationId: createProject
+      summary: Create a project
+      description: >
+        Creates a new project for the authenticated tenant. The project starts
+        in "draft" lifecycle status with "pending" work status.
+      tags:
+        - Projects
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProject'
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{projectId}:
+    get:
+      operationId: getProject
+      summary: Get a project by ID
+      description: Returns a single project by its unique identifier.
+      tags:
+        - Projects
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      operationId: updateProject
+      summary: Update a project
+      description: >
+        Partially updates a project. Requires the current `version` for
+        optimistic locking. Only provided fields are updated.
+      tags:
+        - Projects
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProject'
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      operationId: deleteProject
+      summary: Delete a project
+      description: >
+        Soft-deletes a project by setting the deletedAt timestamp. The project
+        and its children are excluded from normal queries but can be restored.
+      tags:
+        - Projects
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      responses:
+        '204':
+          description: Project deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Epics
+  # -------------------------------------------------------------------------
+  /projects/{projectId}/epics:
+    get:
+      operationId: listEpics
+      summary: List epics for a project
+      description: >
+        Returns a paginated list of epics belonging to the specified project.
+        Supports filtering by work status and priority.
+      tags:
+        - Epics
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+        - name: status
+          in: query
+          description: Filter by work status
+          required: false
+          schema:
+            $ref: '#/components/schemas/WorkStatus'
+        - name: priority
+          in: query
+          description: Filter by priority level
+          required: false
+          schema:
+            $ref: '#/components/schemas/Priority'
+      responses:
+        '200':
+          description: Paginated list of epics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EpicListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      operationId: createEpic
+      summary: Create an epic
+      description: >
+        Creates a new epic within the specified project. The epic starts
+        with "pending" work status.
+      tags:
+        - Epics
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEpic'
+      responses:
+        '201':
+          description: Epic created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EpicResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /epics/{epicId}:
+    get:
+      operationId: getEpic
+      summary: Get an epic by ID
+      description: Returns a single epic by its unique identifier.
+      tags:
+        - Epics
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EpicIdParam'
+      responses:
+        '200':
+          description: Epic details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EpicResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      operationId: updateEpic
+      summary: Update an epic
+      description: >
+        Partially updates an epic. Requires the current `version` for
+        optimistic locking. Only provided fields are updated.
+      tags:
+        - Epics
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EpicIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEpic'
+      responses:
+        '200':
+          description: Epic updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EpicResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      operationId: deleteEpic
+      summary: Delete an epic
+      description: >
+        Soft-deletes an epic by setting the deletedAt timestamp.
+      tags:
+        - Epics
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EpicIdParam'
+      responses:
+        '204':
+          description: Epic deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # User Stories
+  # -------------------------------------------------------------------------
+  /epics/{epicId}/stories:
+    get:
+      operationId: listUserStories
+      summary: List user stories for an epic
+      description: >
+        Returns a paginated list of user stories belonging to the specified
+        epic. Supports filtering by work status and priority.
+      tags:
+        - User Stories
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EpicIdParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+        - name: status
+          in: query
+          description: Filter by work status
+          required: false
+          schema:
+            $ref: '#/components/schemas/WorkStatus'
+        - name: priority
+          in: query
+          description: Filter by priority level
+          required: false
+          schema:
+            $ref: '#/components/schemas/Priority'
+      responses:
+        '200':
+          description: Paginated list of user stories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStoryListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      operationId: createUserStory
+      summary: Create a user story
+      description: >
+        Creates a new user story within the specified epic. The story starts
+        with "pending" work status and zero attempts.
+      tags:
+        - User Stories
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EpicIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserStory'
+      responses:
+        '201':
+          description: User story created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stories/{storyId}:
+    get:
+      operationId: getUserStory
+      summary: Get a user story by ID
+      description: Returns a single user story by its unique identifier.
+      tags:
+        - User Stories
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StoryIdParam'
+      responses:
+        '200':
+          description: User story details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      operationId: updateUserStory
+      summary: Update a user story
+      description: >
+        Partially updates a user story. Requires the current `version` for
+        optimistic locking. Only provided fields are updated.
+      tags:
+        - User Stories
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StoryIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserStory'
+      responses:
+        '200':
+          description: User story updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      operationId: deleteUserStory
+      summary: Delete a user story
+      description: >
+        Soft-deletes a user story by setting the deletedAt timestamp.
+      tags:
+        - User Stories
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StoryIdParam'
+      responses:
+        '204':
+          description: User story deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Tasks
+  # -------------------------------------------------------------------------
+  /stories/{storyId}/tasks:
+    get:
+      operationId: listTasks
+      summary: List tasks for a user story
+      description: >
+        Returns a paginated list of tasks belonging to the specified user story.
+        Supports filtering by work status and priority.
+      tags:
+        - Tasks
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StoryIdParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+        - name: status
+          in: query
+          description: Filter by work status
+          required: false
+          schema:
+            $ref: '#/components/schemas/WorkStatus'
+        - name: priority
+          in: query
+          description: Filter by priority level
+          required: false
+          schema:
+            $ref: '#/components/schemas/Priority'
+      responses:
+        '200':
+          description: Paginated list of tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      operationId: createTask
+      summary: Create a task
+      description: >
+        Creates a new task within the specified user story. The task starts
+        with "pending" work status.
+      tags:
+        - Tasks
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StoryIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTask'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/{taskId}:
+    get:
+      operationId: getTask
+      summary: Get a task by ID
+      description: Returns a single task by its unique identifier.
+      tags:
+        - Tasks
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskIdParam'
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      operationId: updateTask
+      summary: Update a task
+      description: >
+        Partially updates a task. Requires the current `version` for
+        optimistic locking. Only provided fields are updated.
+      tags:
+        - Tasks
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTask'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      operationId: deleteTask
+      summary: Delete a task
+      description: >
+        Soft-deletes a task by setting the deletedAt timestamp.
+      tags:
+        - Tasks
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskIdParam'
+      responses:
+        '204':
+          description: Task deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Task Dependencies
+  # -------------------------------------------------------------------------
+  /tasks/{taskId}/dependencies:
+    post:
+      operationId: addTaskDependency
+      summary: Add a task dependency
+      description: >
+        Adds a dependency relationship where the specified task depends on
+        another task. The system validates that adding this dependency does
+        not create a circular reference.
+      tags:
+        - Task Dependencies
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddTaskDependency'
+      responses:
+        '201':
+          description: Dependency added successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/{taskId}/dependencies/{dependencyTaskId}:
+    delete:
+      operationId: removeTaskDependency
+      summary: Remove a task dependency
+      description: >
+        Removes the dependency relationship between the specified task and
+        the dependency task.
+      tags:
+        - Task Dependencies
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskIdParam'
+        - $ref: '#/components/parameters/DependencyTaskIdParam'
+      responses:
+        '204':
+          description: Dependency removed successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Workers
+  # -------------------------------------------------------------------------
+  /workers:
+    get:
+      operationId: listWorkers
+      summary: List workers
+      description: >
+        Returns a paginated list of worker agents for the authenticated tenant.
+        Supports filtering by active/inactive state.
+      tags:
+        - Workers
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+        - name: isActive
+          in: query
+          description: Filter by active/inactive state
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Paginated list of workers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      operationId: createWorker
+      summary: Create a worker
+      description: >
+        Creates a new worker agent and returns the worker record along with
+        a newly generated API key. The raw API key is only returned once
+        at creation time.
+      tags:
+        - Workers
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorker'
+      responses:
+        '201':
+          description: Worker created successfully with API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateWorkerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /workers/{workerId}:
+    get:
+      operationId: getWorker
+      summary: Get a worker by ID
+      description: Returns a single worker by its unique identifier.
+      tags:
+        - Workers
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkerIdParam'
+      responses:
+        '200':
+          description: Worker details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      operationId: updateWorker
+      summary: Update a worker
+      description: >
+        Partially updates a worker. Requires the current `version` for
+        optimistic locking. Only provided fields are updated.
+      tags:
+        - Workers
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkerIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorker'
+      responses:
+        '200':
+          description: Worker updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      operationId: deleteWorker
+      summary: Delete a worker
+      description: >
+        Permanently deletes a worker agent. Workers do not use soft-delete.
+      tags:
+        - Workers
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkerIdParam'
+      responses:
+        '204':
+          description: Worker deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /workers/{workerId}/regenerate-key:
+    post:
+      operationId: regenerateWorkerKey
+      summary: Regenerate a worker's API key
+      description: >
+        Regenerates the API key for the specified worker. The previous key
+        is immediately revoked and a new raw key is returned. This is the
+        only time the new raw key is available.
+      tags:
+        - Workers
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkerIdParam'
+      responses:
+        '200':
+          description: New API key generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApiKeyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Personas
+  # -------------------------------------------------------------------------
+  /personas:
+    get:
+      operationId: listPersonas
+      summary: List personas
+      description: >
+        Returns a paginated list of personas for the authenticated tenant.
+      tags:
+        - Personas
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+      responses:
+        '200':
+          description: Paginated list of personas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      operationId: createPersona
+      summary: Create a persona
+      description: >
+        Creates a new persona (role definition) for the authenticated tenant.
+      tags:
+        - Personas
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePersona'
+      responses:
+        '201':
+          description: Persona created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /personas/{personaId}:
+    get:
+      operationId: getPersona
+      summary: Get a persona by ID
+      description: Returns a single persona by its unique identifier.
+      tags:
+        - Personas
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PersonaIdParam'
+      responses:
+        '200':
+          description: Persona details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      operationId: updatePersona
+      summary: Update a persona
+      description: >
+        Partially updates a persona. Requires the current `version` for
+        optimistic locking. Only provided fields are updated.
+      tags:
+        - Personas
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PersonaIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersona'
+      responses:
+        '200':
+          description: Persona updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      operationId: deletePersona
+      summary: Delete a persona
+      description: >
+        Permanently deletes a persona. Personas do not use soft-delete.
+      tags:
+        - Personas
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PersonaIdParam'
+      responses:
+        '204':
+          description: Persona deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Work Orchestration
+  # -------------------------------------------------------------------------
+  /work/next:
+    post:
+      operationId: getNextWorkAssignment
+      summary: Get next work assignment
+      description: >
+        Requests the next available work assignment for the authenticated worker
+        agent. Returns a discriminated union with three possible outcomes:
+        "assigned" (work is available), "blocked" (all remaining work is blocked
+        by dependencies), or "all_complete" (no more work exists).
+      tags:
+        - Work Orchestration
+      security:
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: Work assignment result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkAssignmentResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /work/complete:
+    post:
+      operationId: completeWorkAssignment
+      summary: Complete a work assignment
+      description: >
+        Reports the completion (or failure) of an assigned work item. Workers
+        must provide the user story ID, a terminal status (done or failed),
+        and the resource cost incurred. A reason is required when reporting
+        failure.
+      tags:
+        - Work Orchestration
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkCompletionRequest'
+      responses:
+        '200':
+          description: Work completion recorded successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Audit
+  # -------------------------------------------------------------------------
+  /audit/{entityId}:
+    get:
+      operationId: getAuditLog
+      summary: Get audit log for an entity
+      description: >
+        Returns the audit trail for a specific entity, ordered by timestamp
+        descending (most recent first). Supports standard pagination.
+      tags:
+        - Audit
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityIdParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+      responses:
+        '200':
+          description: Paginated list of audit events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+# ===========================================================================
+# COMPONENTS
+# ===========================================================================
 components:
-  schemas: {}
-  securitySchemes: {}
+  # -------------------------------------------------------------------------
+  # Security Schemes
+  # -------------------------------------------------------------------------
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: >
+        Cookie-based session authentication via Google OAuth (Better Auth).
+        Used by human operators accessing the UI and management API.
+
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: >
+        API key authentication for worker agents. Keys are prefixed with
+        "lw_" and passed in the X-API-Key header.
+
+  # -------------------------------------------------------------------------
+  # Path and Query Parameters
+  # -------------------------------------------------------------------------
+  parameters:
+    ProjectIdParam:
+      name: projectId
+      in: path
+      required: true
+      description: Unique identifier of the project (UUID)
+      schema:
+        type: string
+        format: uuid
+
+    EpicIdParam:
+      name: epicId
+      in: path
+      required: true
+      description: Unique identifier of the epic (UUID)
+      schema:
+        type: string
+        format: uuid
+
+    StoryIdParam:
+      name: storyId
+      in: path
+      required: true
+      description: Unique identifier of the user story (UUID)
+      schema:
+        type: string
+        format: uuid
+
+    TaskIdParam:
+      name: taskId
+      in: path
+      required: true
+      description: Unique identifier of the task (UUID)
+      schema:
+        type: string
+        format: uuid
+
+    DependencyTaskIdParam:
+      name: dependencyTaskId
+      in: path
+      required: true
+      description: Unique identifier of the dependency task to remove (UUID)
+      schema:
+        type: string
+        format: uuid
+
+    WorkerIdParam:
+      name: workerId
+      in: path
+      required: true
+      description: Unique identifier of the worker (UUID)
+      schema:
+        type: string
+        format: uuid
+
+    PersonaIdParam:
+      name: personaId
+      in: path
+      required: true
+      description: Unique identifier of the persona (UUID)
+      schema:
+        type: string
+        format: uuid
+
+    EntityIdParam:
+      name: entityId
+      in: path
+      required: true
+      description: Unique identifier of the entity to query audit events for
+      schema:
+        type: string
+
+    PageParam:
+      name: page
+      in: query
+      required: false
+      description: Page number (1-indexed)
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      required: false
+      description: Number of items per page
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+    SortByParam:
+      name: sortBy
+      in: query
+      required: false
+      description: Field name to sort results by
+      schema:
+        type: string
+        default: createdAt
+
+    SortOrderParam:
+      name: sortOrder
+      in: query
+      required: false
+      description: Sort direction
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+        default: desc
+
+  # -------------------------------------------------------------------------
+  # Reusable Responses
+  # -------------------------------------------------------------------------
+  responses:
+    BadRequest:
+      description: >
+        The request body or query parameters failed validation. Check the
+        error details for field-level information.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: >
+        Authentication is required. Provide a valid session cookie or
+        X-API-Key header.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: >
+        The authenticated principal does not have permission to perform
+        this operation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: >
+        A conflict occurred, typically due to an optimistic locking version
+        mismatch, a duplicate resource, or an invalid state transition.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: An unexpected internal server error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  # -------------------------------------------------------------------------
+  # Schemas
+  # -------------------------------------------------------------------------
+  schemas:
+    # -----------------------------------------------------------------------
+    # Enums
+    # -----------------------------------------------------------------------
+    ProjectLifecycleStatus:
+      type: string
+      description: Project lifecycle phase
+      enum:
+        - draft
+        - planning
+        - ready
+        - active
+        - completed
+        - archived
+
+    WorkStatus:
+      type: string
+      description: Execution status for work items (epics, user stories, tasks)
+      enum:
+        - pending
+        - blocked
+        - ready
+        - in_progress
+        - review
+        - done
+        - failed
+        - skipped
+
+    Priority:
+      type: string
+      description: Scheduling priority level for work items
+      enum:
+        - critical
+        - high
+        - medium
+        - low
+
+    ErrorCode:
+      type: string
+      description: Machine-readable error code for programmatic error handling
+      enum:
+        - VALIDATION_REQUIRED_FIELD
+        - VALIDATION_INVALID_FORMAT
+        - VALIDATION_OUT_OF_RANGE
+        - VALIDATION_INVALID_STATUS_TRANSITION
+        - VALIDATION_INVALID_ENUM_VALUE
+        - VALIDATION_PAYLOAD_TOO_LARGE
+        - AUTH_MISSING_CREDENTIALS
+        - AUTH_INVALID_API_KEY
+        - AUTH_EXPIRED_TOKEN
+        - AUTH_REVOKED_TOKEN
+        - AUTHZ_INSUFFICIENT_PERMISSIONS
+        - AUTHZ_RESOURCE_ACCESS_DENIED
+        - AUTHZ_ROLE_NOT_ALLOWED
+        - NOT_FOUND_RESOURCE
+        - NOT_FOUND_PROJECT
+        - NOT_FOUND_EPIC
+        - NOT_FOUND_STORY
+        - NOT_FOUND_TASK
+        - NOT_FOUND_ROUTE
+        - CONFLICT_VERSION_MISMATCH
+        - CONFLICT_DUPLICATE_RESOURCE
+        - CONFLICT_INVALID_STATE
+        - DEPENDENCY_CYCLE_DETECTED
+        - DEPENDENCY_UNRESOLVED
+        - DEPENDENCY_STILL_REFERENCED
+        - DEPENDENCY_MAX_DEPTH_EXCEEDED
+        - RATE_LIMIT_EXCEEDED
+        - INTERNAL_SERVER_ERROR
+        - INTERNAL_SERVICE_UNAVAILABLE
+
+    AuditAction:
+      type: string
+      description: The action recorded in an audit event
+      enum:
+        - created
+        - updated
+        - deleted
+        - status_changed
+        - assigned
+        - completed
+
+    AuditActorType:
+      type: string
+      description: The type of principal that triggered the audit event
+      enum:
+        - user
+        - worker
+        - system
+
+    WorkCompletionStatus:
+      type: string
+      description: Terminal status a worker can report for a completed assignment
+      enum:
+        - done
+        - failed
+
+    # -----------------------------------------------------------------------
+    # Error schemas
+    # -----------------------------------------------------------------------
+    FieldError:
+      type: object
+      description: A single field-level validation error
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          minLength: 1
+          description: >
+            The request body field that failed validation
+            (dot-notation for nested fields)
+        message:
+          type: string
+          minLength: 1
+          description: Human-readable description of the validation failure
+        code:
+          type: string
+          minLength: 1
+          description: Optional machine-readable error code for programmatic handling
+
+    ErrorResponse:
+      type: object
+      description: Standardized error response envelope used by all API endpoints
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - requestId
+          properties:
+            code:
+              $ref: '#/components/schemas/ErrorCode'
+            message:
+              type: string
+              minLength: 1
+              description: Human-readable error message suitable for logging or display
+            details:
+              type: array
+              description: Optional array of field-level validation errors
+              items:
+                $ref: '#/components/schemas/FieldError'
+            requestId:
+              type: string
+              format: uuid
+              description: Unique request identifier for log correlation and debugging
+
+    # -----------------------------------------------------------------------
+    # Pagination metadata
+    # -----------------------------------------------------------------------
+    PaginationMeta:
+      type: object
+      description: Pagination metadata included in every list response
+      required:
+        - page
+        - limit
+        - total
+        - totalPages
+        - hasNext
+        - hasPrev
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number (1-indexed)
+        limit:
+          type: integer
+          minimum: 1
+          description: Number of items per page
+        total:
+          type: integer
+          minimum: 0
+          description: Total number of items matching the query (before pagination)
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Total number of pages available
+        hasNext:
+          type: boolean
+          description: Whether a next page exists
+        hasPrev:
+          type: boolean
+          description: Whether a previous page exists
+
+    # -----------------------------------------------------------------------
+    # Task Reference (nested object used in Task)
+    # -----------------------------------------------------------------------
+    TaskReference:
+      type: object
+      description: A link to an external resource relevant to a task
+      required:
+        - type
+        - url
+        - title
+      properties:
+        type:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Category of the reference (e.g., "doc", "spec", "example")
+        url:
+          type: string
+          format: uri
+          maxLength: 2000
+          description: URL pointing to the external resource
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable title for display purposes
+
+    # -----------------------------------------------------------------------
+    # Domain entity: Project
+    # -----------------------------------------------------------------------
+    Project:
+      type: object
+      description: A top-level organizational unit containing epics
+      required:
+        - id
+        - tenantId
+        - name
+        - description
+        - lifecycleStatus
+        - workStatus
+        - version
+        - createdAt
+        - updatedAt
+        - deletedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier (UUID v4)
+        tenantId:
+          type: string
+          format: uuid
+          description: Tenant ID (equals the owning user's ID)
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable project name
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed project description (Markdown supported)
+        lifecycleStatus:
+          $ref: '#/components/schemas/ProjectLifecycleStatus'
+        workStatus:
+          $ref: '#/components/schemas/WorkStatus'
+        version:
+          type: integer
+          minimum: 0
+          description: Optimistic locking version
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the project was created (ISO 8601)
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the project was last updated (ISO 8601)
+        deletedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Soft-delete timestamp; null means not deleted
+
+    CreateProject:
+      type: object
+      description: Request body for creating a new project
+      required:
+        - name
+        - lifecycleStatus
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable project name
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed project description (Markdown supported)
+        lifecycleStatus:
+          $ref: '#/components/schemas/ProjectLifecycleStatus'
+
+    UpdateProject:
+      type: object
+      description: >
+        Request body for partially updating a project. All fields except
+        version are optional.
+      required:
+        - version
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable project name
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed project description (Markdown supported)
+        lifecycleStatus:
+          $ref: '#/components/schemas/ProjectLifecycleStatus'
+        version:
+          type: integer
+          minimum: 0
+          description: Current version for optimistic locking
+
+    ProjectResponse:
+      type: object
+      description: Single-item API response for a project
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Project'
+
+    ProjectListResponse:
+      type: object
+      description: Paginated list response for projects
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # -----------------------------------------------------------------------
+    # Domain entity: Epic
+    # -----------------------------------------------------------------------
+    Epic:
+      type: object
+      description: A large body of work within a project
+      required:
+        - id
+        - tenantId
+        - projectId
+        - name
+        - description
+        - workStatus
+        - sortOrder
+        - version
+        - createdAt
+        - updatedAt
+        - deletedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier (UUID v4)
+        tenantId:
+          type: string
+          format: uuid
+          description: Tenant ID (equals the owning user's ID)
+        projectId:
+          type: string
+          format: uuid
+          description: ID of the parent project
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable epic name
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed epic description (Markdown supported)
+        workStatus:
+          $ref: '#/components/schemas/WorkStatus'
+        sortOrder:
+          type: integer
+          minimum: 0
+          description: Display and scheduling order within the parent project (zero-based)
+        version:
+          type: integer
+          minimum: 0
+          description: Optimistic locking version
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the epic was created (ISO 8601)
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the epic was last updated (ISO 8601)
+        deletedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Soft-delete timestamp; null means not deleted
+
+    CreateEpic:
+      type: object
+      description: >
+        Request body for creating a new epic. The projectId is provided via
+        the URL path parameter, not in the request body.
+      required:
+        - name
+        - sortOrder
+      properties:
+        projectId:
+          type: string
+          format: uuid
+          description: ID of the parent project (may also come from URL path)
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable epic name
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed epic description (Markdown supported)
+        sortOrder:
+          type: integer
+          minimum: 0
+          description: Display and scheduling order within the parent project (zero-based)
+
+    UpdateEpic:
+      type: object
+      description: >
+        Request body for partially updating an epic. All fields except
+        version are optional.
+      required:
+        - version
+      properties:
+        projectId:
+          type: string
+          format: uuid
+          description: ID of the parent project
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable epic name
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed epic description (Markdown supported)
+        sortOrder:
+          type: integer
+          minimum: 0
+          description: Display and scheduling order within the parent project
+        version:
+          type: integer
+          minimum: 0
+          description: Current version for optimistic locking
+
+    EpicResponse:
+      type: object
+      description: Single-item API response for an epic
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Epic'
+
+    EpicListResponse:
+      type: object
+      description: Paginated list response for epics
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Epic'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # -----------------------------------------------------------------------
+    # Domain entity: UserStory
+    # -----------------------------------------------------------------------
+    UserStory:
+      type: object
+      description: A discrete deliverable within an epic, assignable to a worker agent
+      required:
+        - id
+        - tenantId
+        - epicId
+        - title
+        - description
+        - priority
+        - workStatus
+        - costEstimate
+        - actualCost
+        - assignedWorkerId
+        - assignedAt
+        - attempts
+        - maxAttempts
+        - version
+        - createdAt
+        - updatedAt
+        - deletedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier (UUID v4)
+        tenantId:
+          type: string
+          format: uuid
+          description: Tenant ID (equals the owning user's ID)
+        epicId:
+          type: string
+          format: uuid
+          description: ID of the parent epic
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Short summary of the user story
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed description (Markdown supported)
+        priority:
+          $ref: '#/components/schemas/Priority'
+        workStatus:
+          $ref: '#/components/schemas/WorkStatus'
+        costEstimate:
+          type:
+            - number
+            - 'null'
+          minimum: 0
+          description: Estimated cost in tokens or credits; null if not estimated
+        actualCost:
+          type:
+            - number
+            - 'null'
+          minimum: 0
+          description: Actual cost incurred during execution; null if not completed
+        assignedWorkerId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: ID of the assigned worker agent; null if unassigned
+        assignedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Timestamp when assigned to a worker; null if unassigned
+        attempts:
+          type: integer
+          minimum: 0
+          description: Number of execution attempts made so far
+        maxAttempts:
+          type: integer
+          minimum: 1
+          description: Maximum allowed execution attempts before marking as failed
+        version:
+          type: integer
+          minimum: 0
+          description: Optimistic locking version
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user story was created (ISO 8601)
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user story was last updated (ISO 8601)
+        deletedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Soft-delete timestamp; null means not deleted
+
+    CreateUserStory:
+      type: object
+      description: >
+        Request body for creating a new user story. The epicId is provided
+        via the URL path parameter, not in the request body.
+      required:
+        - title
+        - priority
+        - maxAttempts
+      properties:
+        epicId:
+          type: string
+          format: uuid
+          description: ID of the parent epic (may also come from URL path)
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Short summary of the user story
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed description (Markdown supported)
+        priority:
+          $ref: '#/components/schemas/Priority'
+        costEstimate:
+          type:
+            - number
+            - 'null'
+          minimum: 0
+          description: Estimated cost in tokens or credits
+        maxAttempts:
+          type: integer
+          minimum: 1
+          description: Maximum allowed execution attempts
+
+    UpdateUserStory:
+      type: object
+      description: >
+        Request body for partially updating a user story. All fields except
+        version are optional.
+      required:
+        - version
+      properties:
+        epicId:
+          type: string
+          format: uuid
+          description: ID of the parent epic
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Short summary of the user story
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed description (Markdown supported)
+        priority:
+          $ref: '#/components/schemas/Priority'
+        costEstimate:
+          type:
+            - number
+            - 'null'
+          minimum: 0
+          description: Estimated cost in tokens or credits
+        maxAttempts:
+          type: integer
+          minimum: 1
+          description: Maximum allowed execution attempts
+        version:
+          type: integer
+          minimum: 0
+          description: Current version for optimistic locking
+
+    UserStoryResponse:
+      type: object
+      description: Single-item API response for a user story
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/UserStory'
+
+    UserStoryListResponse:
+      type: object
+      description: Paginated list response for user stories
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserStory'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # -----------------------------------------------------------------------
+    # Domain entity: Task
+    # -----------------------------------------------------------------------
+    Task:
+      type: object
+      description: The smallest unit of work, belonging to a user story
+      required:
+        - id
+        - tenantId
+        - userStoryId
+        - title
+        - description
+        - acceptanceCriteria
+        - technicalNotes
+        - personaId
+        - workStatus
+        - references
+        - version
+        - createdAt
+        - updatedAt
+        - deletedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier (UUID v4)
+        tenantId:
+          type: string
+          format: uuid
+          description: Tenant ID (equals the owning user's ID)
+        userStoryId:
+          type: string
+          format: uuid
+          description: ID of the parent user story
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Short summary of the task
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed description (Markdown supported)
+        acceptanceCriteria:
+          type: array
+          description: List of verifiable criteria for task completion
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2000
+        technicalNotes:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Implementation notes for the worker agent (Markdown supported)
+        personaId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: ID of the persona best suited for this task; null if unassigned
+        workStatus:
+          $ref: '#/components/schemas/WorkStatus'
+        references:
+          type: array
+          description: Links to external resources (docs, specs, examples)
+          items:
+            $ref: '#/components/schemas/TaskReference'
+        version:
+          type: integer
+          minimum: 0
+          description: Optimistic locking version
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the task was created (ISO 8601)
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the task was last updated (ISO 8601)
+        deletedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Soft-delete timestamp; null means not deleted
+
+    CreateTask:
+      type: object
+      description: >
+        Request body for creating a new task. The userStoryId is provided
+        via the URL path parameter, not in the request body.
+      required:
+        - title
+        - acceptanceCriteria
+        - references
+      properties:
+        userStoryId:
+          type: string
+          format: uuid
+          description: ID of the parent user story (may also come from URL path)
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Short summary of the task
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed description (Markdown supported)
+        acceptanceCriteria:
+          type: array
+          description: List of verifiable criteria for task completion
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2000
+        technicalNotes:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Implementation notes for the worker agent (Markdown supported)
+        personaId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: ID of the persona best suited for this task
+        references:
+          type: array
+          description: Links to external resources (docs, specs, examples)
+          items:
+            $ref: '#/components/schemas/TaskReference'
+
+    UpdateTask:
+      type: object
+      description: >
+        Request body for partially updating a task. All fields except
+        version are optional.
+      required:
+        - version
+      properties:
+        userStoryId:
+          type: string
+          format: uuid
+          description: ID of the parent user story
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Short summary of the task
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Detailed description (Markdown supported)
+        acceptanceCriteria:
+          type: array
+          description: List of verifiable criteria for task completion
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2000
+        technicalNotes:
+          type:
+            - string
+            - 'null'
+          maxLength: 10000
+          description: Implementation notes for the worker agent (Markdown supported)
+        personaId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: ID of the persona best suited for this task
+        references:
+          type: array
+          description: Links to external resources (docs, specs, examples)
+          items:
+            $ref: '#/components/schemas/TaskReference'
+        version:
+          type: integer
+          minimum: 0
+          description: Current version for optimistic locking
+
+    TaskResponse:
+      type: object
+      description: Single-item API response for a task
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Task'
+
+    TaskListResponse:
+      type: object
+      description: Paginated list response for tasks
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # -----------------------------------------------------------------------
+    # Task Dependency
+    # -----------------------------------------------------------------------
+    AddTaskDependency:
+      type: object
+      description: Request body for adding a task dependency
+      required:
+        - dependencyTaskId
+      properties:
+        dependencyTaskId:
+          type: string
+          format: uuid
+          description: ID of the task that must be completed before the current task
+
+    # -----------------------------------------------------------------------
+    # Domain entity: Worker
+    # -----------------------------------------------------------------------
+    Worker:
+      type: object
+      description: An AI agent that requests and executes work assignments
+      required:
+        - id
+        - tenantId
+        - name
+        - description
+        - isActive
+        - lastSeenAt
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier (UUID v4)
+        tenantId:
+          type: string
+          format: uuid
+          description: Tenant ID (equals the owning user's ID)
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable worker name (e.g., "agent-backend-01")
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 2000
+          description: Description of the worker's purpose or capabilities
+        isActive:
+          type: boolean
+          description: Whether the worker is currently active and available
+        lastSeenAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Timestamp of the worker's last heartbeat; null if never seen
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the worker was created (ISO 8601)
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the worker was last updated (ISO 8601)
+
+    CreateWorker:
+      type: object
+      description: Request body for creating a new worker
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable worker name
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 2000
+          description: Description of the worker's purpose or capabilities
+
+    UpdateWorker:
+      type: object
+      description: >
+        Request body for partially updating a worker. All fields except
+        version are optional.
+      required:
+        - version
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable worker name
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 2000
+          description: Description of the worker's purpose or capabilities
+        version:
+          type: integer
+          minimum: 0
+          description: Current version for optimistic locking
+
+    WorkerResponse:
+      type: object
+      description: Single-item API response for a worker
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Worker'
+
+    CreateWorkerResponse:
+      type: object
+      description: >
+        Response for worker creation, includes the worker entity and the
+        newly generated API key (returned only once).
+      required:
+        - data
+        - apiKey
+      properties:
+        data:
+          $ref: '#/components/schemas/Worker'
+        apiKey:
+          $ref: '#/components/schemas/CreateApiKeyResponse'
+
+    WorkerListResponse:
+      type: object
+      description: Paginated list response for workers
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Worker'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # -----------------------------------------------------------------------
+    # Domain entity: Persona
+    # -----------------------------------------------------------------------
+    Persona:
+      type: object
+      description: A role definition that tasks reference for assignment matching
+      required:
+        - id
+        - tenantId
+        - title
+        - description
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier (UUID v4)
+        tenantId:
+          type: string
+          format: uuid
+          description: Tenant ID (equals the owning user's ID)
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable persona title (e.g., "Backend Developer")
+        description:
+          type: string
+          maxLength: 10000
+          description: Rich description of the persona's role and capabilities (Markdown)
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the persona was created (ISO 8601)
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the persona was last updated (ISO 8601)
+
+    CreatePersona:
+      type: object
+      description: Request body for creating a new persona
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable persona title
+        description:
+          type: string
+          maxLength: 10000
+          description: Rich description of the persona's role and capabilities (Markdown)
+
+    UpdatePersona:
+      type: object
+      description: >
+        Request body for partially updating a persona. All fields except
+        version are optional.
+      required:
+        - version
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable persona title
+        description:
+          type: string
+          maxLength: 10000
+          description: Rich description of the persona's role and capabilities (Markdown)
+        version:
+          type: integer
+          minimum: 0
+          description: Current version for optimistic locking
+
+    PersonaResponse:
+      type: object
+      description: Single-item API response for a persona
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Persona'
+
+    PersonaListResponse:
+      type: object
+      description: Paginated list response for personas
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Persona'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # -----------------------------------------------------------------------
+    # API Key Management
+    # -----------------------------------------------------------------------
+    CreateApiKeyRequest:
+      type: object
+      description: Request body for creating a new API key
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Human-readable name to identify this API key
+        expiresAt:
+          type: string
+          format: date-time
+          description: Optional expiration timestamp (ISO 8601). Omit for non-expiring keys.
+
+    CreateApiKeyResponse:
+      type: object
+      description: >
+        Response after creating an API key. The rawKey is only returned once
+        at creation time and cannot be retrieved again.
+      required:
+        - id
+        - name
+        - rawKey
+        - maskedKey
+        - createdAt
+        - expiresAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the API key record
+        name:
+          type: string
+          description: Human-readable name assigned to this key
+        rawKey:
+          type: string
+          pattern: ^lw_
+          description: >
+            The full raw API key prefixed with "lw_". Only returned once at
+            creation time. Clients must store it securely.
+        maskedKey:
+          type: string
+          description: Masked version of the key for display (e.g., "lw_****...ab12")
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the key was created (ISO 8601)
+        expiresAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Expiration timestamp, or null for non-expiring keys
+
+    ApiKeySummary:
+      type: object
+      description: Summary representation of an API key (excludes raw key)
+      required:
+        - id
+        - name
+        - maskedKey
+        - createdAt
+        - expiresAt
+        - lastUsedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the API key record
+        name:
+          type: string
+          description: Human-readable name assigned to this key
+        maskedKey:
+          type: string
+          description: Masked version of the key for display
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the key was created (ISO 8601)
+        expiresAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Expiration timestamp, or null for non-expiring keys
+        lastUsedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Timestamp when the key was last used, or null if never used
+
+    # -----------------------------------------------------------------------
+    # Work Orchestration: Assignment
+    # -----------------------------------------------------------------------
+    WorkAssigned:
+      type: object
+      description: >
+        Work assignment response variant when work is available and has been
+        assigned to the requesting worker.
+      required:
+        - type
+        - userStory
+        - tasks
+        - assignedAt
+      properties:
+        type:
+          type: string
+          const: assigned
+          description: Discriminator indicating work has been assigned
+        userStory:
+          $ref: '#/components/schemas/UserStory'
+        tasks:
+          type: array
+          description: Ordered list of tasks the worker must complete
+          items:
+            $ref: '#/components/schemas/Task'
+        assignedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the assignment was made (ISO 8601)
+
+    WorkBlocked:
+      type: object
+      description: >
+        Work assignment response variant when all remaining work is blocked
+        by unresolved dependencies.
+      required:
+        - type
+        - reason
+        - blockedCount
+      properties:
+        type:
+          type: string
+          const: blocked
+          description: Discriminator indicating all remaining work is blocked
+        reason:
+          type: string
+          description: Human-readable explanation of why work is blocked
+        blockedCount:
+          type: integer
+          minimum: 0
+          description: Number of work items currently in blocked state
+
+    WorkAllComplete:
+      type: object
+      description: >
+        Work assignment response variant when every work item has reached
+        a terminal state.
+      required:
+        - type
+        - completedAt
+      properties:
+        type:
+          type: string
+          const: all_complete
+          description: Discriminator indicating all project work is complete
+        completedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the last work item completed (ISO 8601)
+
+    WorkAssignmentResponse:
+      description: >
+        Discriminated union response for the work assignment endpoint.
+        Use the "type" field to determine which variant was returned.
+      oneOf:
+        - $ref: '#/components/schemas/WorkAssigned'
+        - $ref: '#/components/schemas/WorkBlocked'
+        - $ref: '#/components/schemas/WorkAllComplete'
+      discriminator:
+        propertyName: type
+        mapping:
+          assigned: '#/components/schemas/WorkAssigned'
+          blocked: '#/components/schemas/WorkBlocked'
+          all_complete: '#/components/schemas/WorkAllComplete'
+
+    # -----------------------------------------------------------------------
+    # Work Orchestration: Completion
+    # -----------------------------------------------------------------------
+    WorkCompletionRequest:
+      type: object
+      description: >
+        Request body for reporting work completion. The reason field is
+        required when status is "failed".
+      required:
+        - userStoryId
+        - status
+        - cost
+      properties:
+        userStoryId:
+          type: string
+          format: uuid
+          description: UUID of the user story that was assigned to the worker
+        status:
+          $ref: '#/components/schemas/WorkCompletionStatus'
+        cost:
+          type: number
+          minimum: 0
+          description: Resource cost incurred during execution (e.g., API tokens consumed)
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: >
+            Explanation of the outcome. Required when status is "failed" to
+            provide context for debugging and retry decisions.
+
+    # -----------------------------------------------------------------------
+    # Audit
+    # -----------------------------------------------------------------------
+    AuditChangeDiff:
+      type: object
+      description: A single field-level change showing before and after values
+      properties:
+        before:
+          description: The field value before the change
+        after:
+          description: The field value after the change
+
+    AuditEvent:
+      type: object
+      description: An immutable audit trail event recording a state change
+      required:
+        - eventId
+        - entityType
+        - entityId
+        - action
+        - actorType
+        - actorId
+        - timestamp
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          description: Unique identifier for this audit event (UUID v4)
+        entityType:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: The type of entity acted upon (e.g., "project", "task")
+        entityId:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: The unique identifier of the entity acted upon
+        action:
+          $ref: '#/components/schemas/AuditAction'
+        actorType:
+          $ref: '#/components/schemas/AuditActorType'
+        actorId:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: >
+            Unique identifier of the actor (user ID, worker ID, or
+            system identifier)
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the event occurred (ISO 8601)
+        changes:
+          type: object
+          description: Record of field-level changes with before/after values
+          additionalProperties:
+            $ref: '#/components/schemas/AuditChangeDiff'
+        metadata:
+          type: object
+          description: Extensible key-value metadata for additional context
+          additionalProperties:
+            type: string
+
+    AuditEventListResponse:
+      type: object
+      description: Paginated list response for audit events
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'

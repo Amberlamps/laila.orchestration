@@ -1,7 +1,7 @@
 # .spectral.yaml
 # Spectral linting ruleset for the laila.works Orchestration Service API
 # Enforces API design standards: consistent naming, required error responses,
-# pagination patterns, and OpenAPI best practices.
+# path parameter documentation, and OpenAPI best practices.
 #
 # See: https://docs.stoplight.io/docs/spectral/
 
@@ -9,22 +9,92 @@ extends:
   - 'spectral:oas'
 
 rules:
-  # --- Built-in OAS rules (severity overrides) ---
-  # Ensure every operation has an operationId
+  # ---------------------------------------------------------------------------
+  # Built-in OAS rules (severity overrides)
+  # ---------------------------------------------------------------------------
+
+  # Ensure every operation has an operationId (required for code generation)
   operation-operationId: error
 
-  # Require a description on every operation
-  operation-description: warn
+  # Require a description on every operation (documentation quality)
+  operation-description: error
 
   # Require tags on every operation for documentation grouping
-  operation-tags: warn
+  operation-tags: error
 
-  # Require an info contact object
+  # Require an info contact object — disabled because our spec uses url only
   info-contact: off
 
-  # --- Custom rules will be added as the API surface grows ---
-  # Examples of future rules:
-  #   - Require error response schemas on 4xx/5xx
-  #   - Enforce consistent pagination query parameters
-  #   - Enforce kebab-case path segments
-  #   - Require request body content-type application/json
+  # Disable unused component warnings — CreateApiKeyRequest and ApiKeySummary
+  # are part of the public contract and will be used by future endpoints
+  oas3-unused-component: off
+
+  # ---------------------------------------------------------------------------
+  # Custom rules
+  # ---------------------------------------------------------------------------
+
+  # All path parameters must have a description for documentation quality.
+  # Targets inline path parameters defined directly on path items.
+  path-params-have-description:
+    description: 'All path parameters must have a description'
+    severity: error
+    given: "$.paths.*.parameters[?(@.in == 'path')]"
+    then:
+      field: description
+      function: truthy
+
+  # All reusable path parameters defined in components must have a description.
+  component-path-params-have-description:
+    description: 'All reusable path parameters must have a description'
+    severity: error
+    given: '$.components.parameters[*]'
+    then:
+      field: description
+      function: truthy
+
+  # All error responses (4xx/5xx) defined in components/responses must
+  # reference the standard ErrorResponse schema. Uses resolved: false to
+  # inspect raw $ref values before Spectral dereferences them.
+  error-response-schema:
+    description: 'All error responses in components must use the standard ErrorResponse schema'
+    severity: error
+    resolved: false
+    given: "$.components.responses[*].content['application/json'].schema.$ref"
+    then:
+      function: pattern
+      functionOptions:
+        match: '#/components/schemas/ErrorResponse'
+
+  # Enforce that 4xx/5xx operation responses reference a components/responses
+  # entry (which is itself validated by the rule above).
+  operation-error-response-ref:
+    description: 'All 4xx/5xx operation responses must use a $ref to components/responses'
+    severity: error
+    resolved: false
+    given: "$.paths.*[get,post,put,patch,delete].responses[?(@property >= '400' && @property <= '599')].$ref"
+    then:
+      function: pattern
+      functionOptions:
+        match: '^#/components/responses/'
+
+  # Property names in component schemas must use camelCase.
+  # Uses Spectral's built-in casing function for reliable detection.
+  schema-properties-camelcase:
+    description: 'Schema property names must use camelCase'
+    severity: error
+    given: '$.components.schemas.*.properties[*]~'
+    then:
+      function: casing
+      functionOptions:
+        type: camel
+
+  # Path segments must use kebab-case (no camelCase, underscores, or uppercase).
+  # Template expressions like {projectId} are allowed as standalone segments.
+  path-kebab-case:
+    description: 'Path segments should use kebab-case'
+    severity: error
+    given: '$.paths[*]~'
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(\\/([a-z][a-z0-9]*(-[a-z0-9]+)*|\\{[^}]+\\}))+$"

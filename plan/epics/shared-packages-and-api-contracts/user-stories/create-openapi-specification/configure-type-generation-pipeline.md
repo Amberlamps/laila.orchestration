@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Type Generation Pipeline
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** build-engineer
 - **Parent User Story:** [Create OpenAPI Specification](./tasks.md)
 - **Parent Epic:** [Shared Packages & API Contracts](../../user-stories.md)

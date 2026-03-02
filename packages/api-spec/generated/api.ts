@@ -3,15 +3,2376 @@
  * Do not make direct changes to the file.
  */
 
-export type paths = Record<string, never>;
+export interface paths {
+  '/projects': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List projects
+     * @description Returns a paginated list of projects for the authenticated tenant. Supports filtering by lifecycle status and standard pagination/sorting.
+     */
+    get: operations['listProjects'];
+    put?: never;
+    /**
+     * Create a project
+     * @description Creates a new project for the authenticated tenant. The project starts in "draft" lifecycle status with "pending" work status.
+     */
+    post: operations['createProject'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/projects/{projectId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a project by ID
+     * @description Returns a single project by its unique identifier.
+     */
+    get: operations['getProject'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete a project
+     * @description Soft-deletes a project by setting the deletedAt timestamp. The project and its children are excluded from normal queries but can be restored.
+     */
+    delete: operations['deleteProject'];
+    options?: never;
+    head?: never;
+    /**
+     * Update a project
+     * @description Partially updates a project. Requires the current `version` for optimistic locking. Only provided fields are updated.
+     */
+    patch: operations['updateProject'];
+    trace?: never;
+  };
+  '/projects/{projectId}/epics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List epics for a project
+     * @description Returns a paginated list of epics belonging to the specified project. Supports filtering by work status and priority.
+     */
+    get: operations['listEpics'];
+    put?: never;
+    /**
+     * Create an epic
+     * @description Creates a new epic within the specified project. The epic starts with "pending" work status.
+     */
+    post: operations['createEpic'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/epics/{epicId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get an epic by ID
+     * @description Returns a single epic by its unique identifier.
+     */
+    get: operations['getEpic'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete an epic
+     * @description Soft-deletes an epic by setting the deletedAt timestamp.
+     */
+    delete: operations['deleteEpic'];
+    options?: never;
+    head?: never;
+    /**
+     * Update an epic
+     * @description Partially updates an epic. Requires the current `version` for optimistic locking. Only provided fields are updated.
+     */
+    patch: operations['updateEpic'];
+    trace?: never;
+  };
+  '/epics/{epicId}/stories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List user stories for an epic
+     * @description Returns a paginated list of user stories belonging to the specified epic. Supports filtering by work status and priority.
+     */
+    get: operations['listUserStories'];
+    put?: never;
+    /**
+     * Create a user story
+     * @description Creates a new user story within the specified epic. The story starts with "pending" work status and zero attempts.
+     */
+    post: operations['createUserStory'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/stories/{storyId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a user story by ID
+     * @description Returns a single user story by its unique identifier.
+     */
+    get: operations['getUserStory'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete a user story
+     * @description Soft-deletes a user story by setting the deletedAt timestamp.
+     */
+    delete: operations['deleteUserStory'];
+    options?: never;
+    head?: never;
+    /**
+     * Update a user story
+     * @description Partially updates a user story. Requires the current `version` for optimistic locking. Only provided fields are updated.
+     */
+    patch: operations['updateUserStory'];
+    trace?: never;
+  };
+  '/stories/{storyId}/tasks': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List tasks for a user story
+     * @description Returns a paginated list of tasks belonging to the specified user story. Supports filtering by work status and priority.
+     */
+    get: operations['listTasks'];
+    put?: never;
+    /**
+     * Create a task
+     * @description Creates a new task within the specified user story. The task starts with "pending" work status.
+     */
+    post: operations['createTask'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/tasks/{taskId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a task by ID
+     * @description Returns a single task by its unique identifier.
+     */
+    get: operations['getTask'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete a task
+     * @description Soft-deletes a task by setting the deletedAt timestamp.
+     */
+    delete: operations['deleteTask'];
+    options?: never;
+    head?: never;
+    /**
+     * Update a task
+     * @description Partially updates a task. Requires the current `version` for optimistic locking. Only provided fields are updated.
+     */
+    patch: operations['updateTask'];
+    trace?: never;
+  };
+  '/tasks/{taskId}/dependencies': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add a task dependency
+     * @description Adds a dependency relationship where the specified task depends on another task. The system validates that adding this dependency does not create a circular reference.
+     */
+    post: operations['addTaskDependency'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/tasks/{taskId}/dependencies/{dependencyTaskId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove a task dependency
+     * @description Removes the dependency relationship between the specified task and the dependency task.
+     */
+    delete: operations['removeTaskDependency'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/workers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List workers
+     * @description Returns a paginated list of worker agents for the authenticated tenant. Supports filtering by active/inactive state.
+     */
+    get: operations['listWorkers'];
+    put?: never;
+    /**
+     * Create a worker
+     * @description Creates a new worker agent and returns the worker record along with a newly generated API key. The raw API key is only returned once at creation time.
+     */
+    post: operations['createWorker'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/workers/{workerId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a worker by ID
+     * @description Returns a single worker by its unique identifier.
+     */
+    get: operations['getWorker'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete a worker
+     * @description Permanently deletes a worker agent. Workers do not use soft-delete.
+     */
+    delete: operations['deleteWorker'];
+    options?: never;
+    head?: never;
+    /**
+     * Update a worker
+     * @description Partially updates a worker. Requires the current `version` for optimistic locking. Only provided fields are updated.
+     */
+    patch: operations['updateWorker'];
+    trace?: never;
+  };
+  '/workers/{workerId}/regenerate-key': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Regenerate a worker's API key
+     * @description Regenerates the API key for the specified worker. The previous key is immediately revoked and a new raw key is returned. This is the only time the new raw key is available.
+     */
+    post: operations['regenerateWorkerKey'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/personas': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List personas
+     * @description Returns a paginated list of personas for the authenticated tenant.
+     */
+    get: operations['listPersonas'];
+    put?: never;
+    /**
+     * Create a persona
+     * @description Creates a new persona (role definition) for the authenticated tenant.
+     */
+    post: operations['createPersona'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/personas/{personaId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a persona by ID
+     * @description Returns a single persona by its unique identifier.
+     */
+    get: operations['getPersona'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete a persona
+     * @description Permanently deletes a persona. Personas do not use soft-delete.
+     */
+    delete: operations['deletePersona'];
+    options?: never;
+    head?: never;
+    /**
+     * Update a persona
+     * @description Partially updates a persona. Requires the current `version` for optimistic locking. Only provided fields are updated.
+     */
+    patch: operations['updatePersona'];
+    trace?: never;
+  };
+  '/work/next': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get next work assignment
+     * @description Requests the next available work assignment for the authenticated worker agent. Returns a discriminated union with three possible outcomes: "assigned" (work is available), "blocked" (all remaining work is blocked by dependencies), or "all_complete" (no more work exists).
+     */
+    post: operations['getNextWorkAssignment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/work/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Complete a work assignment
+     * @description Reports the completion (or failure) of an assigned work item. Workers must provide the user story ID, a terminal status (done or failed), and the resource cost incurred. A reason is required when reporting failure.
+     */
+    post: operations['completeWorkAssignment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/audit/{entityId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get audit log for an entity
+     * @description Returns the audit trail for a specific entity, ordered by timestamp descending (most recent first). Supports standard pagination.
+     */
+    get: operations['getAuditLog'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+}
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: never;
-  responses: never;
-  parameters: never;
+  schemas: {
+    /**
+     * @description Project lifecycle phase
+     * @enum {string}
+     */
+    ProjectLifecycleStatus: 'draft' | 'planning' | 'ready' | 'active' | 'completed' | 'archived';
+    /**
+     * @description Execution status for work items (epics, user stories, tasks)
+     * @enum {string}
+     */
+    WorkStatus:
+      | 'pending'
+      | 'blocked'
+      | 'ready'
+      | 'in_progress'
+      | 'review'
+      | 'done'
+      | 'failed'
+      | 'skipped';
+    /**
+     * @description Scheduling priority level for work items
+     * @enum {string}
+     */
+    Priority: 'critical' | 'high' | 'medium' | 'low';
+    /**
+     * @description Machine-readable error code for programmatic error handling
+     * @enum {string}
+     */
+    ErrorCode:
+      | 'VALIDATION_REQUIRED_FIELD'
+      | 'VALIDATION_INVALID_FORMAT'
+      | 'VALIDATION_OUT_OF_RANGE'
+      | 'VALIDATION_INVALID_STATUS_TRANSITION'
+      | 'VALIDATION_INVALID_ENUM_VALUE'
+      | 'VALIDATION_PAYLOAD_TOO_LARGE'
+      | 'AUTH_MISSING_CREDENTIALS'
+      | 'AUTH_INVALID_API_KEY'
+      | 'AUTH_EXPIRED_TOKEN'
+      | 'AUTH_REVOKED_TOKEN'
+      | 'AUTHZ_INSUFFICIENT_PERMISSIONS'
+      | 'AUTHZ_RESOURCE_ACCESS_DENIED'
+      | 'AUTHZ_ROLE_NOT_ALLOWED'
+      | 'NOT_FOUND_RESOURCE'
+      | 'NOT_FOUND_PROJECT'
+      | 'NOT_FOUND_EPIC'
+      | 'NOT_FOUND_STORY'
+      | 'NOT_FOUND_TASK'
+      | 'NOT_FOUND_ROUTE'
+      | 'CONFLICT_VERSION_MISMATCH'
+      | 'CONFLICT_DUPLICATE_RESOURCE'
+      | 'CONFLICT_INVALID_STATE'
+      | 'DEPENDENCY_CYCLE_DETECTED'
+      | 'DEPENDENCY_UNRESOLVED'
+      | 'DEPENDENCY_STILL_REFERENCED'
+      | 'DEPENDENCY_MAX_DEPTH_EXCEEDED'
+      | 'RATE_LIMIT_EXCEEDED'
+      | 'INTERNAL_SERVER_ERROR'
+      | 'INTERNAL_SERVICE_UNAVAILABLE';
+    /**
+     * @description The action recorded in an audit event
+     * @enum {string}
+     */
+    AuditAction: 'created' | 'updated' | 'deleted' | 'status_changed' | 'assigned' | 'completed';
+    /**
+     * @description The type of principal that triggered the audit event
+     * @enum {string}
+     */
+    AuditActorType: 'user' | 'worker' | 'system';
+    /**
+     * @description Terminal status a worker can report for a completed assignment
+     * @enum {string}
+     */
+    WorkCompletionStatus: 'done' | 'failed';
+    /** @description A single field-level validation error */
+    FieldError: {
+      /** @description The request body field that failed validation (dot-notation for nested fields) */
+      field: string;
+      /** @description Human-readable description of the validation failure */
+      message: string;
+      /** @description Optional machine-readable error code for programmatic handling */
+      code?: string;
+    };
+    /** @description Standardized error response envelope used by all API endpoints */
+    ErrorResponse: {
+      error: {
+        code: components['schemas']['ErrorCode'];
+        /** @description Human-readable error message suitable for logging or display */
+        message: string;
+        /** @description Optional array of field-level validation errors */
+        details?: components['schemas']['FieldError'][];
+        /**
+         * Format: uuid
+         * @description Unique request identifier for log correlation and debugging
+         */
+        requestId: string;
+      };
+    };
+    /** @description Pagination metadata included in every list response */
+    PaginationMeta: {
+      /** @description Current page number (1-indexed) */
+      page: number;
+      /** @description Number of items per page */
+      limit: number;
+      /** @description Total number of items matching the query (before pagination) */
+      total: number;
+      /** @description Total number of pages available */
+      totalPages: number;
+      /** @description Whether a next page exists */
+      hasNext: boolean;
+      /** @description Whether a previous page exists */
+      hasPrev: boolean;
+    };
+    /** @description A link to an external resource relevant to a task */
+    TaskReference: {
+      /** @description Category of the reference (e.g., "doc", "spec", "example") */
+      type: string;
+      /**
+       * Format: uri
+       * @description URL pointing to the external resource
+       */
+      url: string;
+      /** @description Human-readable title for display purposes */
+      title: string;
+    };
+    /** @description A top-level organizational unit containing epics */
+    Project: {
+      /**
+       * Format: uuid
+       * @description Unique identifier (UUID v4)
+       */
+      id: string;
+      /**
+       * Format: uuid
+       * @description Tenant ID (equals the owning user's ID)
+       */
+      tenantId: string;
+      /** @description Human-readable project name */
+      name: string;
+      /** @description Detailed project description (Markdown supported) */
+      description: string | null;
+      lifecycleStatus: components['schemas']['ProjectLifecycleStatus'];
+      workStatus: components['schemas']['WorkStatus'];
+      /** @description Optimistic locking version */
+      version: number;
+      /**
+       * Format: date-time
+       * @description Timestamp when the project was created (ISO 8601)
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when the project was last updated (ISO 8601)
+       */
+      updatedAt: string;
+      /**
+       * Format: date-time
+       * @description Soft-delete timestamp; null means not deleted
+       */
+      deletedAt: string | null;
+    };
+    /** @description Request body for creating a new project */
+    CreateProject: {
+      /** @description Human-readable project name */
+      name: string;
+      /** @description Detailed project description (Markdown supported) */
+      description?: string | null;
+      lifecycleStatus: components['schemas']['ProjectLifecycleStatus'];
+    };
+    /** @description Request body for partially updating a project. All fields except version are optional. */
+    UpdateProject: {
+      /** @description Human-readable project name */
+      name?: string;
+      /** @description Detailed project description (Markdown supported) */
+      description?: string | null;
+      lifecycleStatus?: components['schemas']['ProjectLifecycleStatus'];
+      /** @description Current version for optimistic locking */
+      version: number;
+    };
+    /** @description Single-item API response for a project */
+    ProjectResponse: {
+      data: components['schemas']['Project'];
+    };
+    /** @description Paginated list response for projects */
+    ProjectListResponse: {
+      data: components['schemas']['Project'][];
+      pagination: components['schemas']['PaginationMeta'];
+    };
+    /** @description A large body of work within a project */
+    Epic: {
+      /**
+       * Format: uuid
+       * @description Unique identifier (UUID v4)
+       */
+      id: string;
+      /**
+       * Format: uuid
+       * @description Tenant ID (equals the owning user's ID)
+       */
+      tenantId: string;
+      /**
+       * Format: uuid
+       * @description ID of the parent project
+       */
+      projectId: string;
+      /** @description Human-readable epic name */
+      name: string;
+      /** @description Detailed epic description (Markdown supported) */
+      description: string | null;
+      workStatus: components['schemas']['WorkStatus'];
+      /** @description Display and scheduling order within the parent project (zero-based) */
+      sortOrder: number;
+      /** @description Optimistic locking version */
+      version: number;
+      /**
+       * Format: date-time
+       * @description Timestamp when the epic was created (ISO 8601)
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when the epic was last updated (ISO 8601)
+       */
+      updatedAt: string;
+      /**
+       * Format: date-time
+       * @description Soft-delete timestamp; null means not deleted
+       */
+      deletedAt: string | null;
+    };
+    /** @description Request body for creating a new epic. The projectId is provided via the URL path parameter, not in the request body. */
+    CreateEpic: {
+      /**
+       * Format: uuid
+       * @description ID of the parent project (may also come from URL path)
+       */
+      projectId?: string;
+      /** @description Human-readable epic name */
+      name: string;
+      /** @description Detailed epic description (Markdown supported) */
+      description?: string | null;
+      /** @description Display and scheduling order within the parent project (zero-based) */
+      sortOrder: number;
+    };
+    /** @description Request body for partially updating an epic. All fields except version are optional. */
+    UpdateEpic: {
+      /**
+       * Format: uuid
+       * @description ID of the parent project
+       */
+      projectId?: string;
+      /** @description Human-readable epic name */
+      name?: string;
+      /** @description Detailed epic description (Markdown supported) */
+      description?: string | null;
+      /** @description Display and scheduling order within the parent project */
+      sortOrder?: number;
+      /** @description Current version for optimistic locking */
+      version: number;
+    };
+    /** @description Single-item API response for an epic */
+    EpicResponse: {
+      data: components['schemas']['Epic'];
+    };
+    /** @description Paginated list response for epics */
+    EpicListResponse: {
+      data: components['schemas']['Epic'][];
+      pagination: components['schemas']['PaginationMeta'];
+    };
+    /** @description A discrete deliverable within an epic, assignable to a worker agent */
+    UserStory: {
+      /**
+       * Format: uuid
+       * @description Unique identifier (UUID v4)
+       */
+      id: string;
+      /**
+       * Format: uuid
+       * @description Tenant ID (equals the owning user's ID)
+       */
+      tenantId: string;
+      /**
+       * Format: uuid
+       * @description ID of the parent epic
+       */
+      epicId: string;
+      /** @description Short summary of the user story */
+      title: string;
+      /** @description Detailed description (Markdown supported) */
+      description: string | null;
+      priority: components['schemas']['Priority'];
+      workStatus: components['schemas']['WorkStatus'];
+      /** @description Estimated cost in tokens or credits; null if not estimated */
+      costEstimate: number | null;
+      /** @description Actual cost incurred during execution; null if not completed */
+      actualCost: number | null;
+      /**
+       * Format: uuid
+       * @description ID of the assigned worker agent; null if unassigned
+       */
+      assignedWorkerId: string | null;
+      /**
+       * Format: date-time
+       * @description Timestamp when assigned to a worker; null if unassigned
+       */
+      assignedAt: string | null;
+      /** @description Number of execution attempts made so far */
+      attempts: number;
+      /** @description Maximum allowed execution attempts before marking as failed */
+      maxAttempts: number;
+      /** @description Optimistic locking version */
+      version: number;
+      /**
+       * Format: date-time
+       * @description Timestamp when the user story was created (ISO 8601)
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when the user story was last updated (ISO 8601)
+       */
+      updatedAt: string;
+      /**
+       * Format: date-time
+       * @description Soft-delete timestamp; null means not deleted
+       */
+      deletedAt: string | null;
+    };
+    /** @description Request body for creating a new user story. The epicId is provided via the URL path parameter, not in the request body. */
+    CreateUserStory: {
+      /**
+       * Format: uuid
+       * @description ID of the parent epic (may also come from URL path)
+       */
+      epicId?: string;
+      /** @description Short summary of the user story */
+      title: string;
+      /** @description Detailed description (Markdown supported) */
+      description?: string | null;
+      priority: components['schemas']['Priority'];
+      /** @description Estimated cost in tokens or credits */
+      costEstimate?: number | null;
+      /** @description Maximum allowed execution attempts */
+      maxAttempts: number;
+    };
+    /** @description Request body for partially updating a user story. All fields except version are optional. */
+    UpdateUserStory: {
+      /**
+       * Format: uuid
+       * @description ID of the parent epic
+       */
+      epicId?: string;
+      /** @description Short summary of the user story */
+      title?: string;
+      /** @description Detailed description (Markdown supported) */
+      description?: string | null;
+      priority?: components['schemas']['Priority'];
+      /** @description Estimated cost in tokens or credits */
+      costEstimate?: number | null;
+      /** @description Maximum allowed execution attempts */
+      maxAttempts?: number;
+      /** @description Current version for optimistic locking */
+      version: number;
+    };
+    /** @description Single-item API response for a user story */
+    UserStoryResponse: {
+      data: components['schemas']['UserStory'];
+    };
+    /** @description Paginated list response for user stories */
+    UserStoryListResponse: {
+      data: components['schemas']['UserStory'][];
+      pagination: components['schemas']['PaginationMeta'];
+    };
+    /** @description The smallest unit of work, belonging to a user story */
+    Task: {
+      /**
+       * Format: uuid
+       * @description Unique identifier (UUID v4)
+       */
+      id: string;
+      /**
+       * Format: uuid
+       * @description Tenant ID (equals the owning user's ID)
+       */
+      tenantId: string;
+      /**
+       * Format: uuid
+       * @description ID of the parent user story
+       */
+      userStoryId: string;
+      /** @description Short summary of the task */
+      title: string;
+      /** @description Detailed description (Markdown supported) */
+      description: string | null;
+      /** @description List of verifiable criteria for task completion */
+      acceptanceCriteria: string[];
+      /** @description Implementation notes for the worker agent (Markdown supported) */
+      technicalNotes: string | null;
+      /**
+       * Format: uuid
+       * @description ID of the persona best suited for this task; null if unassigned
+       */
+      personaId: string | null;
+      workStatus: components['schemas']['WorkStatus'];
+      /** @description Links to external resources (docs, specs, examples) */
+      references: components['schemas']['TaskReference'][];
+      /** @description Optimistic locking version */
+      version: number;
+      /**
+       * Format: date-time
+       * @description Timestamp when the task was created (ISO 8601)
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when the task was last updated (ISO 8601)
+       */
+      updatedAt: string;
+      /**
+       * Format: date-time
+       * @description Soft-delete timestamp; null means not deleted
+       */
+      deletedAt: string | null;
+    };
+    /** @description Request body for creating a new task. The userStoryId is provided via the URL path parameter, not in the request body. */
+    CreateTask: {
+      /**
+       * Format: uuid
+       * @description ID of the parent user story (may also come from URL path)
+       */
+      userStoryId?: string;
+      /** @description Short summary of the task */
+      title: string;
+      /** @description Detailed description (Markdown supported) */
+      description?: string | null;
+      /** @description List of verifiable criteria for task completion */
+      acceptanceCriteria: string[];
+      /** @description Implementation notes for the worker agent (Markdown supported) */
+      technicalNotes?: string | null;
+      /**
+       * Format: uuid
+       * @description ID of the persona best suited for this task
+       */
+      personaId?: string | null;
+      /** @description Links to external resources (docs, specs, examples) */
+      references: components['schemas']['TaskReference'][];
+    };
+    /** @description Request body for partially updating a task. All fields except version are optional. */
+    UpdateTask: {
+      /**
+       * Format: uuid
+       * @description ID of the parent user story
+       */
+      userStoryId?: string;
+      /** @description Short summary of the task */
+      title?: string;
+      /** @description Detailed description (Markdown supported) */
+      description?: string | null;
+      /** @description List of verifiable criteria for task completion */
+      acceptanceCriteria?: string[];
+      /** @description Implementation notes for the worker agent (Markdown supported) */
+      technicalNotes?: string | null;
+      /**
+       * Format: uuid
+       * @description ID of the persona best suited for this task
+       */
+      personaId?: string | null;
+      /** @description Links to external resources (docs, specs, examples) */
+      references?: components['schemas']['TaskReference'][];
+      /** @description Current version for optimistic locking */
+      version: number;
+    };
+    /** @description Single-item API response for a task */
+    TaskResponse: {
+      data: components['schemas']['Task'];
+    };
+    /** @description Paginated list response for tasks */
+    TaskListResponse: {
+      data: components['schemas']['Task'][];
+      pagination: components['schemas']['PaginationMeta'];
+    };
+    /** @description Request body for adding a task dependency */
+    AddTaskDependency: {
+      /**
+       * Format: uuid
+       * @description ID of the task that must be completed before the current task
+       */
+      dependencyTaskId: string;
+    };
+    /** @description An AI agent that requests and executes work assignments */
+    Worker: {
+      /**
+       * Format: uuid
+       * @description Unique identifier (UUID v4)
+       */
+      id: string;
+      /**
+       * Format: uuid
+       * @description Tenant ID (equals the owning user's ID)
+       */
+      tenantId: string;
+      /** @description Human-readable worker name (e.g., "agent-backend-01") */
+      name: string;
+      /** @description Description of the worker's purpose or capabilities */
+      description: string | null;
+      /** @description Whether the worker is currently active and available */
+      isActive: boolean;
+      /**
+       * Format: date-time
+       * @description Timestamp of the worker's last heartbeat; null if never seen
+       */
+      lastSeenAt: string | null;
+      /**
+       * Format: date-time
+       * @description Timestamp when the worker was created (ISO 8601)
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when the worker was last updated (ISO 8601)
+       */
+      updatedAt: string;
+    };
+    /** @description Request body for creating a new worker */
+    CreateWorker: {
+      /** @description Human-readable worker name */
+      name: string;
+      /** @description Description of the worker's purpose or capabilities */
+      description?: string | null;
+    };
+    /** @description Request body for partially updating a worker. All fields except version are optional. */
+    UpdateWorker: {
+      /** @description Human-readable worker name */
+      name?: string;
+      /** @description Description of the worker's purpose or capabilities */
+      description?: string | null;
+      /** @description Current version for optimistic locking */
+      version: number;
+    };
+    /** @description Single-item API response for a worker */
+    WorkerResponse: {
+      data: components['schemas']['Worker'];
+    };
+    /** @description Response for worker creation, includes the worker entity and the newly generated API key (returned only once). */
+    CreateWorkerResponse: {
+      data: components['schemas']['Worker'];
+      apiKey: components['schemas']['CreateApiKeyResponse'];
+    };
+    /** @description Paginated list response for workers */
+    WorkerListResponse: {
+      data: components['schemas']['Worker'][];
+      pagination: components['schemas']['PaginationMeta'];
+    };
+    /** @description A role definition that tasks reference for assignment matching */
+    Persona: {
+      /**
+       * Format: uuid
+       * @description Unique identifier (UUID v4)
+       */
+      id: string;
+      /**
+       * Format: uuid
+       * @description Tenant ID (equals the owning user's ID)
+       */
+      tenantId: string;
+      /** @description Human-readable persona title (e.g., "Backend Developer") */
+      title: string;
+      /** @description Rich description of the persona's role and capabilities (Markdown) */
+      description: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when the persona was created (ISO 8601)
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when the persona was last updated (ISO 8601)
+       */
+      updatedAt: string;
+    };
+    /** @description Request body for creating a new persona */
+    CreatePersona: {
+      /** @description Human-readable persona title */
+      title: string;
+      /** @description Rich description of the persona's role and capabilities (Markdown) */
+      description: string;
+    };
+    /** @description Request body for partially updating a persona. All fields except version are optional. */
+    UpdatePersona: {
+      /** @description Human-readable persona title */
+      title?: string;
+      /** @description Rich description of the persona's role and capabilities (Markdown) */
+      description?: string;
+      /** @description Current version for optimistic locking */
+      version: number;
+    };
+    /** @description Single-item API response for a persona */
+    PersonaResponse: {
+      data: components['schemas']['Persona'];
+    };
+    /** @description Paginated list response for personas */
+    PersonaListResponse: {
+      data: components['schemas']['Persona'][];
+      pagination: components['schemas']['PaginationMeta'];
+    };
+    /** @description Request body for creating a new API key */
+    CreateApiKeyRequest: {
+      /** @description Human-readable name to identify this API key */
+      name: string;
+      /**
+       * Format: date-time
+       * @description Optional expiration timestamp (ISO 8601). Omit for non-expiring keys.
+       */
+      expiresAt?: string;
+    };
+    /** @description Response after creating an API key. The rawKey is only returned once at creation time and cannot be retrieved again. */
+    CreateApiKeyResponse: {
+      /**
+       * Format: uuid
+       * @description Unique identifier for the API key record
+       */
+      id: string;
+      /** @description Human-readable name assigned to this key */
+      name: string;
+      /** @description The full raw API key prefixed with "lw_". Only returned once at creation time. Clients must store it securely. */
+      rawKey: string;
+      /** @description Masked version of the key for display (e.g., "lw_****...ab12") */
+      maskedKey: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when the key was created (ISO 8601)
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description Expiration timestamp, or null for non-expiring keys
+       */
+      expiresAt: string | null;
+    };
+    /** @description Summary representation of an API key (excludes raw key) */
+    ApiKeySummary: {
+      /**
+       * Format: uuid
+       * @description Unique identifier for the API key record
+       */
+      id: string;
+      /** @description Human-readable name assigned to this key */
+      name: string;
+      /** @description Masked version of the key for display */
+      maskedKey: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when the key was created (ISO 8601)
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description Expiration timestamp, or null for non-expiring keys
+       */
+      expiresAt: string | null;
+      /**
+       * Format: date-time
+       * @description Timestamp when the key was last used, or null if never used
+       */
+      lastUsedAt: string | null;
+    };
+    /** @description Work assignment response variant when work is available and has been assigned to the requesting worker. */
+    WorkAssigned: {
+      /**
+       * @description Discriminator indicating work has been assigned (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'assigned';
+      userStory: components['schemas']['UserStory'];
+      /** @description Ordered list of tasks the worker must complete */
+      tasks: components['schemas']['Task'][];
+      /**
+       * Format: date-time
+       * @description Timestamp when the assignment was made (ISO 8601)
+       */
+      assignedAt: string;
+    };
+    /** @description Work assignment response variant when all remaining work is blocked by unresolved dependencies. */
+    WorkBlocked: {
+      /**
+       * @description Discriminator indicating all remaining work is blocked (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'blocked';
+      /** @description Human-readable explanation of why work is blocked */
+      reason: string;
+      /** @description Number of work items currently in blocked state */
+      blockedCount: number;
+    };
+    /** @description Work assignment response variant when every work item has reached a terminal state. */
+    WorkAllComplete: {
+      /**
+       * @description Discriminator indicating all project work is complete (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'all_complete';
+      /**
+       * Format: date-time
+       * @description Timestamp when the last work item completed (ISO 8601)
+       */
+      completedAt: string;
+    };
+    /** @description Discriminated union response for the work assignment endpoint. Use the "type" field to determine which variant was returned. */
+    WorkAssignmentResponse:
+      | components['schemas']['WorkAssigned']
+      | components['schemas']['WorkBlocked']
+      | components['schemas']['WorkAllComplete'];
+    /** @description Request body for reporting work completion. The reason field is required when status is "failed". */
+    WorkCompletionRequest: {
+      /**
+       * Format: uuid
+       * @description UUID of the user story that was assigned to the worker
+       */
+      userStoryId: string;
+      status: components['schemas']['WorkCompletionStatus'];
+      /** @description Resource cost incurred during execution (e.g., API tokens consumed) */
+      cost: number;
+      /** @description Explanation of the outcome. Required when status is "failed" to provide context for debugging and retry decisions. */
+      reason?: string;
+    };
+    /** @description A single field-level change showing before and after values */
+    AuditChangeDiff: {
+      /** @description The field value before the change */
+      before?: unknown;
+      /** @description The field value after the change */
+      after?: unknown;
+    };
+    /** @description An immutable audit trail event recording a state change */
+    AuditEvent: {
+      /**
+       * Format: uuid
+       * @description Unique identifier for this audit event (UUID v4)
+       */
+      eventId: string;
+      /** @description The type of entity acted upon (e.g., "project", "task") */
+      entityType: string;
+      /** @description The unique identifier of the entity acted upon */
+      entityId: string;
+      action: components['schemas']['AuditAction'];
+      actorType: components['schemas']['AuditActorType'];
+      /** @description Unique identifier of the actor (user ID, worker ID, or system identifier) */
+      actorId: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when the event occurred (ISO 8601)
+       */
+      timestamp: string;
+      /** @description Record of field-level changes with before/after values */
+      changes?: {
+        [key: string]: components['schemas']['AuditChangeDiff'];
+      };
+      /** @description Extensible key-value metadata for additional context */
+      metadata?: {
+        [key: string]: string;
+      };
+    };
+    /** @description Paginated list response for audit events */
+    AuditEventListResponse: {
+      data: components['schemas']['AuditEvent'][];
+      pagination: components['schemas']['PaginationMeta'];
+    };
+  };
+  responses: {
+    /** @description The request body or query parameters failed validation. Check the error details for field-level information. */
+    BadRequest: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ErrorResponse'];
+      };
+    };
+    /** @description Authentication is required. Provide a valid session cookie or X-API-Key header. */
+    Unauthorized: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ErrorResponse'];
+      };
+    };
+    /** @description The authenticated principal does not have permission to perform this operation. */
+    Forbidden: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ErrorResponse'];
+      };
+    };
+    /** @description The requested resource does not exist. */
+    NotFound: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ErrorResponse'];
+      };
+    };
+    /** @description A conflict occurred, typically due to an optimistic locking version mismatch, a duplicate resource, or an invalid state transition. */
+    Conflict: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ErrorResponse'];
+      };
+    };
+    /** @description An unexpected internal server error occurred. */
+    InternalServerError: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ErrorResponse'];
+      };
+    };
+  };
+  parameters: {
+    /** @description Unique identifier of the project (UUID) */
+    ProjectIdParam: string;
+    /** @description Unique identifier of the epic (UUID) */
+    EpicIdParam: string;
+    /** @description Unique identifier of the user story (UUID) */
+    StoryIdParam: string;
+    /** @description Unique identifier of the task (UUID) */
+    TaskIdParam: string;
+    /** @description Unique identifier of the dependency task to remove (UUID) */
+    DependencyTaskIdParam: string;
+    /** @description Unique identifier of the worker (UUID) */
+    WorkerIdParam: string;
+    /** @description Unique identifier of the persona (UUID) */
+    PersonaIdParam: string;
+    /** @description Unique identifier of the entity to query audit events for */
+    EntityIdParam: string;
+    /** @description Page number (1-indexed) */
+    PageParam: number;
+    /** @description Number of items per page */
+    LimitParam: number;
+    /** @description Field name to sort results by */
+    SortByParam: string;
+    /** @description Sort direction */
+    SortOrderParam: 'asc' | 'desc';
+  };
   requestBodies: never;
   headers: never;
   pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+  listProjects: {
+    parameters: {
+      query?: {
+        /** @description Page number (1-indexed) */
+        page?: components['parameters']['PageParam'];
+        /** @description Number of items per page */
+        limit?: components['parameters']['LimitParam'];
+        /** @description Field name to sort results by */
+        sortBy?: components['parameters']['SortByParam'];
+        /** @description Sort direction */
+        sortOrder?: components['parameters']['SortOrderParam'];
+        /** @description Filter by project lifecycle status */
+        status?: components['schemas']['ProjectLifecycleStatus'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Paginated list of projects */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProjectListResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  createProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateProject'];
+      };
+    };
+    responses: {
+      /** @description Project created successfully */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProjectResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  getProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the project (UUID) */
+        projectId: components['parameters']['ProjectIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Project details */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProjectResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  deleteProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the project (UUID) */
+        projectId: components['parameters']['ProjectIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Project deleted successfully */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  updateProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the project (UUID) */
+        projectId: components['parameters']['ProjectIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateProject'];
+      };
+    };
+    responses: {
+      /** @description Project updated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProjectResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      409: components['responses']['Conflict'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  listEpics: {
+    parameters: {
+      query?: {
+        /** @description Page number (1-indexed) */
+        page?: components['parameters']['PageParam'];
+        /** @description Number of items per page */
+        limit?: components['parameters']['LimitParam'];
+        /** @description Field name to sort results by */
+        sortBy?: components['parameters']['SortByParam'];
+        /** @description Sort direction */
+        sortOrder?: components['parameters']['SortOrderParam'];
+        /** @description Filter by work status */
+        status?: components['schemas']['WorkStatus'];
+        /** @description Filter by priority level */
+        priority?: components['schemas']['Priority'];
+      };
+      header?: never;
+      path: {
+        /** @description Unique identifier of the project (UUID) */
+        projectId: components['parameters']['ProjectIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Paginated list of epics */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EpicListResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  createEpic: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the project (UUID) */
+        projectId: components['parameters']['ProjectIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateEpic'];
+      };
+    };
+    responses: {
+      /** @description Epic created successfully */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EpicResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  getEpic: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the epic (UUID) */
+        epicId: components['parameters']['EpicIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Epic details */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EpicResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  deleteEpic: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the epic (UUID) */
+        epicId: components['parameters']['EpicIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Epic deleted successfully */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  updateEpic: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the epic (UUID) */
+        epicId: components['parameters']['EpicIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateEpic'];
+      };
+    };
+    responses: {
+      /** @description Epic updated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EpicResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      409: components['responses']['Conflict'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  listUserStories: {
+    parameters: {
+      query?: {
+        /** @description Page number (1-indexed) */
+        page?: components['parameters']['PageParam'];
+        /** @description Number of items per page */
+        limit?: components['parameters']['LimitParam'];
+        /** @description Field name to sort results by */
+        sortBy?: components['parameters']['SortByParam'];
+        /** @description Sort direction */
+        sortOrder?: components['parameters']['SortOrderParam'];
+        /** @description Filter by work status */
+        status?: components['schemas']['WorkStatus'];
+        /** @description Filter by priority level */
+        priority?: components['schemas']['Priority'];
+      };
+      header?: never;
+      path: {
+        /** @description Unique identifier of the epic (UUID) */
+        epicId: components['parameters']['EpicIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Paginated list of user stories */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserStoryListResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  createUserStory: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the epic (UUID) */
+        epicId: components['parameters']['EpicIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateUserStory'];
+      };
+    };
+    responses: {
+      /** @description User story created successfully */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserStoryResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  getUserStory: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the user story (UUID) */
+        storyId: components['parameters']['StoryIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User story details */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserStoryResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  deleteUserStory: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the user story (UUID) */
+        storyId: components['parameters']['StoryIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User story deleted successfully */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  updateUserStory: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the user story (UUID) */
+        storyId: components['parameters']['StoryIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateUserStory'];
+      };
+    };
+    responses: {
+      /** @description User story updated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserStoryResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      409: components['responses']['Conflict'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  listTasks: {
+    parameters: {
+      query?: {
+        /** @description Page number (1-indexed) */
+        page?: components['parameters']['PageParam'];
+        /** @description Number of items per page */
+        limit?: components['parameters']['LimitParam'];
+        /** @description Field name to sort results by */
+        sortBy?: components['parameters']['SortByParam'];
+        /** @description Sort direction */
+        sortOrder?: components['parameters']['SortOrderParam'];
+        /** @description Filter by work status */
+        status?: components['schemas']['WorkStatus'];
+        /** @description Filter by priority level */
+        priority?: components['schemas']['Priority'];
+      };
+      header?: never;
+      path: {
+        /** @description Unique identifier of the user story (UUID) */
+        storyId: components['parameters']['StoryIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Paginated list of tasks */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TaskListResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  createTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the user story (UUID) */
+        storyId: components['parameters']['StoryIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateTask'];
+      };
+    };
+    responses: {
+      /** @description Task created successfully */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TaskResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  getTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the task (UUID) */
+        taskId: components['parameters']['TaskIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Task details */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TaskResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  deleteTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the task (UUID) */
+        taskId: components['parameters']['TaskIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Task deleted successfully */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  updateTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the task (UUID) */
+        taskId: components['parameters']['TaskIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateTask'];
+      };
+    };
+    responses: {
+      /** @description Task updated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TaskResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      409: components['responses']['Conflict'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  addTaskDependency: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the task (UUID) */
+        taskId: components['parameters']['TaskIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AddTaskDependency'];
+      };
+    };
+    responses: {
+      /** @description Dependency added successfully */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      409: components['responses']['Conflict'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  removeTaskDependency: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the task (UUID) */
+        taskId: components['parameters']['TaskIdParam'];
+        /** @description Unique identifier of the dependency task to remove (UUID) */
+        dependencyTaskId: components['parameters']['DependencyTaskIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Dependency removed successfully */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  listWorkers: {
+    parameters: {
+      query?: {
+        /** @description Page number (1-indexed) */
+        page?: components['parameters']['PageParam'];
+        /** @description Number of items per page */
+        limit?: components['parameters']['LimitParam'];
+        /** @description Field name to sort results by */
+        sortBy?: components['parameters']['SortByParam'];
+        /** @description Sort direction */
+        sortOrder?: components['parameters']['SortOrderParam'];
+        /** @description Filter by active/inactive state */
+        isActive?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Paginated list of workers */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WorkerListResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  createWorker: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateWorker'];
+      };
+    };
+    responses: {
+      /** @description Worker created successfully with API key */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreateWorkerResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  getWorker: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the worker (UUID) */
+        workerId: components['parameters']['WorkerIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Worker details */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WorkerResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  deleteWorker: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the worker (UUID) */
+        workerId: components['parameters']['WorkerIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Worker deleted successfully */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  updateWorker: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the worker (UUID) */
+        workerId: components['parameters']['WorkerIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateWorker'];
+      };
+    };
+    responses: {
+      /** @description Worker updated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WorkerResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      409: components['responses']['Conflict'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  regenerateWorkerKey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the worker (UUID) */
+        workerId: components['parameters']['WorkerIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description New API key generated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreateApiKeyResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  listPersonas: {
+    parameters: {
+      query?: {
+        /** @description Page number (1-indexed) */
+        page?: components['parameters']['PageParam'];
+        /** @description Number of items per page */
+        limit?: components['parameters']['LimitParam'];
+        /** @description Field name to sort results by */
+        sortBy?: components['parameters']['SortByParam'];
+        /** @description Sort direction */
+        sortOrder?: components['parameters']['SortOrderParam'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Paginated list of personas */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PersonaListResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  createPersona: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreatePersona'];
+      };
+    };
+    responses: {
+      /** @description Persona created successfully */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PersonaResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  getPersona: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the persona (UUID) */
+        personaId: components['parameters']['PersonaIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Persona details */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PersonaResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  deletePersona: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the persona (UUID) */
+        personaId: components['parameters']['PersonaIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Persona deleted successfully */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  updatePersona: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the persona (UUID) */
+        personaId: components['parameters']['PersonaIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePersona'];
+      };
+    };
+    responses: {
+      /** @description Persona updated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PersonaResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      409: components['responses']['Conflict'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  getNextWorkAssignment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Work assignment result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WorkAssignmentResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  completeWorkAssignment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorkCompletionRequest'];
+      };
+    };
+    responses: {
+      /** @description Work completion recorded successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      409: components['responses']['Conflict'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  getAuditLog: {
+    parameters: {
+      query?: {
+        /** @description Page number (1-indexed) */
+        page?: components['parameters']['PageParam'];
+        /** @description Number of items per page */
+        limit?: components['parameters']['LimitParam'];
+        /** @description Field name to sort results by */
+        sortBy?: components['parameters']['SortByParam'];
+        /** @description Sort direction */
+        sortOrder?: components['parameters']['SortOrderParam'];
+      };
+      header?: never;
+      path: {
+        /** @description Unique identifier of the entity to query audit events for */
+        entityId: components['parameters']['EntityIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Paginated list of audit events */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuditEventListResponse'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+}

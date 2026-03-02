@@ -12,11 +12,14 @@
   "scripts": {
     "generate": "npx openapi-typescript openapi.yaml -o generated/api.ts",
     "lint:spec": "npx spectral lint openapi.yaml",
-    "check:freshness": "npx tsx scripts/generate.ts --check"
+    "check:freshness": "bash scripts/check-freshness.sh"
   },
   "devDependencies": {
     "@stoplight/spectral-cli": "^6.15.0",
     "@types/node": "^25.3.3",
     "openapi-typescript": "^7.13.0"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
   }
 }

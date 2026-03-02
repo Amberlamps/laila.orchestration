@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Add Spec Freshness CI Check
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** devops-engineer
 - **Parent User Story:** [Create OpenAPI Specification](./tasks.md)
 - **Parent Epic:** [Shared Packages & API Contracts](../../user-stories.md)
@@ -30,6 +30,7 @@ The check works by re-running the generation script and comparing the output wit
 ## Technical Notes
 
 - Freshness check script approach:
+
   ```bash
   #!/bin/bash
   # packages/api-spec/scripts/check-freshness.sh
@@ -58,6 +59,7 @@ The check works by re-running the generation script and comparing the output wit
   rm -rf "$TEMP_DIR"
   echo "Generated types are up to date."
   ```
+
 - Alternative approach using Git: run generation, then check `git diff --exit-code generated/` to detect uncommitted changes
 - The `--exit-code` flag on `diff` returns non-zero if differences are found, making it ideal for CI checks
 - Ensure the check handles line ending normalization (use `diff --strip-trailing-cr` or normalize before comparing)

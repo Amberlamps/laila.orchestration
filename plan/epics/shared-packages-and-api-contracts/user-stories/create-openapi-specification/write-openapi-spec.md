@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write OpenAPI Spec
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** api-designer
 - **Parent User Story:** [Create OpenAPI Specification](./tasks.md)
 - **Parent Epic:** [Shared Packages & API Contracts](../../user-stories.md)
@@ -14,6 +14,7 @@
 Write the complete OpenAPI 3.1 specification in `packages/api-spec/openapi.yaml` covering all REST endpoints under `/api/v1`. This is the single source of truth for the API contract — all route handlers, client SDK types, and API documentation are derived from this specification.
 
 The spec should define:
+
 - All CRUD endpoints for projects, epics, user stories, tasks, workers, and personas
 - Work assignment and completion endpoints for the orchestration protocol
 - Authentication schemes (Google OAuth for humans, API key for workers)

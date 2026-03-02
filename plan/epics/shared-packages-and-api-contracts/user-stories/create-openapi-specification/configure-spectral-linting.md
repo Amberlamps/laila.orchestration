@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Spectral Linting
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** api-designer
 - **Parent User Story:** [Create OpenAPI Specification](./tasks.md)
 - **Parent Epic:** [Shared Packages & API Contracts](../../user-stories.md)
@@ -14,6 +14,7 @@
 Set up Stoplight Spectral for linting the OpenAPI 3.1 specification. Spectral enforces API design standards, catches common mistakes, and ensures consistency across all endpoint definitions. It acts as an "ESLint for API specs."
 
 The linting ruleset should enforce conventions like:
+
 - Consistent naming (camelCase for properties, kebab-case for paths)
 - Required error responses on all endpoints
 - Descriptions on all operations, parameters, and schemas
@@ -39,6 +40,7 @@ The linting ruleset should enforce conventions like:
 ## Technical Notes
 
 - Spectral configuration file:
+
   ```yaml
   # packages/api-spec/.spectral.yaml
   # API linting rules for the OpenAPI specification
@@ -58,15 +60,16 @@ The linting ruleset should enforce conventions like:
       severity: error
     # Custom rule: all error responses should reference ErrorResponse
     error-response-schema:
-      description: "All 4xx/5xx responses must use the standard ErrorResponse schema"
+      description: 'All 4xx/5xx responses must use the standard ErrorResponse schema'
       severity: warn
       given: "$.paths.*.*.responses[?(@property >= '400')]"
       then:
-        field: "content.application/json.schema.$ref"
+        field: 'content.application/json.schema.$ref'
         function: pattern
         functionOptions:
-          match: "#/components/schemas/ErrorResponse"
+          match: '#/components/schemas/ErrorResponse'
   ```
+
 - Spectral supports custom functions for complex rules, but built-in functions (`pattern`, `truthy`, `defined`, `enumeration`) cover most needs
 - The `spectral:oas` preset includes rules for:
   - Valid OpenAPI structure
