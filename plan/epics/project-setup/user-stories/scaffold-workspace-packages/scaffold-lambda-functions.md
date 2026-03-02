@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Scaffold Lambda Functions
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Scaffold Workspace Packages](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)
@@ -38,6 +38,7 @@ Each function follows the same structure: a `src/handler.ts` with the Lambda han
 
 - All three functions are triggered by Amazon EventBridge scheduled rules (cron-like), so they receive `ScheduledEvent` payloads
 - Lambda handler signature pattern:
+
   ```typescript
   // src/handler.ts
   // Lambda handler for the timeout-checker function
@@ -50,6 +51,7 @@ Each function follows the same structure: a `src/handler.ts` with the Lambda han
     console.log('timeout-checker invoked', { requestId: context.awsRequestId });
   };
   ```
+
 - Each function should be independently deployable — they have their own `package.json` and build process
 - For Lambda bundling, prefer `esbuild` for fast builds and small bundle sizes; the build script should output to a `dist/` directory
 - Lambda functions will use the `@neondatabase/serverless` driver (via `@laila/database`) for database access, which is optimized for short-lived serverless connections

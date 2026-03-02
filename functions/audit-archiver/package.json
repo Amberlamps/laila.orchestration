@@ -1,0 +1,22 @@
+{
+  "name": "@laila/audit-archiver",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Lambda function that archives old audit log entries from DynamoDB to S3",
+  "main": "dist/handler.js",
+  "scripts": {
+    "build": "esbuild src/handler.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm --sourcemap",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@laila/shared": "workspace:*",
+    "@laila/database": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.161",
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.3"
+  }
+}

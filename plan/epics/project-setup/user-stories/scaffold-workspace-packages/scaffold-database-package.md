@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Scaffold Database Package
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Scaffold Workspace Packages](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)
@@ -16,6 +16,7 @@ Create the `packages/database` workspace package that houses the Drizzle ORM sch
 This package serves as the data access layer for the entire application. It depends on `@laila/shared` for type definitions and constants, and exposes repository interfaces that the domain and API layers consume.
 
 Directory structure:
+
 - `src/schema/` — Drizzle table definitions (PostgreSQL schema)
 - `src/repositories/` — Repository implementations with tenant-scoped queries
 - `src/dynamo/` — DynamoDB access layer for audit logs

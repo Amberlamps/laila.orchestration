@@ -1,0 +1,28 @@
+{
+  "name": "@laila/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1000.0",
+    "@aws-sdk/lib-dynamodb": "^3.1000.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "drizzle-orm": "^0.45.1",
+    "@laila/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.9",
+    "typescript": "^5.9.3"
+  }
+}

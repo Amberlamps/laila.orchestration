@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Scaffold Next.js Web App
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Scaffold Workspace Packages](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)
@@ -14,6 +14,7 @@
 Create the `apps/web` workspace package containing a Next.js 14 application using the Pages Router. This is the primary web application for the AI Agent Orchestration Service, providing the human-facing dashboard for project management, work orchestration, and monitoring.
 
 The scaffold should include:
+
 - Next.js 14 with Pages Router (not App Router) configuration
 - Tailwind CSS v4 setup with the project's design tokens
 - shadcn/ui initialization for the component library

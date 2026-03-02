@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Scaffold API Spec Package
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** api-designer
 - **Parent User Story:** [Scaffold Workspace Packages](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)
@@ -16,6 +16,7 @@ Create the `packages/api-spec` workspace package that holds the OpenAPI 3.1 spec
 The contract-first approach means the OpenAPI spec is written first, then TypeScript types are generated from it. This ensures the API documentation, server implementation, and client SDK always stay in sync.
 
 Directory structure:
+
 - `openapi.yaml` — The OpenAPI 3.1 specification document
 - `generated/` — Auto-generated TypeScript types from the spec
 - `scripts/` — Scripts for type generation, validation, and freshness checks

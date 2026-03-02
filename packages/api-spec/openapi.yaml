@@ -1,0 +1,15 @@
+# openapi.yaml
+# Contract-first API specification for the laila.works Orchestration Service
+# All REST endpoints are defined here before implementation
+openapi: '3.1.0'
+info:
+  title: laila.works Orchestration Service API
+  version: 0.1.0
+  description: >
+    Contract-first REST API specification for the laila.works orchestration
+    service. TypeScript types are generated from this spec using
+    openapi-typescript to keep server and client implementations in sync.
+paths: {}
+components:
+  schemas: {}
+  securitySchemes: {}
