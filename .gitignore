@@ -5,6 +5,8 @@ node_modules/
 dist/
 build/
 .next/
+*.tsbuildinfo
+.turbo/
 
 # Coverage
 coverage/
@@ -13,6 +15,7 @@ coverage/
 .env
 .env.local
 .env.*.local
+!.env.example
 
 # Lock files (managed by pnpm)
 # pnpm-lock.yaml is tracked
@@ -23,7 +26,6 @@ Thumbs.db
 
 # IDE
 .idea/
-.vscode/
 *.swp
 *.swo
 

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Vitest Workspace
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Configure Development Environment](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)
@@ -14,6 +14,7 @@
 Set up Vitest as the test runner for the entire monorepo using the workspace configuration feature. Vitest's workspace mode allows running tests across all packages from a single command while respecting each package's individual configuration needs (e.g., different environments for Node.js packages vs. React components).
 
 The configuration should include:
+
 - A root `vitest.workspace.ts` that discovers test configurations across all workspace packages
 - Coverage reporting via `@vitest/coverage-v8` (V8-based code coverage, faster than Istanbul)
 - Shared test utilities and setup files
@@ -37,6 +38,7 @@ The configuration should include:
 ## Technical Notes
 
 - Vitest workspace configuration:
+
   ```typescript
   // vitest.workspace.ts
   // Configures Vitest to discover and run tests across all monorepo packages
@@ -49,8 +51,10 @@ The configuration should include:
     'functions/*/vitest.config.ts',
   ]);
   ```
+
 - For packages without their own `vitest.config.ts`, consider using a glob pattern or inline configuration in the workspace file
 - Coverage configuration in the root `vitest.config.ts` (or individual configs):
+
   ```typescript
   // vitest.config.ts for a package
   // Configures test environment and coverage settings
@@ -71,6 +75,7 @@ The configuration should include:
     },
   });
   ```
+
 - Use `resolve.alias` in Vitest config to map workspace package paths (e.g., `@laila/shared` to the actual source directory)
 - Consider creating a `test/setup.ts` for global test setup (e.g., custom matchers, environment cleanup)
 - Vitest supports `pool: 'forks'` for better isolation or `pool: 'threads'` for better performance — choose based on test characteristics

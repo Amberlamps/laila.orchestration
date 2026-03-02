@@ -15,8 +15,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "pnpm -r run test",
-    "test:coverage": "pnpm -r run test:coverage",
+    "test": "vitest run --config vitest.workspace.ts",
+    "test:coverage": "vitest run --config vitest.workspace.ts --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf {} + && find . -name 'dist' -type d -prune -exec rm -rf {} +",
     "prepare": "husky"
@@ -24,6 +24,7 @@
   "devDependencies": {
     "@eslint/compat": "^2.0.2",
     "@eslint/js": "^9.39.3",
+    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -34,10 +35,12 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^17.4.0",
     "husky": "^9.1.7",
+    "jsdom": "^28.1.0",
     "lint-staged": "^16.3.1",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.1"
+    "typescript-eslint": "^8.56.1",
+    "vitest": "^4.0.18"
   }
 }

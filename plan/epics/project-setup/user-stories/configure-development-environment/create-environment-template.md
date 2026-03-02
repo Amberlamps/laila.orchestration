@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Environment Template
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Configure Development Environment](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)
@@ -31,6 +31,7 @@ Each variable should include a descriptive comment explaining its purpose, expec
 ## Technical Notes
 
 - The `.env.example` file should follow this pattern:
+
   ```bash
   # .env.example
   # Environment variable template for the laila.works Orchestration Service
@@ -51,6 +52,7 @@ Each variable should include a descriptive comment explaining its purpose, expec
   BETTER_AUTH_SECRET=your-secret-key-here
   # ...
   ```
+
 - Neon PostgreSQL uses different connection strings for pooled (serverless) vs. direct (migration) connections
 - Better Auth requires a secret for session management — document the generation command
 - AWS credentials may be provided via environment variables in local dev, but via IAM roles in production (document both approaches)

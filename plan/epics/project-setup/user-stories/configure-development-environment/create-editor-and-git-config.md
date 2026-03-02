@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Editor and Git Config
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** tooling-engineer
 - **Parent User Story:** [Configure Development Environment](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)
@@ -37,10 +37,10 @@ Additionally, configure VS Code recommended extensions and workspace settings to
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit"
+      "source.fixAll.eslint": "explicit",
     },
     "typescript.tsdk": "node_modules/typescript/lib",
-    "typescript.enablePromptUseWorkspaceTsdk": true
+    "typescript.enablePromptUseWorkspaceTsdk": true,
   }
   ```
 - `.vscode/extensions.json` should use the `recommendations` array:
@@ -51,8 +51,8 @@ Additionally, configure VS Code recommended extensions and workspace settings to
       "dbaeumer.vscode-eslint",
       "bradlc.vscode-tailwindcss",
       "ms-vscode.vscode-typescript-next",
-      "eamodio.gitlens"
-    ]
+      "eamodio.gitlens",
+    ],
   }
   ```
 - Do not include `.vscode/` in `.gitignore` — these are workspace-level settings that should be shared

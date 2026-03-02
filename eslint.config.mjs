@@ -169,7 +169,12 @@ export default tseslint.config(
 
   // ── Exclude config files from strict type-checked rules ──────────────
   {
-    files: ["**/*.config.ts", "**/*.config.mjs", "**/*.config.js"],
+    files: [
+      "**/*.config.ts",
+      "**/*.config.mjs",
+      "**/*.config.js",
+      "vitest.workspace.ts",
+    ],
     ...tseslint.configs.disableTypeChecked,
   },
 

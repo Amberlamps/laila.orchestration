@@ -1,0 +1,5 @@
+# Ensure consistent line endings across platforms
+* text=auto eol=lf
+
+# Mark lock file as generated to reduce diff noise
+pnpm-lock.yaml binary linguist-generated=true
