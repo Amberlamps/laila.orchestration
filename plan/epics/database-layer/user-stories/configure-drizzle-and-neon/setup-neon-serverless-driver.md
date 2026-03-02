@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Setup Neon Serverless Driver
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Configure Drizzle ORM with Neon](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -14,6 +14,7 @@
 Install and configure the `@neondatabase/serverless` driver as the PostgreSQL connection layer for the application. This driver is specifically designed for serverless environments (AWS Lambda, Vercel Edge, Cloudflare Workers) where traditional TCP-based PostgreSQL drivers are inefficient or unsupported.
 
 The Neon serverless driver provides two connection modes:
+
 1. **HTTP mode** — Single-query transactions over HTTP, ideal for simple reads and writes in Lambda functions with minimal latency overhead
 2. **WebSocket mode** — Full-featured PostgreSQL wire protocol over WebSocket, supporting multi-statement transactions and prepared statements
 
@@ -35,6 +36,7 @@ The driver integrates directly with Drizzle ORM via the `drizzle-orm/neon-server
 ## Technical Notes
 
 - Neon serverless driver setup:
+
   ```typescript
   // packages/database/src/connection.ts
   // Connection factory for the Neon serverless PostgreSQL driver
@@ -62,6 +64,7 @@ The driver integrates directly with Drizzle ORM via the `drizzle-orm/neon-server
     return new Pool({ connectionString: databaseUrl });
   }
   ```
+
 - Node.js 22.x has native WebSocket support, so no additional WebSocket polyfill (`ws` package) is needed for the Neon driver
 - For local development, the same Neon cloud database is used (Neon offers free tier with branching) — there is no local PostgreSQL setup
 - The `DATABASE_URL` should include `?sslmode=require` for Neon connections

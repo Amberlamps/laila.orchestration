@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Database Client Factory
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Configure Drizzle ORM with Neon](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -14,6 +14,7 @@
 Create the database client factory (`client.ts`) that integrates the Neon serverless driver with Drizzle ORM. This factory is the primary entry point for all database operations in the application — every repository and database query flows through the Drizzle client instance it creates.
 
 The factory should support:
+
 - Creating a Drizzle client from the Neon HTTP driver (for serverless/Lambda)
 - Creating a Drizzle client from the Neon WebSocket pool (for long-running processes)
 - Singleton pattern to avoid creating multiple clients in the same process
@@ -35,6 +36,7 @@ The factory should support:
 ## Technical Notes
 
 - Database client factory implementation:
+
   ```typescript
   // packages/database/src/client.ts
   // Database client factory integrating Neon serverless driver with Drizzle ORM
@@ -80,7 +82,7 @@ The factory should support:
       if (!url) {
         throw new Error(
           'DATABASE_URL environment variable is not set. ' +
-          'Check your .env file or deployment configuration.'
+            'Check your .env file or deployment configuration.',
         );
       }
       _db = createHttpClient(url);
@@ -88,6 +90,7 @@ The factory should support:
     return _db;
   }
   ```
+
 - The `schema` parameter in `drizzle(client, { schema })` enables Drizzle's relational query API (`.query.projects.findMany()`) in addition to the SQL-like API
 - The HTTP client creates a new HTTP request per query — this is the recommended approach for Lambda because it avoids connection management overhead
 - The pool client maintains WebSocket connections and should be used for the `next dev` server and background Lambda functions that execute multiple queries
