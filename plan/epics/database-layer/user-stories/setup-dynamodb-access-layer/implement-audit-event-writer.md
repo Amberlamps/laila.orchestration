@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Audit Event Writer
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Set Up DynamoDB Access Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -39,6 +39,7 @@ The writer is called by the API layer and repository layer whenever a significan
 ## Technical Notes
 
 - Audit event writer implementation:
+
   ```typescript
   // packages/database/src/dynamo/audit-writer.ts
   // Writes audit events to DynamoDB for the audit log system
@@ -86,15 +87,19 @@ The writer is called by the API layer and repository layer whenever a significan
       expiresAt: Math.floor(Date.now() / 1000) + RETENTION_DAYS * 86400,
     };
 
-    await client.send(new PutCommand({
-      TableName: AUDIT_TABLE_NAME,
-      Item: item,
-    }));
+    await client.send(
+      new PutCommand({
+        TableName: AUDIT_TABLE_NAME,
+        Item: item,
+      }),
+    );
 
     return item;
   }
   ```
+
 - Batch write with chunking and retry:
+
   ```typescript
   /**
    * Writes multiple audit events in batches of 25 (DynamoDB limit)
@@ -129,6 +134,7 @@ The writer is called by the API layer and repository layer whenever a significan
     return written;
   }
   ```
+
 - The `changes` field captures before/after state for auditing:
   ```typescript
   // Example: audit event for a project status update
