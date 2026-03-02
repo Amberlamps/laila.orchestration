@@ -13,6 +13,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="$(cd "$PACKAGE_ROOT/../.." && pwd)"
 SPEC_PATH="$PACKAGE_ROOT/openapi.yaml"
 GENERATED_DIR="$PACKAGE_ROOT/generated"
 COMMITTED_FILE="$GENERATED_DIR/api.ts"
@@ -36,6 +37,7 @@ TEMP_FILE="$TEMP_DIR/api.ts"
 
 echo "Regenerating TypeScript types to verify freshness..."
 npx openapi-typescript "$SPEC_PATH" -o "$TEMP_FILE" 2>&1
+npx prettier --write "$TEMP_FILE" --config "$REPO_ROOT/.prettierrc" > /dev/null 2>&1
 
 # Normalise line endings before comparison (strip trailing CR)
 normalize() {
