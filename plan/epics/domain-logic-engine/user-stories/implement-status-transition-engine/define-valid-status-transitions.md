@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Define Valid Status Transitions
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Status Transition Engine](./tasks.md)
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
@@ -30,6 +30,7 @@ not-started --> in-progress --> complete
 ```
 
 Valid transitions:
+
 - `not-started` -> `in-progress` (work begins)
 - `in-progress` -> `complete` (work finished)
 - `blocked` -> `not-started` (all deps now satisfied)
@@ -48,6 +49,7 @@ draft --> not-started --> in-progress --> complete
 ```
 
 Valid transitions:
+
 - `draft` -> `not-started` (story ready, cross-story deps satisfied)
 - `draft` -> `blocked` (story ready but cross-story deps not satisfied)
 - `not-started` -> `in-progress` (story assigned to a worker)
@@ -68,6 +70,7 @@ draft --> ready --> in-progress --> complete
 ```
 
 Valid transitions:
+
 - `draft` -> `ready` (project finalized, ready for work)
 - `ready` -> `draft` (edit mode, pause work assignment)
 - `ready` -> `in-progress` (first story assigned)
@@ -86,33 +89,28 @@ Epic status is computed from child stories — there are no direct transitions. 
 /**
  * Task statuses. Tasks are the atomic unit of work.
  */
-export type TaskStatus = "not-started" | "in-progress" | "complete" | "blocked";
+export type TaskStatus = 'not-started' | 'in-progress' | 'complete' | 'blocked';
 
 /**
  * User story statuses. Stories aggregate tasks and are assigned to workers.
  */
 export type UserStoryStatus =
-  | "draft"
-  | "not-started"
-  | "in-progress"
-  | "complete"
-  | "failed"
-  | "blocked";
+  | 'draft'
+  | 'not-started'
+  | 'in-progress'
+  | 'complete'
+  | 'failed'
+  | 'blocked';
 
 /**
  * Epic statuses. Epics aggregate stories. Status is derived, not set directly.
  */
-export type EpicStatus =
-  | "not-started"
-  | "in-progress"
-  | "complete"
-  | "failed"
-  | "blocked";
+export type EpicStatus = 'not-started' | 'in-progress' | 'complete' | 'failed' | 'blocked';
 
 /**
  * Project statuses. Projects are the top-level container.
  */
-export type ProjectStatus = "draft" | "ready" | "in-progress" | "complete";
+export type ProjectStatus = 'draft' | 'ready' | 'in-progress' | 'complete';
 
 /**
  * A transition map defines which target states are reachable
@@ -125,10 +123,10 @@ type TransitionMap<S extends string> = Record<S, readonly S[]>;
  * Tasks follow a linear progression with a blocked side-state.
  */
 export const TASK_TRANSITIONS: TransitionMap<TaskStatus> = {
-  "not-started": ["in-progress", "blocked"],
-  "in-progress": ["complete"],
-  "complete": [],  // Terminal state — tasks cannot be un-completed.
-  "blocked": ["not-started"],
+  'not-started': ['in-progress', 'blocked'],
+  'in-progress': ['complete'],
+  complete: [], // Terminal state — tasks cannot be un-completed.
+  blocked: ['not-started'],
 } as const;
 
 /**
@@ -136,12 +134,12 @@ export const TASK_TRANSITIONS: TransitionMap<TaskStatus> = {
  * Stories have a richer state machine with draft, failed, and retry paths.
  */
 export const USER_STORY_TRANSITIONS: TransitionMap<UserStoryStatus> = {
-  "draft": ["not-started", "blocked"],
-  "not-started": ["in-progress", "blocked"],
-  "in-progress": ["complete", "failed"],
-  "complete": [],  // Terminal state.
-  "failed": ["not-started", "blocked"],
-  "blocked": ["not-started"],
+  draft: ['not-started', 'blocked'],
+  'not-started': ['in-progress', 'blocked'],
+  'in-progress': ['complete', 'failed'],
+  complete: [], // Terminal state.
+  failed: ['not-started', 'blocked'],
+  blocked: ['not-started'],
 } as const;
 
 /**
@@ -149,10 +147,10 @@ export const USER_STORY_TRANSITIONS: TransitionMap<UserStoryStatus> = {
  * Projects have a simple lifecycle with an edit-mode loop.
  */
 export const PROJECT_TRANSITIONS: TransitionMap<ProjectStatus> = {
-  "draft": ["ready"],
-  "ready": ["draft", "in-progress"],
-  "in-progress": ["complete"],
-  "complete": [],  // Terminal state.
+  draft: ['ready'],
+  ready: ['draft', 'in-progress'],
+  'in-progress': ['complete'],
+  complete: [], // Terminal state.
 } as const;
 
 /**
@@ -174,7 +172,7 @@ export type TransitionValidationResult =
 export function validateTransition<S extends string>(
   transitionMap: TransitionMap<S>,
   currentStatus: S,
-  targetStatus: S
+  targetStatus: S,
 ): TransitionValidationResult {
   const allowedTargets = transitionMap[currentStatus];
 
@@ -192,7 +190,7 @@ export function validateTransition<S extends string>(
       valid: false,
       from: currentStatus,
       to: targetStatus,
-      reason: `Transition from "${currentStatus}" to "${targetStatus}" is not allowed. Valid targets: [${allowedTargets.join(", ")}]`,
+      reason: `Transition from "${currentStatus}" to "${targetStatus}" is not allowed. Valid targets: [${allowedTargets.join(', ')}]`,
     };
   }
 

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Epic Status Derivation
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Status Transition Engine](./tasks.md)
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
@@ -28,7 +28,7 @@ Epic status is determined by evaluating the statuses of all child stories in pri
 // Derive epic status from child user story statuses.
 // Epic status is always computed, never set directly.
 // Pure function: no database calls, no side effects.
-import type { UserStoryStatus, EpicStatus } from "./transition-definitions";
+import type { UserStoryStatus, EpicStatus } from './transition-definitions';
 
 /**
  * Minimal story information needed for epic status derivation.
@@ -69,9 +69,7 @@ export interface EpicStatusDerivation {
  * @param stories - Child stories of the epic with their current statuses
  * @returns Derived epic status with explanation and summary
  */
-export function deriveEpicStatus(
-  stories: EpicStoryInfo[]
-): EpicStatusDerivation {
+export function deriveEpicStatus(stories: EpicStoryInfo[]): EpicStatusDerivation {
   // Count stories in each status for the summary.
   const summary = {
     total: stories.length,
@@ -85,22 +83,22 @@ export function deriveEpicStatus(
 
   for (const story of stories) {
     switch (story.status) {
-      case "complete":
+      case 'complete':
         summary.complete++;
         break;
-      case "in-progress":
+      case 'in-progress':
         summary.inProgress++;
         break;
-      case "failed":
+      case 'failed':
         summary.failed++;
         break;
-      case "blocked":
+      case 'blocked':
         summary.blocked++;
         break;
-      case "not-started":
+      case 'not-started':
         summary.notStarted++;
         break;
-      case "draft":
+      case 'draft':
         summary.draft++;
         break;
     }
@@ -109,8 +107,8 @@ export function deriveEpicStatus(
   // Handle empty epic (no stories).
   if (stories.length === 0) {
     return {
-      derivedStatus: "not-started",
-      reason: "Epic has no user stories",
+      derivedStatus: 'not-started',
+      reason: 'Epic has no user stories',
       storySummary: summary,
     };
   }
@@ -118,7 +116,7 @@ export function deriveEpicStatus(
   // Rule 1: All stories complete -> epic is complete.
   if (summary.complete === summary.total) {
     return {
-      derivedStatus: "complete",
+      derivedStatus: 'complete',
       reason: `All ${summary.total} stories are complete`,
       storySummary: summary,
     };
@@ -129,7 +127,7 @@ export function deriveEpicStatus(
   // as failed while work is still actively happening on other stories.
   if (summary.failed > 0 && summary.inProgress === 0) {
     return {
-      derivedStatus: "failed",
+      derivedStatus: 'failed',
       reason: `${summary.failed} story/stories failed, no stories in progress`,
       storySummary: summary,
     };
@@ -138,7 +136,7 @@ export function deriveEpicStatus(
   // Rule 3: Any in-progress -> epic is in-progress.
   if (summary.inProgress > 0) {
     return {
-      derivedStatus: "in-progress",
+      derivedStatus: 'in-progress',
       reason: `${summary.inProgress} story/stories in progress`,
       storySummary: summary,
     };
@@ -148,7 +146,7 @@ export function deriveEpicStatus(
   const nonComplete = summary.total - summary.complete;
   if (nonComplete > 0 && summary.blocked === nonComplete) {
     return {
-      derivedStatus: "blocked",
+      derivedStatus: 'blocked',
       reason: `All ${nonComplete} non-complete stories are blocked`,
       storySummary: summary,
     };
@@ -156,7 +154,7 @@ export function deriveEpicStatus(
 
   // Rule 5: Default -> not-started.
   return {
-    derivedStatus: "not-started",
+    derivedStatus: 'not-started',
     reason: `${summary.notStarted} stories not started, ${summary.draft} in draft`,
     storySummary: summary,
   };
@@ -170,7 +168,7 @@ export function deriveEpicStatus(
  * @returns Map of epic ID to derived status
  */
 export function batchDeriveEpicStatuses(
-  epicStories: Map<string, EpicStoryInfo[]>
+  epicStories: Map<string, EpicStoryInfo[]>,
 ): Map<string, EpicStatusDerivation> {
   const results = new Map<string, EpicStatusDerivation>();
 

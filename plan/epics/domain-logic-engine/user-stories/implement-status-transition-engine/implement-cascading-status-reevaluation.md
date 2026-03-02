@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Cascading Status Re-evaluation
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Status Transition Engine](./tasks.md)
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
@@ -16,6 +16,7 @@ Implement the cascading status re-evaluation engine. When a task completes, its 
 ### Cascade Logic
 
 When a task transitions to `complete`:
+
 1. Find all tasks that depend on this task (reverse edges in the DAG)
 2. For each dependent task: check if ALL its dependencies are now complete
 3. If yes: the dependent should transition from `blocked` -> `not-started`
@@ -29,8 +30,8 @@ The cascade is a pure computation: given the current state and the triggering ev
 // Computes cascading status changes when a task completes.
 // Pure function: takes current state, returns list of status commands.
 // The API layer executes the commands against the database.
-import type { AdjacencyList } from "../dag/types";
-import type { TaskStatus, UserStoryStatus, EpicStatus } from "./transition-definitions";
+import type { AdjacencyList } from '../dag/types';
+import type { TaskStatus, UserStoryStatus, EpicStatus } from './transition-definitions';
 
 /**
  * Minimal task state needed for cascading re-evaluation.
@@ -65,9 +66,9 @@ export interface EpicState {
  * The API layer executes these commands against the database.
  */
 export type StatusChangeCommand =
-  | { entity: "task"; id: string; from: TaskStatus; to: TaskStatus; reason: string }
-  | { entity: "user-story"; id: string; from: UserStoryStatus; to: UserStoryStatus; reason: string }
-  | { entity: "epic"; id: string; from: EpicStatus; to: EpicStatus; reason: string };
+  | { entity: 'task'; id: string; from: TaskStatus; to: TaskStatus; reason: string }
+  | { entity: 'user-story'; id: string; from: UserStoryStatus; to: UserStoryStatus; reason: string }
+  | { entity: 'epic'; id: string; from: EpicStatus; to: EpicStatus; reason: string };
 
 /**
  * Compute all cascading status changes triggered by a task completing.
@@ -95,7 +96,7 @@ export function computeCascadingChanges(
   reverseDeps: AdjacencyList,
   tasks: Map<string, TaskState>,
   stories: Map<string, UserStoryState>,
-  epics: Map<string, EpicState>
+  epics: Map<string, EpicState>,
 ): StatusChangeCommand[] {
   const commands: StatusChangeCommand[] = [];
   const affectedStoryIds = new Set<string>();
@@ -106,20 +107,20 @@ export function computeCascadingChanges(
   // Step 2: Check each dependent — are all its deps now complete?
   for (const dependentId of dependents) {
     const dependentTask = tasks.get(dependentId);
-    if (!dependentTask || dependentTask.status !== "blocked") continue;
+    if (!dependentTask || dependentTask.status !== 'blocked') continue;
 
     const deps = adjacencyList.get(dependentId) ?? new Set<string>();
     const allDepsComplete = Array.from(deps).every((depId) => {
       const depTask = tasks.get(depId);
-      return depTask?.status === "complete";
+      return depTask?.status === 'complete';
     });
 
     if (allDepsComplete) {
       commands.push({
-        entity: "task",
+        entity: 'task',
         id: dependentId,
-        from: "blocked",
-        to: "not-started",
+        from: 'blocked',
+        to: 'not-started',
         reason: `All dependencies of task "${dependentId}" are now complete`,
       });
 
