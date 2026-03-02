@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Worker Repository
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Repository Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -48,6 +48,7 @@ Workers also have project access management through the `worker_project_access` 
 ## Technical Notes
 
 - API key generation and hashing:
+
   ```typescript
   // packages/database/src/repositories/worker-repository.ts
   // Worker repository with secure API key management
@@ -77,11 +78,13 @@ Workers also have project access management through the `worker_project_access` 
     return createHash('sha256').update(rawKey).digest('hex');
   }
   ```
+
 - SHA-256 is appropriate for API key hashing (not bcrypt) because:
   - API keys have high entropy (256 bits), making brute force infeasible
   - SHA-256 is fast, which matters for per-request authentication
   - No salt is needed for high-entropy secrets
 - The `authenticateByApiKey` method does NOT require tenant_id since authentication happens before tenant context is established:
+
   ```typescript
   async authenticateByApiKey(rawApiKey: string) {
     const prefix = rawApiKey.substring(0, PREFIX_LENGTH);
@@ -113,6 +116,7 @@ Workers also have project access management through the `worker_project_access` 
     return worker;
   }
   ```
+
 - Use `crypto.timingSafeEqual` for hash comparison to prevent timing attacks
 - The `regenerateApiKey` method should invalidate the old key immediately (update hash and prefix in a single operation)
 

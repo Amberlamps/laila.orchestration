@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Task Repository
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Repository Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -37,6 +37,7 @@ Implement the task repository providing CRUD operations for tasks within user st
 ## Technical Notes
 
 - Dependency edge management:
+
   ```typescript
   // packages/database/src/repositories/task-repository.ts
   // Task repository with dependency (DAG) edge management
@@ -70,7 +71,9 @@ Implement the task repository providing CRUD operations for tasks within user st
     }).returning();
   }
   ```
+
 - The `getTaskGraph` method returns all data needed for the domain layer to construct and validate the DAG:
+
   ```typescript
   // Returns tasks and edges for building a DAG data structure
   async getTaskGraph(tenantId: string, projectId: string) {
@@ -90,6 +93,7 @@ Implement the task repository providing CRUD operations for tasks within user st
     return { tasks, edges };
   }
   ```
+
 - Bulk status update for cascading changes:
   ```typescript
   // When a story is assigned, all its tasks transition to in_progress

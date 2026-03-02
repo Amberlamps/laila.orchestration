@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Epic Repository
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Repository Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -35,6 +35,7 @@ Implement the epic repository providing CRUD operations for epics within project
 ## Technical Notes
 
 - Derived status computation query:
+
   ```typescript
   // packages/database/src/repositories/epic-repository.ts
   // Epic repository with derived work status computation
@@ -60,11 +61,13 @@ Implement the epic repository providing CRUD operations for epics within project
     return deriveEpicStatus(statusCounts);
   }
   ```
+
 - The `reorder` method should use a transaction to update all sort_order values atomically:
   ```typescript
   await db.transaction(async (tx) => {
     for (let i = 0; i < epicIds.length; i++) {
-      await tx.update(epics)
+      await tx
+        .update(epics)
         .set({ sortOrder: i, updatedAt: new Date() })
         .where(and(eq(epics.id, epicIds[i]), eq(epics.tenantId, tenantId)));
     }

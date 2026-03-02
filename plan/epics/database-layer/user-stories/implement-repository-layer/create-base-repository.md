@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Base Repository
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Repository Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -38,6 +38,7 @@ Create the base repository abstraction that all entity-specific repositories ext
 ## Technical Notes
 
 - Base repository pattern with Drizzle:
+
   ```typescript
   // packages/database/src/repositories/base-repository.ts
   // Base repository providing mandatory tenant scoping, pagination,
@@ -51,8 +52,8 @@ Create the base repository abstraction that all entity-specific repositories ext
     constructor(entityName: string, id: string, expectedVersion: number) {
       super(
         `Optimistic locking conflict: ${entityName} ${id} has been modified. ` +
-        `Expected version ${expectedVersion} but found a newer version. ` +
-        `Retry with the latest version.`
+          `Expected version ${expectedVersion} but found a newer version. ` +
+          `Retry with the latest version.`,
       );
       this.name = 'ConflictError';
     }
@@ -61,25 +62,24 @@ Create the base repository abstraction that all entity-specific repositories ext
   // Ensures all queries include tenant_id — the type system prevents omission
   export type TenantScopedQuery<T> = T & { tenantId: string };
   ```
+
 - The base repository should use Drizzle's query builder, not raw SQL, for type safety
 - Soft-delete filter pattern: `and(eq(table.tenantId, tenantId), isNull(table.deletedAt))`
 - Optimistic locking update pattern:
+
   ```typescript
   // Optimistic locking: only update if version matches, increment version
   const result = await db
     .update(table)
     .set({ ...data, version: sql`${table.version} + 1`, updatedAt: new Date() })
-    .where(and(
-      eq(table.id, id),
-      eq(table.tenantId, tenantId),
-      eq(table.version, expectedVersion),
-    ))
+    .where(and(eq(table.id, id), eq(table.tenantId, tenantId), eq(table.version, expectedVersion)))
     .returning();
 
   if (result.length === 0) {
     throw new ConflictError(entityName, id, expectedVersion);
   }
   ```
+
 - Consider using a generic type parameter for the table to make the base repository work across all entities:
   ```typescript
   export function createBaseRepository<TTable extends PgTable>(table: TTable, db: Database) { ... }

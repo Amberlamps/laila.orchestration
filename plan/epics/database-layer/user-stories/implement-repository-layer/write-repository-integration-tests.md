@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Repository Integration Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Repository Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -62,6 +62,7 @@ Integration tests differ from unit tests in that they execute actual SQL against
 ## Technical Notes
 
 - Test database setup with Vitest:
+
   ```typescript
   // packages/database/src/repositories/__tests__/setup.ts
   // Test setup for repository integration tests
@@ -84,7 +85,9 @@ Integration tests differ from unit tests in that they execute actual SQL against
   // Transaction-based isolation: wrap each test in a transaction and roll back
   // This ensures tests don't interfere with each other
   ```
+
 - Transaction rollback pattern for test isolation:
+
   ```typescript
   import { sql } from 'drizzle-orm';
 
@@ -96,7 +99,9 @@ Integration tests differ from unit tests in that they execute actual SQL against
     await db.execute(sql`ROLLBACK`);
   });
   ```
+
 - Create test fixture factories that generate properly typed test data:
+
   ```typescript
   // packages/database/src/repositories/__tests__/fixtures.ts
   // Test data factories for repository integration tests
@@ -120,6 +125,7 @@ Integration tests differ from unit tests in that they execute actual SQL against
     };
   }
   ```
+
 - Neon database branches are ideal for test databases — they are instant copies that can be discarded
 - Consider using a Vitest globalSetup that runs migrations before tests and drops the test branch after
 - For optimistic locking tests, simulate concurrent updates by using two separate update calls with the same version

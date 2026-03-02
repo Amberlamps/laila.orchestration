@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Story Repository
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Repository Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -14,6 +14,7 @@
 Implement the user story repository providing CRUD operations for user stories within epics. User stories are the unit of work assignment — they are assigned to workers, track execution cost, and manage retry attempts. The repository must enforce special rules around in-progress stories and assignment lifecycle.
 
 Key behaviors:
+
 - Stories that are `in_progress` cannot have their core fields modified (read-only enforcement during execution)
 - Assignment tracking: setting/clearing `assigned_worker_id` and `assigned_at`
 - Attempt management: incrementing `attempts` counter and logging to attempt_history
@@ -48,6 +49,7 @@ Key behaviors:
 ## Technical Notes
 
 - Assignment must be atomic to prevent race conditions:
+
   ```typescript
   // packages/database/src/repositories/story-repository.ts
   // Story repository with assignment lifecycle management
@@ -101,6 +103,7 @@ Key behaviors:
     });
   }
   ```
+
 - The `findReadyForAssignment` query is one of the most performance-critical queries in the system — it's called on every work assignment request. Ensure the composite index `(tenant_id, work_status)` supports this efficiently
 - Priority ordering: use a CASE expression or a priority-to-integer mapping for sorting:
   ```sql

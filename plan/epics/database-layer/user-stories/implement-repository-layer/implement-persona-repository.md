@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Persona Repository
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Repository Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -33,6 +33,7 @@ Implement the persona repository providing CRUD operations for persona managemen
 ## Technical Notes
 
 - Deletion guard implementation:
+
   ```typescript
   // packages/database/src/repositories/persona-repository.ts
   // Persona repository with deletion guard for active task references
@@ -68,6 +69,7 @@ Implement the persona repository providing CRUD operations for persona managemen
       ));
   }
   ```
+
 - Title uniqueness is enforced by the database unique index, but the repository should catch the unique constraint violation and throw a user-friendly `ValidationError` instead of exposing the raw database error
 - Personas use physical deletion (not soft-delete) since they are reference data, not transactional entities. Once safe to delete, they are permanently removed.
 - The `findWithTaskCounts` method can use a SQL aggregation to count tasks by status:
@@ -79,10 +81,10 @@ Implement the persona repository providing CRUD operations for persona managemen
       totalCount: sql<number>`count(*)`,
     })
     .from(personasTable)
-    .leftJoin(tasksTable, and(
-      eq(tasksTable.personaId, personasTable.id),
-      isNull(tasksTable.deletedAt),
-    ))
+    .leftJoin(
+      tasksTable,
+      and(eq(tasksTable.personaId, personasTable.id), isNull(tasksTable.deletedAt)),
+    )
     .where(and(eq(personasTable.id, id), eq(personasTable.tenantId, tenantId)))
     .groupBy(personasTable.id);
   ```

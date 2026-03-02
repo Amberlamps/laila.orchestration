@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Project Repository
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Repository Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -35,6 +35,7 @@ The project repository is the entry point for the work hierarchy — creating, u
 ## Technical Notes
 
 - Status transition validation:
+
   ```typescript
   // packages/database/src/repositories/project-repository.ts
   // Project repository with lifecycle status transition validation
@@ -55,11 +56,12 @@ The project repository is the entry point for the work hierarchy — creating, u
     if (!allowed || !allowed.includes(next)) {
       throw new ValidationError(
         `Invalid lifecycle transition: '${current}' -> '${next}'. ` +
-        `Allowed transitions from '${current}': [${allowed?.join(', ') ?? 'none'}]`
+          `Allowed transitions from '${current}': [${allowed?.join(', ') ?? 'none'}]`,
       );
     }
   }
   ```
+
 - Cascade soft-delete should be implemented as a transaction:
   ```typescript
   // Cascade soft-delete: mark project and all children as deleted
