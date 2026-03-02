@@ -1,0 +1,22 @@
+{
+  "name": "@laila/api-spec",
+  "version": "0.0.0",
+  "private": true,
+  "description": "OpenAPI 3.1 specification and generated TypeScript types for the laila.works Orchestration Service API",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "generate": "npx openapi-typescript openapi.yaml -o generated/api.ts",
+    "lint:spec": "npx spectral lint openapi.yaml",
+    "check:freshness": "npx tsx scripts/generate.ts --check"
+  },
+  "devDependencies": {
+    "@stoplight/spectral-cli": "^6.15.0",
+    "@types/node": "^25.3.3",
+    "openapi-typescript": "^7.13.0"
+  }
+}

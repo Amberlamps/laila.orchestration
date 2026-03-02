@@ -1,0 +1,30 @@
+# .spectral.yaml
+# Spectral linting ruleset for the laila.works Orchestration Service API
+# Enforces API design standards: consistent naming, required error responses,
+# pagination patterns, and OpenAPI best practices.
+#
+# See: https://docs.stoplight.io/docs/spectral/
+
+extends:
+  - 'spectral:oas'
+
+rules:
+  # --- Built-in OAS rules (severity overrides) ---
+  # Ensure every operation has an operationId
+  operation-operationId: error
+
+  # Require a description on every operation
+  operation-description: warn
+
+  # Require tags on every operation for documentation grouping
+  operation-tags: warn
+
+  # Require an info contact object
+  info-contact: off
+
+  # --- Custom rules will be added as the API surface grows ---
+  # Examples of future rules:
+  #   - Require error response schemas on 4xx/5xx
+  #   - Enforce consistent pagination query parameters
+  #   - Enforce kebab-case path segments
+  #   - Require request body content-type application/json

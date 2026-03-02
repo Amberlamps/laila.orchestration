@@ -1,0 +1,16 @@
+{
+  "name": "@laila/domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./orchestration": "./src/orchestration/index.ts",
+    "./dag": "./src/dag/index.ts",
+    "./status": "./src/status/index.ts",
+    "./validation": "./src/validation/index.ts"
+  },
+  "dependencies": {
+    "@laila/shared": "workspace:*"
+  }
+}

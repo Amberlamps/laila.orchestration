@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Scaffold Domain Package
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Scaffold Workspace Packages](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)
@@ -16,6 +16,7 @@ Create the `packages/domain` workspace package that contains the core business l
 The domain package follows a clean architecture principle: it depends only on `@laila/shared` for types and schemas, and never on framework-specific code (no Next.js, no HTTP, no database drivers). This ensures business logic is testable in isolation and portable across different execution contexts (API routes, Lambda functions, background jobs).
 
 Directory structure:
+
 - `src/orchestration/` — Work assignment logic, project lifecycle management
 - `src/dag/` — DAG construction, topological sort, cycle detection, dependency resolution
 - `src/status/` — Status transition state machines, derived status computation
