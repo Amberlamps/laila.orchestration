@@ -4,7 +4,7 @@
 
 - **Title:** Database Layer
 - **Description:** Configure Drizzle ORM with Neon, define PostgreSQL schema, implement repository layer, set up DynamoDB access.
-- **Status:** Not Started
+- **Status:** In Progress (laila-agent-1)
 - **Total User Stories:** 5
 - **Dependencies:** Epic 2 (Shared Packages & API Contracts)
 
@@ -12,7 +12,7 @@
 
 | User Story | Description | Status | Tasks | Dependencies |
 | --- | --- | --- | --- | --- |
-| [Configure Drizzle ORM with Neon](./user-stories/configure-drizzle-and-neon/tasks.md) | Set up Neon serverless driver, Drizzle Kit migrations, and database client factory | Not Started | 3 tasks | None |
+| [Configure Drizzle ORM with Neon](./user-stories/configure-drizzle-and-neon/tasks.md) | Set up Neon serverless driver, Drizzle Kit migrations, and database client factory | In Progress (laila-agent-1) | 3 tasks | None |
 | [Define PostgreSQL Schema](./user-stories/define-postgresql-schema/tasks.md) | Define all Drizzle table schemas: auth, projects, epics, stories, tasks, dependencies, workers, personas, attempt history | Not Started | 8 tasks | Configure Drizzle ORM with Neon |
 | [Implement Repository Layer](./user-stories/implement-repository-layer/tasks.md) | Create base repository and entity-specific repositories with tenant scoping | Not Started | 8 tasks | Define PostgreSQL Schema |
 | [Set Up DynamoDB Access Layer](./user-stories/setup-dynamodb-access-layer/tasks.md) | Define DynamoDB audit table schema and implement read/write operations | Not Started | 3 tasks | None |

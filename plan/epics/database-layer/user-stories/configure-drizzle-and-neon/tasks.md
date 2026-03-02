@@ -4,7 +4,7 @@
 
 - **Title:** Configure Drizzle ORM with Neon
 - **Description:** Set up the Neon serverless driver, configure Drizzle Kit for migration generation, and create the database client factory.
-- **Status:** Not Started
+- **Status:** In Progress (laila-agent-1)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
 - **Total Tasks:** 3
 - **Dependencies:** None (Epic 2 must be complete for shared types to be available)
