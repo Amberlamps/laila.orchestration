@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Define DynamoDB Table Schema
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** database-administrator
 - **Parent User Story:** [Set Up DynamoDB Access Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -12,12 +12,14 @@
 ## Description
 
 Define the DynamoDB table schema for the audit log system. DynamoDB is used instead of PostgreSQL for audit logs because it provides:
+
 - Cost-effective storage for high-volume append-only data
 - Automatic TTL-based expiration for log retention policies
 - Seamless scalability without connection management overhead
 - Natural fit for time-series event data with partition key access patterns
 
 The schema design must support two primary access patterns:
+
 1. **By entity:** "Show me all audit events for project X" (partition key query)
 2. **By actor:** "Show me all actions performed by user Y" (GSI query)
 
@@ -40,6 +42,7 @@ The schema design must support two primary access patterns:
 ## Technical Notes
 
 - DynamoDB schema definition:
+
   ```typescript
   // packages/database/src/dynamo/schema.ts
   // DynamoDB audit log table schema definition
@@ -50,8 +53,8 @@ The schema design must support two primary access patterns:
   export const ACTOR_INDEX_NAME = 'actorId-timestamp-index';
 
   // Key attribute names
-  export const PARTITION_KEY = 'entityId';      // e.g., "project:uuid" or "task:uuid"
-  export const SORT_KEY = 'timestamp#eventId';  // e.g., "2026-03-01T12:00:00Z#uuid"
+  export const PARTITION_KEY = 'entityId'; // e.g., "project:uuid" or "task:uuid"
+  export const SORT_KEY = 'timestamp#eventId'; // e.g., "2026-03-01T12:00:00Z#uuid"
 
   // Audit event item type
   export interface AuditEventItem {
@@ -84,6 +87,7 @@ The schema design must support two primary access patterns:
     expiresAt?: number;
   }
   ```
+
 - The composite sort key `timestamp#eventId` ensures:
   1. Events are ordered chronologically (timestamp prefix)
   2. Events at the same millisecond are uniquely identified (event UUID suffix)

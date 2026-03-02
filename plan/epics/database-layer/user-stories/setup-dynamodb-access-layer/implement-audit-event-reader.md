@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Audit Event Reader
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Set Up DynamoDB Access Layer](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -17,6 +17,7 @@ Implement the audit event reader that queries audit events from DynamoDB. The re
 2. **By actor** — Query all audit events performed by a specific actor (e.g., all actions by user Y), using the GSI
 
 Both patterns support:
+
 - Cursor-based pagination (using DynamoDB's `LastEvaluatedKey` as the cursor)
 - Time range filtering (events between start and end timestamps)
 - Configurable page size
@@ -46,6 +47,7 @@ Both patterns support:
 ## Technical Notes
 
 - Entity query implementation:
+
   ```typescript
   // packages/database/src/dynamo/audit-reader.ts
   // Reads audit events from DynamoDB with cursor-based pagination
@@ -55,16 +57,16 @@ Both patterns support:
   import { AUDIT_TABLE_NAME, ACTOR_INDEX_NAME, type AuditEventItem } from './schema';
 
   export interface AuditQueryOptions {
-    limit?: number;         // Page size (default 50, max 100)
-    cursor?: string;        // Opaque pagination cursor (base64 encoded LastEvaluatedKey)
-    startTime?: string;     // ISO timestamp — filter events from this time
-    endTime?: string;       // ISO timestamp — filter events until this time
+    limit?: number; // Page size (default 50, max 100)
+    cursor?: string; // Opaque pagination cursor (base64 encoded LastEvaluatedKey)
+    startTime?: string; // ISO timestamp — filter events from this time
+    endTime?: string; // ISO timestamp — filter events until this time
     order?: 'asc' | 'desc'; // Sort order (default 'desc' — newest first)
   }
 
   export interface AuditQueryResult {
     events: AuditEventItem[];
-    cursor: string | null;  // Null when no more pages
+    cursor: string | null; // Null when no more pages
     count: number;
   }
 
@@ -124,6 +126,7 @@ Both patterns support:
     };
   }
   ```
+
 - GSI query for actor follows the same pattern but specifies `IndexName: ACTOR_INDEX_NAME` and uses `actorId` as the partition key with `timestamp` as the sort key
 - Cursor encoding: `LastEvaluatedKey` is a DynamoDB-specific object — base64url-encoding it creates an opaque cursor string that clients can pass back for the next page
 - Time range filtering leverages the sort key's ISO timestamp prefix for efficient range scans without requiring filter expressions

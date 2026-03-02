@@ -12,4 +12,31 @@
  * - Query operations designed around access patterns
  */
 
-export {};
+export {
+  AUDIT_TABLE_NAME,
+  ACTOR_INDEX_NAME,
+  PARTITION_KEY,
+  SORT_KEY,
+  GSI_PARTITION_KEY,
+  GSI_SORT_KEY,
+  TTL_ATTRIBUTE,
+  AUDIT_TABLE_KEY_SCHEMA,
+  type AuditEventItem,
+} from './schema';
+
+export { createDynamoClient, type DynamoClientOptions } from './client';
+
+export {
+  writeAuditEvent,
+  writeAuditEventBatch,
+  AuditWriteError,
+  type AuditEventInput,
+} from './audit-writer';
+
+export {
+  queryByEntity,
+  queryByActor,
+  AuditReaderError,
+  type AuditQueryOptions,
+  type AuditQueryResult,
+} from './audit-reader';
