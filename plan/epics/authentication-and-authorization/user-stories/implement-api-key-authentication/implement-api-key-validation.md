@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement API Key Validation
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** security-engineer
 - **Parent User Story:** [Implement API Key Authentication](./tasks.md)
 - **Parent Epic:** [Authentication & Authorization](../../user-stories.md)
@@ -29,17 +29,17 @@ Implement the API key validation middleware that authenticates incoming requests
 // packages/web/src/lib/middleware/api-key-validator.ts
 // Validates API keys from the Authorization header for agent requests.
 // Uses prefix-based O(1) lookup followed by SHA-256 hash comparison.
-import type { NextApiRequest } from "next";
-import { hashApiKey, extractPrefix, isValidKeyFormat } from "@/lib/api-keys";
-import { db } from "@laila/database";
-import { apiKeys, workers } from "@laila/database/schema";
-import { eq, and } from "drizzle-orm";
-import { timingSafeEqual } from "node:crypto";
+import type { NextApiRequest } from 'next';
+import { hashApiKey, extractPrefix, isValidKeyFormat } from '@/lib/api-keys';
+import { db } from '@laila/database';
+import { apiKeys, workers } from '@laila/database/schema';
+import { eq, and } from 'drizzle-orm';
+import { timingSafeEqual } from 'node:crypto';
 
 // The authenticated worker context injected into the request
 // after successful API key validation.
 export interface WorkerAuthContext {
-  type: "agent";
+  type: 'agent';
   workerId: string;
   workerName: string;
   tenantId: string;
@@ -55,15 +55,13 @@ export interface WorkerAuthContext {
  * timing attacks. Updates last_used_at asynchronously to avoid
  * adding latency to the request path.
  */
-export async function validateApiKey(
-  req: NextApiRequest
-): Promise<WorkerAuthContext | null> {
+export async function validateApiKey(req: NextApiRequest): Promise<WorkerAuthContext | null> {
   // Step 1: Extract the Bearer token from the Authorization header.
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return null;
   }
-  const token = authHeader.slice("Bearer ".length);
+  const token = authHeader.slice('Bearer '.length);
 
   // Step 2: Validate the key format (lw_ + 48 hex chars).
   // Early rejection of malformed keys avoids unnecessary database queries.
@@ -89,10 +87,7 @@ export async function validateApiKey(
   // This prevents timing attacks that could leak hash information.
   const providedHash = hashApiKey(token);
   const storedHash = keyRecord.hashedKey;
-  const isMatch = timingSafeEqual(
-    Buffer.from(providedHash, "hex"),
-    Buffer.from(storedHash, "hex")
-  );
+  const isMatch = timingSafeEqual(Buffer.from(providedHash, 'hex'), Buffer.from(storedHash, 'hex'));
 
   if (!isMatch) {
     return null;
@@ -105,17 +100,14 @@ export async function validateApiKey(
 
   // Step 7: Update last_used_at asynchronously (fire-and-forget).
   // This does not block the request path.
-  void db
-    .update(apiKeys)
-    .set({ lastUsedAt: new Date() })
-    .where(eq(apiKeys.id, keyRecord.id));
+  void db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, keyRecord.id));
 
   // Step 8: Load project access permissions for the worker.
   const projectAccess = await loadWorkerProjectAccess(keyRecord.workerId);
 
   // Step 9: Return the authenticated worker context.
   return {
-    type: "agent",
+    type: 'agent',
     workerId: keyRecord.workerId,
     workerName: keyRecord.worker.name,
     tenantId: keyRecord.worker.tenantId,
@@ -127,9 +119,7 @@ export async function validateApiKey(
  * Load the project IDs that a worker has been granted access to.
  * Used to scope the worker's operations to authorized projects only.
  */
-async function loadWorkerProjectAccess(
-  workerId: string
-): Promise<string[]> {
+async function loadWorkerProjectAccess(workerId: string): Promise<string[]> {
   // Query the worker_project_access junction table
   // to get all project IDs this worker can operate on.
   const accessRecords = await db.query.workerProjectAccess.findMany({

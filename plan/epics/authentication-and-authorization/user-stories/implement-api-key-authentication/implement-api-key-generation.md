@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement API Key Generation
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** security-engineer
 - **Parent User Story:** [Implement API Key Authentication](./tasks.md)
 - **Parent Epic:** [Authentication & Authorization](../../user-stories.md)
@@ -33,11 +33,11 @@ The API key format is: `lw_` + 48 hexadecimal characters (from `crypto.randomByt
 // API key generation utilities for execution agent authentication.
 // Keys use the format: lw_ + 48 hex chars (192 bits of entropy).
 // Only the SHA-256 hash is persisted; plaintext is revealed once.
-import { randomBytes, createHash } from "node:crypto";
+import { randomBytes, createHash } from 'node:crypto';
 
 // Prefix that identifies all laila.works API keys.
 // Used for visual identification and lookup optimization.
-const API_KEY_PREFIX = "lw_";
+const API_KEY_PREFIX = 'lw_';
 
 // Number of random bytes to generate (24 bytes = 48 hex chars).
 // Provides 192 bits of entropy, sufficient for API key security.
@@ -63,16 +63,14 @@ export interface GeneratedApiKey {
  */
 export function generateApiKey(): GeneratedApiKey {
   // Generate 24 cryptographically random bytes.
-  const randomHex = randomBytes(KEY_BYTES).toString("hex");
+  const randomHex = randomBytes(KEY_BYTES).toString('hex');
 
   // Construct the full key: lw_ + 48 hex characters.
   const plaintextKey = `${API_KEY_PREFIX}${randomHex}`;
 
   // Hash the full key with SHA-256 for secure storage.
   // The hash is what gets stored in the database.
-  const hashedKey = createHash("sha256")
-    .update(plaintextKey)
-    .digest("hex");
+  const hashedKey = createHash('sha256').update(plaintextKey).digest('hex');
 
   // Extract the lookup prefix from the hex body (not the lw_ prefix).
   // This is stored alongside the hash for O(1) key resolution.
@@ -86,7 +84,7 @@ export function generateApiKey(): GeneratedApiKey {
  * Used during key validation to compare against the database.
  */
 export function hashApiKey(plaintextKey: string): string {
-  return createHash("sha256").update(plaintextKey).digest("hex");
+  return createHash('sha256').update(plaintextKey).digest('hex');
 }
 
 /**
@@ -112,6 +110,7 @@ export function isValidKeyFormat(key: string): boolean {
 ### API Endpoint
 
 Create a POST endpoint (e.g., `POST /api/workers/:workerId/api-keys`) that:
+
 1. Validates the requesting user owns the worker (authorization check)
 2. Calls `generateApiKey()` to produce the key material
 3. Stores `hashedKey` and `prefix` in the `api_keys` table linked to the worker

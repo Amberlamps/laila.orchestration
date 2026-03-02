@@ -71,6 +71,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@laila/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@laila/domain':
         specifier: workspace:*
         version: link:../../packages/domain
@@ -83,6 +86,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      drizzle-orm:
+        specifier: ^0.45.1
+        version: 0.45.1(@neondatabase/serverless@1.0.2)(@types/pg@8.18.0)
       lucide-react:
         specifier: ^0.468.0
         version: 0.468.0(react@18.3.1)
