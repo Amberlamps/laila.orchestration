@@ -12,7 +12,7 @@ The architecture is a TypeScript monorepo (pnpm workspaces) with Next.js 14 (Pag
 
 | Epic | Description | Status | User Stories | Dependencies |
 | --- | --- | --- | --- | --- |
-| [1. Project Setup & Monorepo Scaffold](./epics/project-setup/user-stories.md) | Initialize pnpm monorepo, TypeScript config, linting, formatting, CI pipeline, and dev environment | Not Started | 4 stories | None |
+| [1. Project Setup & Monorepo Scaffold](./epics/project-setup/user-stories.md) | Initialize pnpm monorepo, TypeScript config, linting, formatting, CI pipeline, and dev environment | In Progress (laila-agent-1) | 4 stories | None |
 | [2. Shared Packages & API Contracts](./epics/shared-packages-and-api-contracts/user-stories.md) | Implement @laila/shared Zod schemas, types, constants, and contract-first OpenAPI specification | Not Started | 2 stories | Epic 1 |
 | [3. Database Layer](./epics/database-layer/user-stories.md) | Configure Drizzle ORM with Neon, define PostgreSQL schema, implement repository layer, set up DynamoDB access | Not Started | 5 stories | Epic 2 |
 | [4. Authentication & Authorization](./epics/authentication-and-authorization/user-stories.md) | Better Auth with Google OAuth, API key authentication, auth middleware, protected routes | Not Started | 3 stories | Epic 3 |
