@@ -82,12 +82,7 @@ export default tseslint.config(
       "import-x/resolver-next": [
         createTypeScriptImportResolver({
           alwaysTryTypes: true,
-          project: [
-            "./tsconfig.base.json",
-            "./apps/*/tsconfig.json",
-            "./packages/*/tsconfig.json",
-            "./functions/*/tsconfig.json",
-          ],
+          project: ["apps/*/tsconfig.json", "packages/*/tsconfig.json"],
         }),
       ],
     },

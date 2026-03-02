@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Set Up Better Auth Server
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** security-engineer
 - **Parent User Story:** [Configure Better Auth with Google OAuth](./tasks.md)
 - **Parent Epic:** [Authentication & Authorization](../../user-stories.md)
@@ -36,7 +36,7 @@ The Better Auth server instance should be created in a shared auth configuration
 // packages/web/src/lib/auth.ts
 // Configure the Better Auth server instance with Google OAuth,
 // JWT sessions, and secure cookie settings.
-import { betterAuth } from "better-auth";
+import { betterAuth } from 'better-auth';
 
 export const auth = betterAuth({
   // BETTER_AUTH_SECRET is used for token signing and encryption.
@@ -53,11 +53,11 @@ export const auth = betterAuth({
     // 15-minute JWT access tokens with 30-day refresh tokens.
     // Access tokens are short-lived to limit exposure window.
     // Refresh tokens enable seamless re-authentication.
-    expiresIn: 60 * 15,         // 15 minutes in seconds
-    updateAge: 60 * 60 * 24,    // update session age every 24 hours
+    expiresIn: 60 * 15, // 15 minutes in seconds
+    updateAge: 60 * 60 * 24, // update session age every 24 hours
     cookieCache: {
       enabled: true,
-      maxAge: 60 * 5,           // cache cookie for 5 minutes
+      maxAge: 60 * 5, // cache cookie for 5 minutes
     },
   },
   // Additional configuration for database adapter will be
