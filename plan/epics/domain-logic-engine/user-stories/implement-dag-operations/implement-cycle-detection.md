@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Cycle Detection
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement DAG Operations](./tasks.md)
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
@@ -49,9 +49,7 @@ export type AdjacencyList = Map<string, Set<string>>;
  * Either the proposed edge is safe, or a cycle was detected
  * with a description of the cycle path.
  */
-export type CycleCheckResult =
-  | { hasCycle: false }
-  | { hasCycle: true; cyclePath: string[] };
+export type CycleCheckResult = { hasCycle: false } | { hasCycle: true; cyclePath: string[] };
 ```
 
 ### Cycle Detection Algorithm
@@ -63,7 +61,7 @@ Use DFS with three coloring states (white/gray/black) to detect back edges:
 // DFS-based cycle detection for the task dependency DAG.
 // Validates that adding a proposed edge does not create a cycle.
 // Uses three-color DFS: white (unvisited), gray (in-progress), black (finished).
-import type { AdjacencyList, DagEdge, CycleCheckResult } from "./types";
+import type { AdjacencyList, DagEdge, CycleCheckResult } from './types';
 
 /**
  * Check if adding a proposed edge would create a cycle in the DAG.
@@ -84,10 +82,7 @@ import type { AdjacencyList, DagEdge, CycleCheckResult } from "./types";
  * Time complexity: O(V + E) where V is the number of nodes and E is edges.
  * Space complexity: O(V) for the visited/recursion stack sets.
  */
-export function detectCycle(
-  adjacencyList: AdjacencyList,
-  proposedEdge: DagEdge
-): CycleCheckResult {
+export function detectCycle(adjacencyList: AdjacencyList, proposedEdge: DagEdge): CycleCheckResult {
   // Self-loop check: a task cannot depend on itself.
   if (proposedEdge.from === proposedEdge.to) {
     return {
@@ -164,9 +159,7 @@ export function buildAdjacencyList(edges: DagEdge[]): AdjacencyList {
  * @param adjacencyList - The full DAG to validate
  * @returns CycleCheckResult indicating whether any cycle exists
  */
-export function validateAcyclicity(
-  adjacencyList: AdjacencyList
-): CycleCheckResult {
+export function validateAcyclicity(adjacencyList: AdjacencyList): CycleCheckResult {
   // Three-color DFS across all components.
   // White: not yet visited (default).
   // Gray: currently in the DFS recursion stack.

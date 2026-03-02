@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Derived Dependency Computation
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement DAG Operations](./tasks.md)
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
@@ -22,7 +22,7 @@ These derived dependencies are computed on-the-fly (not stored in the database) 
 // Derive user-story-level and epic-level dependency graphs
 // from the task-level DAG. Dependencies roll up: if any task
 // in Story A depends on a task in Story B, Story A depends on Story B.
-import type { AdjacencyList, DagEdge } from "./types";
+import type { AdjacencyList, DagEdge } from './types';
 
 /**
  * Mapping from a task ID to its parent container (story or epic).
@@ -63,7 +63,7 @@ export interface DerivedDependencyGraph {
  */
 export function deriveStoryDependencies(
   taskAdjacencyList: AdjacencyList,
-  taskGroupings: Map<string, TaskGrouping>
+  taskGroupings: Map<string, TaskGrouping>,
 ): DerivedDependencyGraph {
   const storyAdjacencyList: AdjacencyList = new Map();
   const edgeProvenance = new Map<string, DagEdge[]>();
@@ -116,7 +116,7 @@ export function deriveStoryDependencies(
  */
 export function deriveEpicDependencies(
   storyAdjacencyList: AdjacencyList,
-  storyToEpic: Map<string, string>
+  storyToEpic: Map<string, string>,
 ): DerivedDependencyGraph {
   const epicAdjacencyList: AdjacencyList = new Map();
   const edgeProvenance = new Map<string, DagEdge[]>();
@@ -162,15 +162,12 @@ export function deriveEpicDependencies(
  */
 export function deriveAllDependencies(
   taskAdjacencyList: AdjacencyList,
-  taskGroupings: Map<string, TaskGrouping>
+  taskGroupings: Map<string, TaskGrouping>,
 ): {
   storyDependencies: DerivedDependencyGraph;
   epicDependencies: DerivedDependencyGraph;
 } {
-  const storyDependencies = deriveStoryDependencies(
-    taskAdjacencyList,
-    taskGroupings
-  );
+  const storyDependencies = deriveStoryDependencies(taskAdjacencyList, taskGroupings);
 
   // Build story-to-epic mapping from the task groupings.
   const storyToEpic = new Map<string, string>();
@@ -178,10 +175,7 @@ export function deriveAllDependencies(
     storyToEpic.set(grouping.userStoryId, grouping.epicId);
   }
 
-  const epicDependencies = deriveEpicDependencies(
-    storyDependencies.adjacencyList,
-    storyToEpic
-  );
+  const epicDependencies = deriveEpicDependencies(storyDependencies.adjacencyList, storyToEpic);
 
   return { storyDependencies, epicDependencies };
 }

@@ -12,5 +12,8 @@
   },
   "dependencies": {
     "@laila/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "fast-check": "^4.5.3"
   }
 }

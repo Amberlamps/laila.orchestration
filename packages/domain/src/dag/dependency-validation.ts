@@ -1,35 +1,8 @@
-# Implement Dependency Validation
-
-## Task Details
-
-- **Title:** Implement Dependency Validation
-- **Status:** Complete
-- **Assigned Agent:** backend-developer
-- **Parent User Story:** [Implement DAG Operations](./tasks.md)
-- **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
-- **Dependencies:** Implement Cycle Detection
-
-## Description
-
-Implement comprehensive dependency validation rules that must pass before a new dependency edge can be added to the task DAG. Cycle detection is one check; this task implements all the other structural and semantic validations.
-
-Each validation function is pure — it takes the current graph state and proposed change as input and returns a validation result. The API layer will call these validators before persisting any dependency changes.
-
-### Validation Rules
-
-1. **Task existence:** Both the source and target task IDs must exist within the project
-2. **Same-project constraint:** Both tasks must belong to the same project
-3. **Finish-to-start semantics:** The dependency means "target must complete before source can start"
-4. **No self-dependencies:** A task cannot depend on itself
-5. **No duplicate edges:** The exact same dependency edge cannot be added twice
-6. **Active work safety:** Adding a dependency to a task that is currently in-progress or complete must be rejected if it would invalidate the current state (e.g., making a completed task depend on an incomplete task)
-
-```typescript
-// packages/domain/src/dag/dependency-validation.ts
 // Validates proposed dependency changes against structural and semantic rules.
 // All functions are pure — no database calls, no side effects.
-import type { AdjacencyList, DagEdge, CycleCheckResult } from './types';
 import { detectCycle } from './cycle-detection';
+
+import type { AdjacencyList, DagEdge } from './types';
 
 /**
  * Complete result of dependency validation.
@@ -104,14 +77,8 @@ export function validateDependency(
     });
   }
 
-  // If either task doesn't exist, skip further checks
-  // (they require task metadata).
-  if (!fromTask || !toTask) {
-    return { valid: false, errors };
-  }
-
-  // Rule 2: Same-project constraint.
-  if (fromTask.projectId !== toTask.projectId) {
+  // Rule 2: Same-project constraint (requires both tasks to exist).
+  if (fromTask && toTask && fromTask.projectId !== toTask.projectId) {
     errors.push({
       code: 'CROSS_PROJECT',
       message: 'Dependencies cannot cross project boundaries',
@@ -156,17 +123,17 @@ export function validateDependency(
     }
   }
 
-  // Rule 6: Active work safety.
+  // Rule 6: Active work safety (requires fromTask to exist).
   // If the source task (the one gaining a dependency) is already
   // in-progress or complete, adding a new dependency is dangerous.
-  if (fromTask.status === 'in-progress') {
+  if (fromTask?.status === 'in-progress') {
     errors.push({
       code: 'ACTIVE_WORK_CONFLICT',
       message: 'Cannot add dependency to a task that is currently in progress',
       details: { taskId: fromTask.id, status: fromTask.status },
     });
   }
-  if (fromTask.status === 'complete') {
+  if (fromTask?.status === 'complete') {
     errors.push({
       code: 'ACTIVE_WORK_CONFLICT',
       message: 'Cannot add dependency to a completed task',
@@ -200,50 +167,21 @@ export function validateDependencyRemoval(
     errors.push({
       code: 'TASK_NOT_FOUND',
       message: `Task "${proposedRemoval.from}" does not exist`,
+      details: { taskId: proposedRemoval.from },
     });
   }
 
-  // Removing a dependency from an in-progress task could be
-  // confusing but is generally safe (it makes the task "more free").
-  // However, we log a warning for this case.
+  const toTask = tasks.get(proposedRemoval.to);
+  if (!toTask) {
+    errors.push({
+      code: 'TASK_NOT_FOUND',
+      message: `Task "${proposedRemoval.to}" does not exist`,
+      details: { taskId: proposedRemoval.to },
+    });
+  }
 
   return {
     valid: errors.length === 0,
     errors,
   };
 }
-```
-
-## Acceptance Criteria
-
-- [ ] `validateDependency()` checks all six validation rules and collects all errors (no short-circuit)
-- [ ] Non-existent task IDs are detected with `TASK_NOT_FOUND` error
-- [ ] Cross-project dependencies are rejected with `CROSS_PROJECT` error
-- [ ] Self-dependencies are rejected with `SELF_DEPENDENCY` error
-- [ ] Duplicate edges are rejected with `DUPLICATE_EDGE` error
-- [ ] Cycles are detected via delegation to the cycle detection module with `CYCLE_DETECTED` error
-- [ ] Adding dependencies to in-progress or completed tasks is rejected with `ACTIVE_WORK_CONFLICT` error
-- [ ] `validateDependencyRemoval()` validates edge removal safety
-- [ ] All validation errors include descriptive messages and relevant details
-- [ ] Error codes are machine-readable string literals (for API error responses)
-- [ ] All functions are pure — no side effects, no database calls
-- [ ] All types are properly exported for use by the API layer
-- [ ] No `any` types used
-
-## Technical Notes
-
-- The validator collects ALL errors rather than short-circuiting on the first failure. This allows the UI to display all issues at once, improving the user experience.
-- The `TaskValidationInfo` type is a minimal projection of the task record. The API layer is responsible for loading the full task records and extracting this subset.
-- The `ACTIVE_WORK_CONFLICT` check prevents dangerous state transitions. A completed task gaining a new dependency would retroactively invalidate its completion. An in-progress task gaining a new dependency could block it when it was previously ready.
-- Consider adding a `validateBulkDependencies()` function that validates multiple proposed edges at once, checking for mutual conflicts between the proposed edges themselves.
-- The validation result type is designed for easy serialization to JSON API error responses.
-
-## References
-
-- **Functional Requirements:** FR-DAG-005 (dependency validation rules), FR-DAG-006 (error reporting)
-- **Design Specification:** Section 5.1.4 (Dependency Validation), Section 5.1.5 (Active Work Safety)
-- **Project Setup:** Domain package structure, error type conventions
-
-## Estimated Complexity
-
-Medium — The individual validation rules are straightforward, but combining them all into a non-short-circuiting validator with proper error types and detail extraction requires careful design. The active work safety rule introduces state-awareness that the other pure validators don't have.
