@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Auth Integration Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Configure Better Auth with Google OAuth](./tasks.md)
 - **Parent Epic:** [Authentication & Authorization](../../user-stories.md)
@@ -41,16 +41,16 @@ The tests should cover:
 // packages/web/src/tests/auth/oauth-flow.test.ts
 // Integration tests for the complete Google OAuth authentication flow.
 // Uses mocked Google endpoints to test the full request/response cycle.
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createTestServer } from "@/tests/helpers/test-server";
-import { createTestDatabase } from "@/tests/helpers/test-database";
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { createTestServer } from '@/tests/helpers/test-server';
+import { createTestDatabase } from '@/tests/helpers/test-database';
 
-describe("Google OAuth Flow", () => {
+describe('Google OAuth Flow', () => {
   // Set up a test database and HTTP server for each test.
   // The test server wraps the Next.js API routes with
   // the same middleware stack used in production.
 
-  it("should create a user and session on first OAuth callback", async () => {
+  it('should create a user and session on first OAuth callback', async () => {
     // 1. Mock Google token exchange to return a valid access token
     // 2. Mock Google userinfo to return test user profile
     // 3. Call GET /api/auth/callback/google?code=mock_code
@@ -59,15 +59,15 @@ describe("Google OAuth Flow", () => {
     // 6. Assert: GET /api/auth/session returns authenticated user
   });
 
-  it("should link OAuth account to existing user on repeat sign-in", async () => {
+  it('should link OAuth account to existing user on repeat sign-in', async () => {
     // Verify idempotent behavior when same Google user signs in again
   });
 
-  it("should return null session for unauthenticated request", async () => {
+  it('should return null session for unauthenticated request', async () => {
     // GET /api/auth/session without cookies should return null
   });
 
-  it("should invalidate session on sign-out", async () => {
+  it('should invalidate session on sign-out', async () => {
     // 1. Sign in via mocked OAuth
     // 2. POST /api/auth/signout with session cookie
     // 3. Assert: session cookie cleared

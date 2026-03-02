@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Auth API Route
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Configure Better Auth with Google OAuth](./tasks.md)
 - **Parent Epic:** [Authentication & Authorization](../../user-stories.md)
@@ -23,9 +23,9 @@ In Next.js Pages Router, a catch-all route at `pages/api/auth/[...betterauth].ts
 // - GET /api/auth/callback/google — handle OAuth callback
 // - GET /api/auth/session — get current session
 // - POST /api/auth/signout — invalidate session
-import type { NextApiRequest, NextApiResponse } from "next";
-import { auth } from "@/lib/auth";
-import { toNextJsHandler } from "better-auth/next-js";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { auth } from '@/lib/auth';
+import { toNextJsHandler } from 'better-auth/next-js';
 
 // toNextJsHandler converts Better Auth's web-standard handler
 // into a Next.js Pages Router compatible API handler.
@@ -38,7 +38,7 @@ Additionally, create a client-side auth utility that components can use to inter
 // packages/web/src/lib/auth-client.ts
 // Client-side auth utilities for initiating sign-in,
 // checking session status, and signing out.
-import { createAuthClient } from "better-auth/react";
+import { createAuthClient } from 'better-auth/react';
 
 export const authClient = createAuthClient({
   // baseURL defaults to the current origin, which works

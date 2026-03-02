@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Drizzle Auth Adapter
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** security-engineer
 - **Parent User Story:** [Configure Better Auth with Google OAuth](./tasks.md)
 - **Parent Epic:** [Authentication & Authorization](../../user-stories.md)
@@ -29,17 +29,17 @@ Key configuration steps:
 // packages/web/src/lib/auth.ts — updated with Drizzle adapter
 // Connect Better Auth to PostgreSQL via the Drizzle ORM adapter.
 // This persists users, sessions, and OAuth account links in the database.
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@laila/database";
-import * as schema from "@laila/database/schema";
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { db } from '@laila/database';
+import * as schema from '@laila/database/schema';
 
 export const auth = betterAuth({
   // ... existing config from setup-better-auth-server ...
   database: drizzleAdapter(db, {
     // Provide the full schema so Better Auth can reference
     // the users, sessions, and accounts tables directly.
-    provider: "pg",
+    provider: 'pg',
     schema: {
       user: schema.users,
       session: schema.sessions,
