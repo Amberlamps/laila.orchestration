@@ -4,7 +4,7 @@
 
 - **Title:** Implement DAG Operations
 - **Description:** Implement core directed acyclic graph (DAG) algorithms: cycle detection, topological sort, dependency validation, and derived dependency computation. All functions are pure and deterministic with no database dependency.
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
 - **Total Tasks:** 5
 - **Dependencies:** None
@@ -13,13 +13,13 @@
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Cycle Detection](./implement-cycle-detection.md) | DFS-based cycle detection for the project-wide task DAG, validating proposed new edges | Not Started | backend-developer | None |
-| [Implement Topological Sort](./implement-topological-sort.md) | Topological sort for task ordering within user stories and across the project | Not Started | backend-developer | None |
-| [Implement Dependency Validation](./implement-dependency-validation.md) | Validate task IDs, same-project constraint, finish-to-start semantics, no self-deps, active work safety | Not Started | backend-developer | Implement Cycle Detection |
-| [Implement Derived Dependency Computation](./implement-derived-dependency-computation.md) | Derive user-story-level and epic-level dependencies from the task-level DAG | Not Started | backend-developer | Implement Cycle Detection, Implement Topological Sort |
-| [Write DAG Property-Based Tests](./write-dag-property-based-tests.md) | Property-based tests using fast-check for all DAG operations | Not Started | qa-expert | Implement Cycle Detection, Implement Topological Sort, Implement Dependency Validation, Implement Derived Dependency Computation |
+| Task                                                                                      | Description                                                                                             | Status   | Assigned Agent    | Dependencies                                                                                                                     |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| [Implement Cycle Detection](./implement-cycle-detection.md)                               | DFS-based cycle detection for the project-wide task DAG, validating proposed new edges                  | Complete | backend-developer | None                                                                                                                             |
+| [Implement Topological Sort](./implement-topological-sort.md)                             | Topological sort for task ordering within user stories and across the project                           | Complete | backend-developer | None                                                                                                                             |
+| [Implement Dependency Validation](./implement-dependency-validation.md)                   | Validate task IDs, same-project constraint, finish-to-start semantics, no self-deps, active work safety | Complete | backend-developer | Implement Cycle Detection                                                                                                        |
+| [Implement Derived Dependency Computation](./implement-derived-dependency-computation.md) | Derive user-story-level and epic-level dependencies from the task-level DAG                             | Complete | backend-developer | Implement Cycle Detection, Implement Topological Sort                                                                            |
+| [Write DAG Property-Based Tests](./write-dag-property-based-tests.md)                     | Property-based tests using fast-check for all DAG operations                                            | Complete | qa-expert         | Implement Cycle Detection, Implement Topological Sort, Implement Dependency Validation, Implement Derived Dependency Computation |
 
 ## Dependency Graph
 

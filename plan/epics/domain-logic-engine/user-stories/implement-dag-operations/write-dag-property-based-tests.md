@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write DAG Property-Based Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement DAG Operations](./tasks.md)
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
@@ -24,10 +24,10 @@ Unlike example-based tests that verify specific inputs produce specific outputs,
 // Property-based tests for cycle detection using fast-check.
 // Verifies that acyclicity is ALWAYS maintained when the validator
 // accepts an edge, and cycles are ALWAYS detected when present.
-import { describe, it } from "vitest";
-import * as fc from "fast-check";
-import { detectCycle, buildAdjacencyList, validateAcyclicity } from "@/dag/cycle-detection";
-import type { DagEdge } from "@/dag/types";
+import { describe, it } from 'vitest';
+import * as fc from 'fast-check';
+import { detectCycle, buildAdjacencyList, validateAcyclicity } from '@/dag/cycle-detection';
+import type { DagEdge } from '@/dag/types';
 
 // Custom fast-check arbitrary that generates valid DAG edges.
 // Generates node IDs as strings "node-0" through "node-N".
@@ -37,8 +37,8 @@ const dagEdgeArbitrary = (maxNodes: number): fc.Arbitrary<DagEdge> =>
     to: fc.integer({ min: 0, max: maxNodes - 1 }).map((n) => `node-${n}`),
   });
 
-describe("Cycle Detection — Property-Based Tests", () => {
-  it("PROPERTY: a DAG built only from accepted edges is always acyclic", () => {
+describe('Cycle Detection — Property-Based Tests', () => {
+  it('PROPERTY: a DAG built only from accepted edges is always acyclic', () => {
     // Generate a sequence of random edges.
     // For each edge, run detectCycle. If accepted, add to graph.
     // After all edges, validate the entire graph is acyclic.
@@ -60,40 +60,34 @@ describe("Cycle Detection — Property-Based Tests", () => {
           // INVARIANT: the graph must be acyclic after only adding accepted edges.
           const validation = validateAcyclicity(adjacencyList);
           return !validation.hasCycle;
-        }
+        },
       ),
-      { numRuns: 1000 }
+      { numRuns: 1000 },
     );
   });
 
-  it("PROPERTY: self-loops are always detected as cycles", () => {
+  it('PROPERTY: self-loops are always detected as cycles', () => {
     fc.assert(
-      fc.property(
-        fc.string({ minLength: 1, maxLength: 10 }),
-        (nodeId) => {
-          const result = detectCycle(new Map(), { from: nodeId, to: nodeId });
+      fc.property(fc.string({ minLength: 1, maxLength: 10 }), (nodeId) => {
+        const result = detectCycle(new Map(), { from: nodeId, to: nodeId });
+        return result.hasCycle === true;
+      }),
+    );
+  });
+
+  it('PROPERTY: adding an edge to an empty graph never creates a cycle (unless self-loop)', () => {
+    fc.assert(
+      fc.property(dagEdgeArbitrary(100), (edge) => {
+        const result = detectCycle(new Map(), edge);
+        if (edge.from === edge.to) {
           return result.hasCycle === true;
         }
-      )
+        return result.hasCycle === false;
+      }),
     );
   });
 
-  it("PROPERTY: adding an edge to an empty graph never creates a cycle (unless self-loop)", () => {
-    fc.assert(
-      fc.property(
-        dagEdgeArbitrary(100),
-        (edge) => {
-          const result = detectCycle(new Map(), edge);
-          if (edge.from === edge.to) {
-            return result.hasCycle === true;
-          }
-          return result.hasCycle === false;
-        }
-      )
-    );
-  });
-
-  it("PROPERTY: detected cycles have a valid cycle path", () => {
+  it('PROPERTY: detected cycles have a valid cycle path', () => {
     fc.assert(
       fc.property(
         fc.array(dagEdgeArbitrary(10), { minLength: 1, maxLength: 20 }),
@@ -107,8 +101,8 @@ describe("Cycle Detection — Property-Based Tests", () => {
             return result.cyclePath.length >= 2;
           }
           return true;
-        }
-      )
+        },
+      ),
     );
   });
 });
@@ -121,71 +115,60 @@ describe("Cycle Detection — Property-Based Tests", () => {
 // Property-based tests for topological sort.
 // Verifies ordering validity and determinism.
 
-describe("Topological Sort — Property-Based Tests", () => {
-  it("PROPERTY: every dependency appears before its dependent in the sorted output", () => {
+describe('Topological Sort — Property-Based Tests', () => {
+  it('PROPERTY: every dependency appears before its dependent in the sorted output', () => {
     // Generate a random acyclic graph (by only accepting non-cyclic edges).
     // Run topological sort.
     // For every edge (A depends on B), verify B appears before A in the output.
     fc.assert(
-      fc.property(
-        generateRandomDag(20, 50),
-        ({ edges, allNodeIds }) => {
-          const adjacencyList = buildAdjacencyList(edges);
-          const result = topologicalSort(adjacencyList, allNodeIds);
+      fc.property(generateRandomDag(20, 50), ({ edges, allNodeIds }) => {
+        const adjacencyList = buildAdjacencyList(edges);
+        const result = topologicalSort(adjacencyList, allNodeIds);
 
-          if (!result.success) return false;
+        if (!result.success) return false;
 
-          const positionMap = new Map(
-            result.sorted.map((id, index) => [id, index])
-          );
+        const positionMap = new Map(result.sorted.map((id, index) => [id, index]));
 
-          for (const edge of edges) {
-            const fromPos = positionMap.get(edge.from)!;
-            const toPos = positionMap.get(edge.to)!;
-            // `to` (dependency) must come before `from` (dependent).
-            if (toPos >= fromPos) return false;
-          }
-
-          return true;
+        for (const edge of edges) {
+          const fromPos = positionMap.get(edge.from)!;
+          const toPos = positionMap.get(edge.to)!;
+          // `to` (dependency) must come before `from` (dependent).
+          if (toPos >= fromPos) return false;
         }
-      ),
-      { numRuns: 1000 }
+
+        return true;
+      }),
+      { numRuns: 1000 },
     );
   });
 
-  it("PROPERTY: all input nodes appear exactly once in the sorted output", () => {
+  it('PROPERTY: all input nodes appear exactly once in the sorted output', () => {
     fc.assert(
-      fc.property(
-        generateRandomDag(20, 50),
-        ({ edges, allNodeIds }) => {
-          const adjacencyList = buildAdjacencyList(edges);
-          const result = topologicalSort(adjacencyList, allNodeIds);
+      fc.property(generateRandomDag(20, 50), ({ edges, allNodeIds }) => {
+        const adjacencyList = buildAdjacencyList(edges);
+        const result = topologicalSort(adjacencyList, allNodeIds);
 
-          if (!result.success) return false;
+        if (!result.success) return false;
 
-          return (
-            result.sorted.length === allNodeIds.length &&
-            new Set(result.sorted).size === allNodeIds.length
-          );
-        }
-      )
+        return (
+          result.sorted.length === allNodeIds.length &&
+          new Set(result.sorted).size === allNodeIds.length
+        );
+      }),
     );
   });
 
-  it("PROPERTY: topological sort is deterministic (same input produces same output)", () => {
+  it('PROPERTY: topological sort is deterministic (same input produces same output)', () => {
     fc.assert(
-      fc.property(
-        generateRandomDag(15, 30),
-        ({ edges, allNodeIds }) => {
-          const adjacencyList = buildAdjacencyList(edges);
-          const result1 = topologicalSort(adjacencyList, allNodeIds);
-          const result2 = topologicalSort(adjacencyList, allNodeIds);
+      fc.property(generateRandomDag(15, 30), ({ edges, allNodeIds }) => {
+        const adjacencyList = buildAdjacencyList(edges);
+        const result1 = topologicalSort(adjacencyList, allNodeIds);
+        const result2 = topologicalSort(adjacencyList, allNodeIds);
 
-          if (!result1.success || !result2.success) return false;
+        if (!result1.success || !result2.success) return false;
 
-          return JSON.stringify(result1.sorted) === JSON.stringify(result2.sorted);
-        }
-      )
+        return JSON.stringify(result1.sorted) === JSON.stringify(result2.sorted);
+      }),
     );
   });
 });
@@ -197,26 +180,26 @@ describe("Topological Sort — Property-Based Tests", () => {
 // packages/domain/src/tests/dag/derived-dependencies.property.test.ts
 // Property-based tests for derived dependency computation.
 
-describe("Derived Dependencies — Property-Based Tests", () => {
-  it("PROPERTY: derived story graph is acyclic if task graph is acyclic", () => {
+describe('Derived Dependencies — Property-Based Tests', () => {
+  it('PROPERTY: derived story graph is acyclic if task graph is acyclic', () => {
     // Generate a random acyclic task graph with story groupings.
     // Derive story dependencies.
     // Verify the derived story graph is also acyclic.
   });
 
-  it("PROPERTY: derived epic graph is acyclic if story graph is acyclic", () => {
+  it('PROPERTY: derived epic graph is acyclic if story graph is acyclic', () => {
     // Generate a random acyclic story graph with epic groupings.
     // Derive epic dependencies.
     // Verify the derived epic graph is also acyclic.
   });
 
-  it("PROPERTY: every derived story edge has at least one provenance edge", () => {
+  it('PROPERTY: every derived story edge has at least one provenance edge', () => {
     // Verify that the edgeProvenance map has an entry for every
     // derived story dependency, and each entry has at least one
     // task-level edge.
   });
 
-  it("PROPERTY: intra-story task edges never produce story-level dependencies", () => {
+  it('PROPERTY: intra-story task edges never produce story-level dependencies', () => {
     // Generate task edges within the same story.
     // Verify no story-level dependencies are created.
   });
@@ -238,7 +221,7 @@ Create reusable fast-check arbitraries for generating random DAGs, task grouping
  */
 export function generateRandomDag(
   maxNodes: number,
-  maxEdges: number
+  maxEdges: number,
 ): fc.Arbitrary<{ edges: DagEdge[]; allNodeIds: string[] }> {
   // Implementation uses fc.array + fc.record to generate edge proposals,
   // then filters through cycle detection to guarantee acyclicity.

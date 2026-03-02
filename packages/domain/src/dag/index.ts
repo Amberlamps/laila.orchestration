@@ -12,4 +12,23 @@
  * stateless transformations over immutable data structures.
  */
 
-export {};
+export type { DagEdge, AdjacencyList, CycleCheckResult } from './types';
+export { buildAdjacencyList, detectCycle, validateAcyclicity } from './cycle-detection';
+export {
+  topologicalSort,
+  topologicalSortForStory,
+  type TopologicalSortResult,
+} from './topological-sort';
+export {
+  validateDependency,
+  validateDependencyRemoval,
+  type DependencyValidationResult,
+  type DependencyValidationError,
+  type TaskValidationInfo,
+} from './dependency-validation';
+export type { TaskGrouping, DerivedDependencyGraph } from './derived-dependencies';
+export {
+  deriveStoryDependencies,
+  deriveEpicDependencies,
+  deriveAllDependencies,
+} from './derived-dependencies';
