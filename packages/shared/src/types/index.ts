@@ -10,4 +10,10 @@
  * in both server and browser contexts.
  */
 
-export {};
+export type {
+  Nullable,
+  WithTimestamps,
+  WithSoftDelete,
+  WithOptimisticLock,
+  TenantScoped,
+} from './utility';

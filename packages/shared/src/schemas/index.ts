@@ -9,4 +9,39 @@
  * in both server and browser contexts.
  */
 
-export {};
+export { projectSchema, type Project } from './project';
+export { epicSchema, type Epic } from './epic';
+export { userStorySchema, type UserStory } from './user-story';
+export { taskSchema, taskReferenceSchema, type Task, type TaskReference } from './task';
+export { workerSchema, type Worker } from './worker';
+export { personaSchema, type Persona } from './persona';
+
+// API request/response schemas
+export * from './api';
+
+// Pagination response factory and backwards-compatible aliases
+export {
+  paginationResponseMetaSchema,
+  type PaginationResponseMeta,
+  paginatedResponseSchema,
+} from './pagination';
+
+// Error envelope schemas
+export {
+  fieldErrorSchema,
+  type FieldError,
+  errorEnvelopeSchema,
+  type ErrorEnvelope,
+} from './error';
+
+// Audit event schemas
+export {
+  auditActionSchema,
+  type AuditAction,
+  auditActorTypeSchema,
+  type AuditActorType,
+  auditChangeDiffSchema,
+  type AuditChangeDiff,
+  auditEventSchema,
+  type AuditEvent,
+} from './audit';

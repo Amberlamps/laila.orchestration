@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Define Entity Schemas
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement @laila/shared Zod Schemas and Types](./tasks.md)
 - **Parent Epic:** [Shared Packages & API Contracts](../../user-stories.md)
@@ -16,6 +16,7 @@ Define Zod schemas for all core domain entities in `@laila/shared/schemas`. Thes
 Each entity schema should define the full shape of the entity as it would be represented in API responses (not the database column layout — that is handled by Drizzle schema in Epic 3). The schemas should reference the status and priority enums defined in the constants module.
 
 Entities to define:
+
 - **Project** — The top-level organizational unit containing epics
 - **Epic** — A large body of work within a project, containing user stories
 - **User Story** — A unit of work within an epic, containing tasks and assignable to workers
@@ -41,6 +42,7 @@ Entities to define:
 ## Technical Notes
 
 - Schema pattern for entities:
+
   ```typescript
   // packages/shared/src/schemas/project.ts
   // Zod schema for the Project entity — the top-level organizational unit
@@ -71,6 +73,7 @@ Entities to define:
 
   export type Project = z.infer<typeof projectSchema>;
   ```
+
 - Use `.nullable()` for optional database fields that can be NULL, not `.optional()` — the field should always be present in the response, just potentially null
 - The `version` field on entities supports optimistic locking — clients must send the current version on updates, and the server rejects updates with stale versions
 - Consider defining "create" and "update" variants of schemas (e.g., `createProjectSchema` that omits auto-generated fields like id, createdAt) — but these may belong in the API request schemas task instead

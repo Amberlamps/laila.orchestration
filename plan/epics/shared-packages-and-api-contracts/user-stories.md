@@ -10,10 +10,10 @@
 
 ## User Stories
 
-| User Story                                                                                            | Description                                                                                           | Status                      | Tasks   | Dependencies                                  |
-| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------- | ------- | --------------------------------------------- |
-| [Implement @laila/shared Zod Schemas and Types](./user-stories/implement-shared-zod-schemas/tasks.md) | Define all Zod schemas, TypeScript types, status enums, constants, and utility types in @laila/shared | In Progress (laila-agent-1) | 5 tasks | None                                          |
-| [Create OpenAPI Specification](./user-stories/create-openapi-specification/tasks.md)                  | Write the OpenAPI 3.1 spec, configure type generation, Spectral linting, and freshness checks         | Not Started                 | 4 tasks | Implement @laila/shared Zod Schemas and Types |
+| User Story                                                                                            | Description                                                                                           | Status      | Tasks   | Dependencies                                  |
+| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------- | ------- | --------------------------------------------- |
+| [Implement @laila/shared Zod Schemas and Types](./user-stories/implement-shared-zod-schemas/tasks.md) | Define all Zod schemas, TypeScript types, status enums, constants, and utility types in @laila/shared | Complete    | 5 tasks | None                                          |
+| [Create OpenAPI Specification](./user-stories/create-openapi-specification/tasks.md)                  | Write the OpenAPI 3.1 spec, configure type generation, Spectral linting, and freshness checks         | Not Started | 4 tasks | Implement @laila/shared Zod Schemas and Types |
 
 ## Dependency Graph
 

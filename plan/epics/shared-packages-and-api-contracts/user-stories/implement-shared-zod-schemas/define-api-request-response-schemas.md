@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Define API Request/Response Schemas
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement @laila/shared Zod Schemas and Types](./tasks.md)
 - **Parent Epic:** [Shared Packages & API Contracts](../../user-stories.md)
@@ -14,6 +14,7 @@
 Define Zod schemas for all API request bodies, query parameters, and response payloads in `@laila/shared/schemas`. These schemas are used for request validation in API route handlers and for type-safe response construction.
 
 The API follows REST conventions with:
+
 - Create requests (POST bodies) that omit auto-generated fields
 - Update requests (PATCH/PUT bodies) that include a `version` field for optimistic locking
 - List requests (GET query params) with pagination, filtering, and sorting
@@ -38,6 +39,7 @@ The API follows REST conventions with:
 ## Technical Notes
 
 - Work assignment discriminated union pattern:
+
   ```typescript
   // packages/shared/src/schemas/api/work-assignment.ts
   // Typed response for the work assignment endpoint (POST /api/v1/work/next)
@@ -75,6 +77,7 @@ The API follows REST conventions with:
 
   export type WorkAssignmentResponse = z.infer<typeof workAssignmentResponseSchema>;
   ```
+
 - Create request schemas should use `.pick()` or `.omit()` on entity schemas where possible to avoid duplication:
   ```typescript
   // Derive create schema from entity schema by omitting auto-generated fields

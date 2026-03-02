@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Define Shared Utility Types
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement @laila/shared Zod Schemas and Types](./tasks.md)
 - **Parent Epic:** [Shared Packages & API Contracts](../../user-stories.md)
@@ -34,6 +34,7 @@ Utility types provide the structural building blocks that wrap domain entities f
 ## Technical Notes
 
 - Pagination response factory pattern:
+
   ```typescript
   // packages/shared/src/schemas/pagination.ts
   // Generic pagination schema factory for wrapping entity arrays in paginated responses
@@ -66,7 +67,9 @@ Utility types provide the structural building blocks that wrap domain entities f
     });
   }
   ```
+
 - Error envelope supports structured field-level errors for form validation:
+
   ```typescript
   // packages/shared/src/schemas/error.ts
   // Standardized error response envelope for all API error responses
@@ -79,13 +82,14 @@ Utility types provide the structural building blocks that wrap domain entities f
 
   export const errorEnvelopeSchema = z.object({
     error: z.object({
-      code: errorCodeSchema,           // From error-codes.ts constants
+      code: errorCodeSchema, // From error-codes.ts constants
       message: z.string(),
       details: z.array(fieldErrorSchema).optional(),
       requestId: z.string().uuid(),
     }),
   });
   ```
+
 - Utility types provide TypeScript-level abstractions without runtime validation:
   ```typescript
   // packages/shared/src/types/utility.ts
