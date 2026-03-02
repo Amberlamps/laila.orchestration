@@ -99,12 +99,20 @@ const getRetentionDays = (): number => {
 };
 
 /** Required fields that must be present on every audit event input. */
-const REQUIRED_FIELDS = ['entityId', 'action', 'actorType', 'actorId', 'tenantId'] as const;
+const REQUIRED_FIELDS = [
+  'entityType',
+  'entityId',
+  'action',
+  'actorType',
+  'actorId',
+  'tenantId',
+] as const;
 
-/** Validates that all required fields are non-empty strings. */
+/** Validates that all required fields are non-empty, non-whitespace strings. */
 const validateInput = (input: AuditEventInput): void => {
   for (const field of REQUIRED_FIELDS) {
-    if (input[field] === '') {
+    const value = (input as Record<string, unknown>)[field];
+    if (typeof value !== 'string' || value.trim() === '') {
       throw new AuditWriteError(`Missing required field: ${field}`);
     }
   }
@@ -222,7 +230,7 @@ export const writeAuditEventBatch = async (inputs: AuditEventInput[]): Promise<n
     let attempt = 0;
 
     // Retry loop for unprocessed items with exponential backoff
-    while (writeRequests.length > 0 && attempt <= MAX_RETRIES) {
+    while (writeRequests.length > 0 && attempt < MAX_RETRIES) {
       if (attempt > 0) {
         await backoff(attempt - 1);
       }
@@ -256,6 +264,13 @@ export const writeAuditEventBatch = async (inputs: AuditEventInput[]): Promise<n
           error,
         );
       }
+    }
+
+    // If unprocessed items remain after all retries, throw
+    if (writeRequests.length > 0 && attempt >= MAX_RETRIES) {
+      throw new AuditWriteError(
+        `Batch write failed: ${String(writeRequests.length)} items remained unprocessed after ${String(MAX_RETRIES)} retries`,
+      );
     }
   }
 
