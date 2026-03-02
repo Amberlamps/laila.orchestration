@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Worker Tables
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** database-administrator
 - **Parent User Story:** [Define PostgreSQL Schema](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -14,6 +14,7 @@
 Define the `workers` table and `worker_project_access` junction table in the Drizzle schema. Workers represent AI execution agents that authenticate via API keys and request work assignments from the orchestration service.
 
 The `workers` table stores:
+
 - Worker identity and metadata
 - A **hashed** API key (the raw key is only shown once at creation time)
 - A **prefix** column containing the first characters of the API key (e.g., `lw_abc123`) for efficient lookup without exposing the full hash
@@ -46,33 +47,41 @@ The `worker_project_access` junction table implements a many-to-many relationshi
   5. If match, worker is authenticated
   ```
 - This two-step lookup (prefix index scan + hash verification) avoids scanning all workers and hashing against each one:
+
   ```typescript
   // packages/database/src/schema/workers.ts
   // Workers table — AI execution agents that authenticate via API keys
   // Uses a prefix+hash pattern for efficient and secure API key authentication
   import { pgTable, uuid, text, boolean, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
 
-  export const workersTable = pgTable('workers', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    tenantId: uuid('tenant_id').notNull().references(() => usersTable.id),
-    name: text('name').notNull(),
-    description: text('description'),
-    // SHA-256 hash of the full API key — never store the raw key
-    apiKeyHash: text('api_key_hash').notNull(),
-    // First 12 characters of the API key for efficient prefix-based lookup
-    // Format: "lw_" + 8 random chars (e.g., "lw_abc12345")
-    apiKeyPrefix: text('api_key_prefix').notNull(),
-    isActive: boolean('is_active').notNull().default(true),
-    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  }, (table) => ({
-    tenantIdx: index('workers_tenant_idx').on(table.tenantId),
-    // Unique prefix index — enables O(1) lookup during API key authentication
-    prefixUniqueIdx: uniqueIndex('workers_prefix_unique_idx').on(table.apiKeyPrefix),
-    tenantActiveIdx: index('workers_tenant_active_idx').on(table.tenantId, table.isActive),
-  }));
+  export const workersTable = pgTable(
+    'workers',
+    {
+      id: uuid('id').primaryKey().defaultRandom(),
+      tenantId: uuid('tenant_id')
+        .notNull()
+        .references(() => usersTable.id),
+      name: text('name').notNull(),
+      description: text('description'),
+      // SHA-256 hash of the full API key — never store the raw key
+      apiKeyHash: text('api_key_hash').notNull(),
+      // First 12 characters of the API key for efficient prefix-based lookup
+      // Format: "lw_" + 8 random chars (e.g., "lw_abc12345")
+      apiKeyPrefix: text('api_key_prefix').notNull(),
+      isActive: boolean('is_active').notNull().default(true),
+      lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
+      createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+      updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+      tenantIdx: index('workers_tenant_idx').on(table.tenantId),
+      // Unique prefix index — enables O(1) lookup during API key authentication
+      prefixUniqueIdx: uniqueIndex('workers_prefix_unique_idx').on(table.apiKeyPrefix),
+      tenantActiveIdx: index('workers_tenant_active_idx').on(table.tenantId, table.isActive),
+    }),
+  );
   ```
+
 - The prefix must be long enough to be unique across all workers in the system (not just per tenant)
 - Use SHA-256 or bcrypt for the API key hash — SHA-256 is faster for API key lookup (no salt needed since API keys have high entropy), while bcrypt is more appropriate for passwords
 - `last_seen_at` is updated on every API request from the worker, useful for monitoring worker health

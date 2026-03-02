@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Generate Initial Migration
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** database-administrator
 - **Parent User Story:** [Define PostgreSQL Schema](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -32,6 +32,7 @@ This task is the gatekeeper for schema quality — it verifies that all table de
 ## Technical Notes
 
 - Migration generation steps:
+
   ```bash
   # Step 1: Ensure all schema files are syntactically correct
   pnpm --filter @laila/database typecheck
@@ -48,6 +49,7 @@ This task is the gatekeeper for schema quality — it verifies that all table de
   pnpm --filter @laila/database db:push --dry-run
   # Should report "No changes detected" if migration matches schema
   ```
+
 - Review the generated SQL carefully:
   - Check that `ON DELETE CASCADE` and `ON DELETE SET NULL` behaviors are correct for each foreign key
   - Verify that `UNIQUE INDEX` constraints are on the right columns

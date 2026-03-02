@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Project and Epic Tables
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** database-administrator
 - **Parent User Story:** [Define PostgreSQL Schema](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -14,6 +14,7 @@
 Define the `projects` and `epics` tables in the Drizzle schema. These represent the top two levels of the work hierarchy: projects contain epics, and epics contain user stories.
 
 Both tables implement:
+
 - **Optimistic locking** via a `version` integer column that is incremented on every update and checked in WHERE clauses to prevent concurrent modification conflicts
 - **Soft delete** via a nullable `deleted_at` timestamp that marks records as deleted without physically removing them
 - **Tenant scoping** via a `tenant_id` foreign key to the users table, ensuring complete data isolation between tenants
@@ -36,6 +37,7 @@ Projects have both a `lifecycle_status` (planning phase) and a `work_status` (ex
 ## Technical Notes
 
 - Table definition pattern:
+
   ```typescript
   // packages/database/src/schema/projects.ts
   // Projects table — top-level organizational unit in the work hierarchy
@@ -44,23 +46,33 @@ Projects have both a `lifecycle_status` (planning phase) and a `work_status` (ex
   import { relations } from 'drizzle-orm';
   import { usersTable } from './auth';
 
-  export const projectsTable = pgTable('projects', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    tenantId: uuid('tenant_id').notNull().references(() => usersTable.id),
-    name: text('name').notNull(),
-    description: text('description'),
-    lifecycleStatus: text('lifecycle_status').notNull().default('draft'),
-    workStatus: text('work_status').notNull().default('pending'),
-    version: integer('version').notNull().default(0),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-    deletedAt: timestamp('deleted_at', { withTimezone: true }),
-  }, (table) => ({
-    tenantIdIdx: index('projects_tenant_id_idx').on(table.tenantId),
-    tenantStatusIdx: index('projects_tenant_status_idx').on(table.tenantId, table.lifecycleStatus),
-    tenantDeletedIdx: index('projects_tenant_deleted_idx').on(table.tenantId, table.deletedAt),
-  }));
+  export const projectsTable = pgTable(
+    'projects',
+    {
+      id: uuid('id').primaryKey().defaultRandom(),
+      tenantId: uuid('tenant_id')
+        .notNull()
+        .references(() => usersTable.id),
+      name: text('name').notNull(),
+      description: text('description'),
+      lifecycleStatus: text('lifecycle_status').notNull().default('draft'),
+      workStatus: text('work_status').notNull().default('pending'),
+      version: integer('version').notNull().default(0),
+      createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+      updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+      deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    },
+    (table) => ({
+      tenantIdIdx: index('projects_tenant_id_idx').on(table.tenantId),
+      tenantStatusIdx: index('projects_tenant_status_idx').on(
+        table.tenantId,
+        table.lifecycleStatus,
+      ),
+      tenantDeletedIdx: index('projects_tenant_deleted_idx').on(table.tenantId, table.deletedAt),
+    }),
+  );
   ```
+
 - Use `text` type for status columns instead of PostgreSQL `enum` type — text is easier to evolve (adding new values doesn't require ALTER TYPE), and validation is handled at the application layer via Zod schemas
 - The `version` column pattern for optimistic locking:
   ```sql

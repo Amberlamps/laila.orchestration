@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Story and Task Tables
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** database-administrator
 - **Parent User Story:** [Define PostgreSQL Schema](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -14,11 +14,13 @@
 Define the `user_stories` and `tasks` tables in the Drizzle schema. These represent the lower two levels of the work hierarchy: user stories are contained within epics and group related tasks, while tasks are the atomic units of work assigned to AI agent workers.
 
 User stories track:
+
 - Assignment to workers (which worker is currently executing it)
 - Cost tracking (estimated and actual execution cost)
 - Attempt management (how many times the story has been attempted, max retries)
 
 Tasks track:
+
 - Acceptance criteria (array of strings stored as JSONB)
 - Technical notes for the executing agent
 - Persona reference (what role/skill is needed)
@@ -40,6 +42,7 @@ Tasks track:
 ## Technical Notes
 
 - JSONB column definition in Drizzle:
+
   ```typescript
   // packages/database/src/schema/tasks.ts
   // Tasks table — atomic units of work in the orchestration hierarchy
@@ -48,19 +51,27 @@ Tasks track:
 
   export const tasksTable = pgTable('tasks', {
     id: uuid('id').primaryKey().defaultRandom(),
-    tenantId: uuid('tenant_id').notNull().references(() => usersTable.id),
-    userStoryId: uuid('user_story_id').notNull().references(() => userStoriesTable.id, {
-      onDelete: 'cascade',
-    }),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => usersTable.id),
+    userStoryId: uuid('user_story_id')
+      .notNull()
+      .references(() => userStoriesTable.id, {
+        onDelete: 'cascade',
+      }),
     // ... other columns
     // Acceptance criteria stored as JSONB array of strings
     // e.g., ["All tests pass", "No type errors", "Documentation updated"]
     acceptanceCriteria: jsonb('acceptance_criteria').$type<string[]>().notNull().default([]),
     // References to external resources (docs, specs, examples)
     // e.g., [{ type: "doc", url: "...", title: "..." }]
-    references: jsonb('references').$type<Array<{ type: string; url: string; title: string }>>().notNull().default([]),
+    references: jsonb('references')
+      .$type<Array<{ type: string; url: string; title: string }>>()
+      .notNull()
+      .default([]),
   });
   ```
+
 - Use `.$type<T>()` on JSONB columns to provide TypeScript type information — Drizzle uses this for query result typing
 - The `numeric` type for cost fields provides decimal precision for monetary values — use `numeric('cost_estimate', { precision: 10, scale: 4 })` for cost tracking
 - The `assigned_worker_id` uses `SET NULL` on delete so that if a worker is removed, the story's assignment history is preserved (the attempt_history table captures the full history)
