@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Status Engine Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Status Transition Engine](./tasks.md)
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
@@ -21,7 +21,7 @@ Write exhaustive tests for the entire status transition engine: transition valid
 // packages/domain/src/tests/status/transition-validation.test.ts
 // Exhaustive tests for status transition validation.
 // Every valid transition is tested, and every invalid transition is rejected.
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 import {
   validateTransition,
   TASK_TRANSITIONS,
@@ -30,51 +30,45 @@ import {
   type TaskStatus,
   type UserStoryStatus,
   type ProjectStatus,
-} from "@/status/transition-definitions";
+} from '@/status/transition-definitions';
 
-describe("Task Transition Validation", () => {
+describe('Task Transition Validation', () => {
   // Test all VALID transitions
   const validTransitions: Array<[TaskStatus, TaskStatus]> = [
-    ["not-started", "in-progress"],
-    ["not-started", "blocked"],
-    ["in-progress", "complete"],
-    ["blocked", "not-started"],
+    ['not-started', 'in-progress'],
+    ['not-started', 'blocked'],
+    ['in-progress', 'complete'],
+    ['blocked', 'not-started'],
   ];
 
-  it.each(validTransitions)(
-    "should accept transition from %s to %s",
-    (from, to) => {
-      const result = validateTransition(TASK_TRANSITIONS, from, to);
-      expect(result.valid).toBe(true);
-    }
-  );
+  it.each(validTransitions)('should accept transition from %s to %s', (from, to) => {
+    const result = validateTransition(TASK_TRANSITIONS, from, to);
+    expect(result.valid).toBe(true);
+  });
 
   // Test all INVALID transitions
   const invalidTransitions: Array<[TaskStatus, TaskStatus]> = [
-    ["not-started", "complete"],     // Cannot skip in-progress
-    ["in-progress", "not-started"],  // Cannot go back
-    ["in-progress", "blocked"],      // Cannot block in-progress
-    ["complete", "not-started"],     // Terminal state
-    ["complete", "in-progress"],     // Terminal state
-    ["complete", "blocked"],         // Terminal state
-    ["blocked", "in-progress"],      // Must go through not-started
-    ["blocked", "complete"],         // Must go through in-progress
+    ['not-started', 'complete'], // Cannot skip in-progress
+    ['in-progress', 'not-started'], // Cannot go back
+    ['in-progress', 'blocked'], // Cannot block in-progress
+    ['complete', 'not-started'], // Terminal state
+    ['complete', 'in-progress'], // Terminal state
+    ['complete', 'blocked'], // Terminal state
+    ['blocked', 'in-progress'], // Must go through not-started
+    ['blocked', 'complete'], // Must go through in-progress
   ];
 
-  it.each(invalidTransitions)(
-    "should reject transition from %s to %s",
-    (from, to) => {
-      const result = validateTransition(TASK_TRANSITIONS, from, to);
-      expect(result.valid).toBe(false);
-    }
-  );
+  it.each(invalidTransitions)('should reject transition from %s to %s', (from, to) => {
+    const result = validateTransition(TASK_TRANSITIONS, from, to);
+    expect(result.valid).toBe(false);
+  });
 
-  it("should include allowed targets in error message for invalid transition", () => {
-    const result = validateTransition(TASK_TRANSITIONS, "not-started", "complete");
+  it('should include allowed targets in error message for invalid transition', () => {
+    const result = validateTransition(TASK_TRANSITIONS, 'not-started', 'complete');
     expect(result.valid).toBe(false);
     if (!result.valid) {
-      expect(result.reason).toContain("in-progress");
-      expect(result.reason).toContain("blocked");
+      expect(result.reason).toContain('in-progress');
+      expect(result.reason).toContain('blocked');
     }
   });
 });
@@ -87,46 +81,46 @@ describe("Task Transition Validation", () => {
 ```typescript
 // packages/domain/src/tests/status/cascading-reevaluation.test.ts
 // Tests for cascading status changes when tasks complete.
-import { describe, it, expect } from "vitest";
-import { computeCascadingChanges, buildReverseDeps } from "@/status/cascading-reevaluation";
+import { describe, it, expect } from 'vitest';
+import { computeCascadingChanges, buildReverseDeps } from '@/status/cascading-reevaluation';
 
-describe("Cascading Status Re-evaluation", () => {
-  it("should unblock a dependent task when its only dependency completes", () => {
+describe('Cascading Status Re-evaluation', () => {
+  it('should unblock a dependent task when its only dependency completes', () => {
     // Task B depends on Task A. A completes.
     // Assert: command to transition B from blocked -> not-started
   });
 
-  it("should NOT unblock a task when only one of multiple dependencies completes", () => {
+  it('should NOT unblock a task when only one of multiple dependencies completes', () => {
     // Task C depends on Task A and Task B. A completes, B is still incomplete.
     // Assert: no command for C (still blocked)
   });
 
-  it("should unblock a task when its LAST remaining dependency completes", () => {
+  it('should unblock a task when its LAST remaining dependency completes', () => {
     // Task C depends on A and B. B was already complete. A now completes.
     // Assert: command to transition C from blocked -> not-started
   });
 
-  it("should unblock multiple tasks that depend on the same completed task", () => {
+  it('should unblock multiple tasks that depend on the same completed task', () => {
     // Tasks B and C both depend on A. A completes.
     // Assert: commands for both B and C
   });
 
-  it("should not emit commands for tasks that are not blocked", () => {
+  it('should not emit commands for tasks that are not blocked', () => {
     // Task B depends on A but is not-started (not blocked). A completes.
     // Assert: no command for B (already in correct state)
   });
 
-  it("should not emit commands for in-progress dependents", () => {
+  it('should not emit commands for in-progress dependents', () => {
     // Task B depends on A and is in-progress. A completes.
     // Assert: no command for B (in-progress is immune)
   });
 
-  it("should handle tasks with no dependents", () => {
+  it('should handle tasks with no dependents', () => {
     // Leaf task with no dependents completes.
     // Assert: empty commands array
   });
 
-  it("should handle long dependency chains", () => {
+  it('should handle long dependency chains', () => {
     // A -> B -> C -> D (chain). A completes.
     // Assert: only B is unblocked (not C or D, since B hasn't completed yet)
   });
@@ -137,16 +131,19 @@ describe("Cascading Status Re-evaluation", () => {
 
 ```typescript
 // packages/domain/src/tests/status/task-status-determination.test.ts
-import { describe, it, expect } from "vitest";
-import { determineTaskStatus, determineInitialTaskStatus } from "@/status/task-status-determination";
+import { describe, it, expect } from 'vitest';
+import {
+  determineTaskStatus,
+  determineInitialTaskStatus,
+} from '@/status/task-status-determination';
 
-describe("Task Status Determination", () => {
-  it("should determine not-started for task with no dependencies", () => {});
-  it("should determine not-started for task with all deps complete", () => {});
-  it("should determine blocked for task with incomplete deps", () => {});
-  it("should not change in-progress tasks", () => {});
-  it("should not change complete tasks", () => {});
-  it("should return shouldChange: false when status already correct", () => {});
+describe('Task Status Determination', () => {
+  it('should determine not-started for task with no dependencies', () => {});
+  it('should determine not-started for task with all deps complete', () => {});
+  it('should determine blocked for task with incomplete deps', () => {});
+  it('should not change in-progress tasks', () => {});
+  it('should not change complete tasks', () => {});
+  it('should return shouldChange: false when status already correct', () => {});
 });
 ```
 
@@ -154,19 +151,19 @@ describe("Task Status Determination", () => {
 
 ```typescript
 // packages/domain/src/tests/status/story-status-derivation.test.ts
-import { describe, it, expect } from "vitest";
-import { deriveStoryStatus, findCrossStoryDependencies } from "@/status/story-status-derivation";
+import { describe, it, expect } from 'vitest';
+import { deriveStoryStatus, findCrossStoryDependencies } from '@/status/story-status-derivation';
 
-describe("Story Status Derivation", () => {
-  it("should derive complete when all tasks are complete", () => {});
-  it("should derive blocked when cross-story dep is incomplete", () => {});
-  it("should derive in-progress when a task is in-progress", () => {});
-  it("should derive not-started when all cross-story deps satisfied", () => {});
-  it("should preserve draft status", () => {});
-  it("should preserve failed status", () => {});
-  it("should handle story with no tasks", () => {});
-  it("should not consider intra-story deps as cross-story", () => {});
-  it("should list all blocking dependencies in the result", () => {});
+describe('Story Status Derivation', () => {
+  it('should derive complete when all tasks are complete', () => {});
+  it('should derive blocked when cross-story dep is incomplete', () => {});
+  it('should derive in-progress when a task is in-progress', () => {});
+  it('should derive not-started when all cross-story deps satisfied', () => {});
+  it('should preserve draft status', () => {});
+  it('should preserve failed status', () => {});
+  it('should handle story with no tasks', () => {});
+  it('should not consider intra-story deps as cross-story', () => {});
+  it('should list all blocking dependencies in the result', () => {});
 });
 ```
 
@@ -174,25 +171,25 @@ describe("Story Status Derivation", () => {
 
 ```typescript
 // packages/domain/src/tests/status/epic-status-derivation.test.ts
-import { describe, it, expect } from "vitest";
-import { deriveEpicStatus } from "@/status/epic-status-derivation";
+import { describe, it, expect } from 'vitest';
+import { deriveEpicStatus } from '@/status/epic-status-derivation';
 
-describe("Epic Status Derivation", () => {
-  it("should derive complete when all stories are complete", () => {});
-  it("should derive failed when any story failed and none in-progress", () => {});
-  it("should derive in-progress when any story is in-progress", () => {});
-  it("should derive in-progress even when some stories are failed", () => {});
-  it("should derive blocked when all non-complete stories are blocked", () => {});
-  it("should derive not-started for empty epics", () => {});
-  it("should derive not-started when all stories are draft", () => {});
-  it("should include accurate story summary counts", () => {});
+describe('Epic Status Derivation', () => {
+  it('should derive complete when all stories are complete', () => {});
+  it('should derive failed when any story failed and none in-progress', () => {});
+  it('should derive in-progress when any story is in-progress', () => {});
+  it('should derive in-progress even when some stories are failed', () => {});
+  it('should derive blocked when all non-complete stories are blocked', () => {});
+  it('should derive not-started for empty epics', () => {});
+  it('should derive not-started when all stories are draft', () => {});
+  it('should include accurate story summary counts', () => {});
 });
 
-describe("Edge Cases", () => {
-  it("should handle single-task stories", () => {});
-  it("should handle long chains of dependent stories", () => {});
-  it("should handle diamond dependency patterns", () => {});
-  it("should handle mixed draft and non-draft stories", () => {});
+describe('Edge Cases', () => {
+  it('should handle single-task stories', () => {});
+  it('should handle long chains of dependent stories', () => {});
+  it('should handle diamond dependency patterns', () => {});
+  it('should handle mixed draft and non-draft stories', () => {});
 });
 ```
 

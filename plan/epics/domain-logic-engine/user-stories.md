@@ -10,11 +10,11 @@
 
 ## User Stories
 
-| User Story                                                                                       | Description                                                                                                                | Status                      | Tasks   | Dependencies                                                 |
-| ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------- | ------------------------------------------------------------ |
-| [Implement DAG Operations](./user-stories/implement-dag-operations/tasks.md)                     | Cycle detection, topological sort, dependency validation, and derived dependency computation for the project-wide task DAG | Complete                    | 5 tasks | None                                                         |
-| [Implement Status Transition Engine](./user-stories/implement-status-transition-engine/tasks.md) | Define valid status transitions, cascading re-evaluation, and status derivation for tasks, user stories, and epics         | In Progress (laila-agent-3) | 6 tasks | Implement DAG Operations                                     |
-| [Implement Work Assignment Engine](./user-stories/implement-work-assignment-engine/tasks.md)     | Eligibility rules, priority-based selection, recommended task order, and optimistic locking logic for story assignment     | Not Started                 | 5 tasks | Implement DAG Operations, Implement Status Transition Engine |
+| User Story                                                                                       | Description                                                                                                                | Status      | Tasks   | Dependencies                                                 |
+| ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ----------- | ------- | ------------------------------------------------------------ |
+| [Implement DAG Operations](./user-stories/implement-dag-operations/tasks.md)                     | Cycle detection, topological sort, dependency validation, and derived dependency computation for the project-wide task DAG | Complete    | 5 tasks | None                                                         |
+| [Implement Status Transition Engine](./user-stories/implement-status-transition-engine/tasks.md) | Define valid status transitions, cascading re-evaluation, and status derivation for tasks, user stories, and epics         | Complete    | 6 tasks | Implement DAG Operations                                     |
+| [Implement Work Assignment Engine](./user-stories/implement-work-assignment-engine/tasks.md)     | Eligibility rules, priority-based selection, recommended task order, and optimistic locking logic for story assignment     | Not Started | 5 tasks | Implement DAG Operations, Implement Status Transition Engine |
 
 ## Dependency Graph
 
