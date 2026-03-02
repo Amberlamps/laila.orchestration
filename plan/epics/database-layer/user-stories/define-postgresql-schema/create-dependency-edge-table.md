@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Dependency Edge Table
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** database-administrator
 - **Parent User Story:** [Define PostgreSQL Schema](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -14,6 +14,7 @@
 Define the `task_dependency_edges` table that represents the Directed Acyclic Graph (DAG) of task dependencies. Each row is an edge from a dependent task to the task it depends on (prerequisite). This table is central to the orchestration system — it determines which tasks are blocked and which are ready for assignment.
 
 The DAG structure ensures that:
+
 - A task is only available for assignment when ALL of its prerequisite tasks are completed
 - Circular dependencies are prevented (enforced at the application layer, not database)
 - Dependency resolution queries are efficient via proper indexing
@@ -34,6 +35,7 @@ The DAG structure ensures that:
 ## Technical Notes
 
 - Dependency edge table definition:
+
   ```typescript
   // packages/database/src/schema/dependency-edges.ts
   // Task dependency edges — represents the DAG (Directed Acyclic Graph)
@@ -44,29 +46,42 @@ The DAG structure ensures that:
   import { usersTable } from './auth';
   import { tasksTable } from './tasks';
 
-  export const taskDependencyEdgesTable = pgTable('task_dependency_edges', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    tenantId: uuid('tenant_id').notNull().references(() => usersTable.id),
-    // The task that has a dependency (cannot start until prerequisite completes)
-    dependentTaskId: uuid('dependent_task_id').notNull().references(() => tasksTable.id, {
-      onDelete: 'cascade',
+  export const taskDependencyEdgesTable = pgTable(
+    'task_dependency_edges',
+    {
+      id: uuid('id').primaryKey().defaultRandom(),
+      tenantId: uuid('tenant_id')
+        .notNull()
+        .references(() => usersTable.id),
+      // The task that has a dependency (cannot start until prerequisite completes)
+      dependentTaskId: uuid('dependent_task_id')
+        .notNull()
+        .references(() => tasksTable.id, {
+          onDelete: 'cascade',
+        }),
+      // The task that must complete first (the prerequisite)
+      prerequisiteTaskId: uuid('prerequisite_task_id')
+        .notNull()
+        .references(() => tasksTable.id, {
+          onDelete: 'cascade',
+        }),
+      createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+      // Prevent duplicate edges between the same pair of tasks
+      uniqueEdge: uniqueIndex('dep_edges_unique_idx').on(
+        table.dependentTaskId,
+        table.prerequisiteTaskId,
+      ),
+      // Find all prerequisites for a given task (what blocks it)
+      dependentIdx: index('dep_edges_dependent_idx').on(table.dependentTaskId),
+      // Find all downstream tasks that depend on a given task (what it unblocks)
+      prerequisiteIdx: index('dep_edges_prerequisite_idx').on(table.prerequisiteTaskId),
+      tenantIdx: index('dep_edges_tenant_idx').on(table.tenantId),
     }),
-    // The task that must complete first (the prerequisite)
-    prerequisiteTaskId: uuid('prerequisite_task_id').notNull().references(() => tasksTable.id, {
-      onDelete: 'cascade',
-    }),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  }, (table) => ({
-    // Prevent duplicate edges between the same pair of tasks
-    uniqueEdge: uniqueIndex('dep_edges_unique_idx')
-      .on(table.dependentTaskId, table.prerequisiteTaskId),
-    // Find all prerequisites for a given task (what blocks it)
-    dependentIdx: index('dep_edges_dependent_idx').on(table.dependentTaskId),
-    // Find all downstream tasks that depend on a given task (what it unblocks)
-    prerequisiteIdx: index('dep_edges_prerequisite_idx').on(table.prerequisiteTaskId),
-    tenantIdx: index('dep_edges_tenant_idx').on(table.tenantId),
-  }));
+  );
   ```
+
 - Key queries enabled by the indexes:
   1. "What are the prerequisites for task X?" → `WHERE dependent_task_id = X` (uses `dependentIdx`)
   2. "What tasks does task X unblock?" → `WHERE prerequisite_task_id = X` (uses `prerequisiteIdx`)

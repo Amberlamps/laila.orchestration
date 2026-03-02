@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Auth Tables
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** database-administrator
 - **Parent User Story:** [Define PostgreSQL Schema](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -31,6 +31,7 @@ The key design decision in this system is the **tenant_id = user_id pattern**: e
 ## Technical Notes
 
 - Better Auth table schema in Drizzle:
+
   ```typescript
   // packages/database/src/schema/auth.ts
   // Authentication tables for Better Auth (Google OAuth)
@@ -38,18 +39,23 @@ The key design decision in this system is the **tenant_id = user_id pattern**: e
   // All tenant-scoped tables reference users.id as their tenant_id foreign key
   import { pgTable, uuid, text, boolean, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
 
-  export const usersTable = pgTable('users', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    name: text('name').notNull(),
-    email: text('email').notNull(),
-    emailVerified: boolean('email_verified').notNull().default(false),
-    image: text('image'),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  }, (table) => ({
-    emailUniqueIdx: uniqueIndex('users_email_unique_idx').on(table.email),
-  }));
+  export const usersTable = pgTable(
+    'users',
+    {
+      id: uuid('id').primaryKey().defaultRandom(),
+      name: text('name').notNull(),
+      email: text('email').notNull(),
+      emailVerified: boolean('email_verified').notNull().default(false),
+      image: text('image'),
+      createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+      updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+      emailUniqueIdx: uniqueIndex('users_email_unique_idx').on(table.email),
+    }),
+  );
   ```
+
 - Better Auth has specific expectations about column names — verify the exact column naming convention required by the Better Auth adapter (snake_case vs. camelCase)
 - The `users.id` serves dual purpose: authentication identity AND tenant isolation key
 - Consider using `$defaultFn(() => crypto.randomUUID())` for UUID generation if `defaultRandom()` is not available

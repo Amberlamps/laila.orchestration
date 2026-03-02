@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Attempt History Table
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** database-administrator
 - **Parent User Story:** [Define PostgreSQL Schema](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -14,6 +14,7 @@
 Define the `attempt_history` table that tracks every worker assignment attempt for user stories. Each row records a single attempt: which worker was assigned, when the assignment started and ended, the outcome (success/failure), the reason for failure (if applicable), and the cost incurred.
 
 This history is essential for:
+
 - Debugging failed assignments (what went wrong, which worker tried)
 - Cost accounting (tracking per-attempt and total execution costs)
 - Retry intelligence (avoiding reassigning to a worker that already failed on this story)
@@ -31,6 +32,7 @@ This history is essential for:
 ## Technical Notes
 
 - Attempt history table definition:
+
   ```typescript
   // packages/database/src/schema/attempt-history.ts
   // Attempt history — records every worker assignment attempt for user stories
@@ -42,41 +44,51 @@ This history is essential for:
   import { userStoriesTable } from './user-stories';
   import { workersTable } from './workers';
 
-  export const attemptHistoryTable = pgTable('attempt_history', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    tenantId: uuid('tenant_id').notNull().references(() => usersTable.id),
-    userStoryId: uuid('user_story_id').notNull().references(() => userStoriesTable.id, {
-      onDelete: 'cascade',
+  export const attemptHistoryTable = pgTable(
+    'attempt_history',
+    {
+      id: uuid('id').primaryKey().defaultRandom(),
+      tenantId: uuid('tenant_id')
+        .notNull()
+        .references(() => usersTable.id),
+      userStoryId: uuid('user_story_id')
+        .notNull()
+        .references(() => userStoriesTable.id, {
+          onDelete: 'cascade',
+        }),
+      // Worker that executed this attempt — set null if worker is later deleted
+      workerId: uuid('worker_id').references(() => workersTable.id, {
+        onDelete: 'set null',
+      }),
+      // Sequential attempt number for this user story (1, 2, 3...)
+      attemptNumber: integer('attempt_number').notNull(),
+      startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
+      completedAt: timestamp('completed_at', { withTimezone: true }),
+      // Outcome of the attempt
+      status: text('status').notNull().default('in_progress'),
+      // Human-readable reason for failure or timeout (null for success)
+      reason: text('reason'),
+      // Cost incurred during this attempt (LLM tokens, API calls, etc.)
+      cost: numeric('cost', { precision: 10, scale: 4 }),
+      // Execution duration in milliseconds (computed at completion time)
+      durationMs: integer('duration_ms'),
+      createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+      tenantIdx: index('attempts_tenant_idx').on(table.tenantId),
+      storyIdx: index('attempts_story_idx').on(table.userStoryId),
+      workerIdx: index('attempts_worker_idx').on(table.workerId),
+      // Ensure unique attempt numbers per story and enable ordered history queries
+      storyAttemptIdx: index('attempts_story_attempt_idx').on(
+        table.userStoryId,
+        table.attemptNumber,
+      ),
+      // Enable worker activity timeline queries
+      workerTimeIdx: index('attempts_worker_time_idx').on(table.workerId, table.startedAt),
     }),
-    // Worker that executed this attempt — set null if worker is later deleted
-    workerId: uuid('worker_id').references(() => workersTable.id, {
-      onDelete: 'set null',
-    }),
-    // Sequential attempt number for this user story (1, 2, 3...)
-    attemptNumber: integer('attempt_number').notNull(),
-    startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
-    completedAt: timestamp('completed_at', { withTimezone: true }),
-    // Outcome of the attempt
-    status: text('status').notNull().default('in_progress'),
-    // Human-readable reason for failure or timeout (null for success)
-    reason: text('reason'),
-    // Cost incurred during this attempt (LLM tokens, API calls, etc.)
-    cost: numeric('cost', { precision: 10, scale: 4 }),
-    // Execution duration in milliseconds (computed at completion time)
-    durationMs: integer('duration_ms'),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  }, (table) => ({
-    tenantIdx: index('attempts_tenant_idx').on(table.tenantId),
-    storyIdx: index('attempts_story_idx').on(table.userStoryId),
-    workerIdx: index('attempts_worker_idx').on(table.workerId),
-    // Ensure unique attempt numbers per story and enable ordered history queries
-    storyAttemptIdx: index('attempts_story_attempt_idx')
-      .on(table.userStoryId, table.attemptNumber),
-    // Enable worker activity timeline queries
-    workerTimeIdx: index('attempts_worker_time_idx')
-      .on(table.workerId, table.startedAt),
-  }));
+  );
   ```
+
 - The `attempt_number` is derived from the user story's `attempts` counter at the time of assignment
 - `duration_ms` is computed at completion time as `completed_at - started_at` in milliseconds, stored for efficient querying without date arithmetic
 - The `cost` field uses `numeric(10, 4)` for precise decimal representation (up to 999,999.9999)

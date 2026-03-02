@@ -10,4 +10,12 @@
  * Schema files added here are automatically picked up by drizzle-kit for migration generation.
  */
 
-export {};
+export * from './auth';
+export * from './projects';
+export * from './epics';
+export * from './user-stories';
+export * from './tasks';
+export * from './dependency-edges';
+export * from './workers';
+export * from './personas';
+export * from './attempt-history';

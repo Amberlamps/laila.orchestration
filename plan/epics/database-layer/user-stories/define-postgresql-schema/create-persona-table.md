@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Persona Table
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** database-administrator
 - **Parent User Story:** [Define PostgreSQL Schema](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -31,6 +31,7 @@ The persona description field supports Markdown for rich formatting, allowing de
 ## Technical Notes
 
 - Persona table definition:
+
   ```typescript
   // packages/database/src/schema/personas.ts
   // Personas table — role definitions for task assignment matching
@@ -41,23 +42,32 @@ The persona description field supports Markdown for rich formatting, allowing de
   import { relations } from 'drizzle-orm';
   import { usersTable } from './auth';
 
-  export const personasTable = pgTable('personas', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    tenantId: uuid('tenant_id').notNull().references(() => usersTable.id),
-    // Human-readable role title (e.g., "Backend Developer", "QA Engineer")
-    title: text('title').notNull(),
-    // Rich description of the persona's capabilities and responsibilities (Markdown)
-    // Used as context for AI agents when executing tasks assigned to this persona
-    description: text('description').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  }, (table) => ({
-    tenantIdx: index('personas_tenant_idx').on(table.tenantId),
-    // Ensure unique persona titles within a tenant
-    tenantTitleUniqueIdx: uniqueIndex('personas_tenant_title_unique_idx')
-      .on(table.tenantId, table.title),
-  }));
+  export const personasTable = pgTable(
+    'personas',
+    {
+      id: uuid('id').primaryKey().defaultRandom(),
+      tenantId: uuid('tenant_id')
+        .notNull()
+        .references(() => usersTable.id),
+      // Human-readable role title (e.g., "Backend Developer", "QA Engineer")
+      title: text('title').notNull(),
+      // Rich description of the persona's capabilities and responsibilities (Markdown)
+      // Used as context for AI agents when executing tasks assigned to this persona
+      description: text('description').notNull(),
+      createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+      updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+      tenantIdx: index('personas_tenant_idx').on(table.tenantId),
+      // Ensure unique persona titles within a tenant
+      tenantTitleUniqueIdx: uniqueIndex('personas_tenant_title_unique_idx').on(
+        table.tenantId,
+        table.title,
+      ),
+    }),
+  );
   ```
+
 - Personas do NOT use soft delete — they are either active or deleted. However, deletion must be guarded: the repository layer should check if any non-completed tasks reference the persona before allowing deletion
 - The `description` field is intentionally `text` (unlimited length) since Markdown persona descriptions can be detailed
 - Unlike most tables, personas do not have a `version` column for optimistic locking since concurrent editing conflicts are unlikely for persona definitions. This can be added later if needed
