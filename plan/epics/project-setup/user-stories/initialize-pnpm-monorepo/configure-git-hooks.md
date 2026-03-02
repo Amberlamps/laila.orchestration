@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Git Hooks
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** tooling-engineer
 - **Parent User Story:** [Initialize pnpm Monorepo Workspace](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)

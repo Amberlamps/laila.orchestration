@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure ESLint Flat Config
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** tooling-engineer
 - **Parent User Story:** [Initialize pnpm Monorepo Workspace](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)
@@ -16,6 +16,7 @@ Set up ESLint v9 using the new flat config format (`eslint.config.mjs`) at the m
 The flat config format replaces the legacy `.eslintrc.*` approach and uses a single exported array of configuration objects. Each object can target specific file patterns and apply different rule sets. This is ESLint v9's default and only supported configuration format.
 
 Key plugins and rule sets to configure:
+
 - `@typescript-eslint` with strict type-checked rules (requires `parserOptions.project` pointing to tsconfig files)
 - `eslint-plugin-react` and `eslint-plugin-react-hooks` for React rules
 - `eslint-plugin-jsx-a11y` for accessibility enforcement
