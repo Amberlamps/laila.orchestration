@@ -20,3 +20,4 @@ export * from './orchestration';
 export * from './dag';
 export * from './status';
 export * from './validation';
+export * from './assignment';

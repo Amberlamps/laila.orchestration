@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Assignment Engine Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Work Assignment Engine](./tasks.md)
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
@@ -20,39 +20,39 @@ Write exhaustive tests for the entire work assignment engine: eligibility rules,
 ```typescript
 // packages/domain/src/tests/assignment/eligibility-rules.test.ts
 // Exhaustive tests for story eligibility evaluation.
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 import {
   evaluateEligibility,
   getEligibleStoryIds,
   type StoryEligibilityInfo,
   type EpicInfo,
   type ProjectInfo,
-} from "@/assignment/eligibility-rules";
+} from '@/assignment/eligibility-rules';
 
-describe("evaluateEligibility", () => {
+describe('evaluateEligibility', () => {
   // Helper to create test data with sensible defaults.
   function createTestProject(overrides: Partial<ProjectInfo> = {}): ProjectInfo {
-    return { id: "project-1", status: "ready", ...overrides };
+    return { id: 'project-1', status: 'ready', ...overrides };
   }
 
   function createTestEpic(overrides: Partial<EpicInfo> = {}): EpicInfo {
-    return { id: "epic-1", status: "not-started", ...overrides };
+    return { id: 'epic-1', status: 'not-started', ...overrides };
   }
 
   function createTestStory(overrides: Partial<StoryEligibilityInfo> = {}): StoryEligibilityInfo {
     return {
-      id: "story-1",
-      status: "not-started",
-      epicId: "epic-1",
+      id: 'story-1',
+      status: 'not-started',
+      epicId: 'epic-1',
       crossStoryDepsSatisfied: true,
       ...overrides,
     };
   }
 
-  describe("happy path", () => {
-    it("should mark story as eligible when all criteria are met", () => {
+  describe('happy path', () => {
+    it('should mark story as eligible when all criteria are met', () => {
       const stories = [createTestStory()];
-      const epics = new Map([["epic-1", createTestEpic()]]);
+      const epics = new Map([['epic-1', createTestEpic()]]);
       const project = createTestProject();
 
       const results = evaluateEligibility(stories, epics, project);
@@ -62,42 +62,44 @@ describe("evaluateEligibility", () => {
     });
   });
 
-  describe("project state restrictions", () => {
-    it("should disqualify when project is in draft state", () => {
-      const project = createTestProject({ status: "draft" });
-      const results = evaluateEligibility([createTestStory()], new Map([["epic-1", createTestEpic()]]), project);
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons).toContainEqual(
-        expect.stringContaining("draft")
+  describe('project state restrictions', () => {
+    it('should disqualify when project is in draft state', () => {
+      const project = createTestProject({ status: 'draft' });
+      const results = evaluateEligibility(
+        [createTestStory()],
+        new Map([['epic-1', createTestEpic()]]),
+        project,
       );
+      expect(results[0].eligible).toBe(false);
+      expect(results[0].disqualificationReasons).toContainEqual(expect.stringContaining('draft'));
     });
 
-    it("should disqualify when project is complete", () => {});
-    it("should allow when project is in-progress", () => {});
+    it('should disqualify when project is complete', () => {});
+    it('should allow when project is in-progress', () => {});
   });
 
-  describe("story status restrictions", () => {
-    it("should disqualify in-progress stories", () => {});
-    it("should disqualify blocked stories", () => {});
-    it("should disqualify failed stories", () => {});
-    it("should disqualify draft stories", () => {});
-    it("should disqualify complete stories", () => {});
+  describe('story status restrictions', () => {
+    it('should disqualify in-progress stories', () => {});
+    it('should disqualify blocked stories', () => {});
+    it('should disqualify failed stories', () => {});
+    it('should disqualify draft stories', () => {});
+    it('should disqualify complete stories', () => {});
   });
 
-  describe("epic status restrictions", () => {
-    it("should disqualify when parent epic is blocked", () => {});
-    it("should disqualify when parent epic is failed", () => {});
-    it("should allow when parent epic is in-progress", () => {});
-    it("should handle missing parent epic", () => {});
+  describe('epic status restrictions', () => {
+    it('should disqualify when parent epic is blocked', () => {});
+    it('should disqualify when parent epic is failed', () => {});
+    it('should allow when parent epic is in-progress', () => {});
+    it('should handle missing parent epic', () => {});
   });
 
-  describe("cross-story dependencies", () => {
-    it("should disqualify when cross-story deps are not satisfied", () => {});
-    it("should allow when cross-story deps are satisfied", () => {});
+  describe('cross-story dependencies', () => {
+    it('should disqualify when cross-story deps are not satisfied', () => {});
+    it('should allow when cross-story deps are satisfied', () => {});
   });
 
-  describe("multiple disqualification reasons", () => {
-    it("should collect all reasons when multiple criteria fail", () => {
+  describe('multiple disqualification reasons', () => {
+    it('should collect all reasons when multiple criteria fail', () => {
       // Story in wrong status AND project in wrong state AND epic blocked
       // Assert: all three reasons are present
     });
@@ -109,50 +111,50 @@ describe("evaluateEligibility", () => {
 
 ```typescript
 // packages/domain/src/tests/assignment/priority-selection.test.ts
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 import {
   selectStoryForAssignment,
   rankEligibleStories,
   type StorySelectionInfo,
-} from "@/assignment/priority-selection";
+} from '@/assignment/priority-selection';
 
-describe("selectStoryForAssignment", () => {
-  it("should select high priority over medium priority", () => {
+describe('selectStoryForAssignment', () => {
+  it('should select high priority over medium priority', () => {
     // Two eligible stories: one high, one medium
     // Assert: high priority story is selected
   });
 
-  it("should select medium priority over low priority", () => {});
+  it('should select medium priority over low priority', () => {});
 
-  it("should use topological order as tiebreaker for same priority", () => {
+  it('should use topological order as tiebreaker for same priority', () => {
     // Two high-priority stories at different topo positions
     // Assert: earlier topo position is selected
   });
 
-  it("should use creation time as final tiebreaker", () => {
+  it('should use creation time as final tiebreaker', () => {
     // Two high-priority stories at same topo position
     // Assert: older story is selected
   });
 
-  it("should return selected: false when no eligible stories", () => {
+  it('should return selected: false when no eligible stories', () => {
     const result = selectStoryForAssignment([], new Map(), []);
     expect(result.selected).toBe(false);
   });
 
-  it("should handle single eligible story", () => {});
+  it('should handle single eligible story', () => {});
 
-  it("should handle stories not in topological order (Infinity position)", () => {
+  it('should handle stories not in topological order (Infinity position)', () => {
     // Story not in topo sort should be ranked after stories in topo sort
   });
 });
 
-describe("rankEligibleStories", () => {
-  it("should return all stories sorted by priority, topo order, then creation time", () => {
+describe('rankEligibleStories', () => {
+  it('should return all stories sorted by priority, topo order, then creation time', () => {
     // Multiple stories with various priorities and positions
     // Assert: sorted correctly
   });
 
-  it("should return empty array for no eligible stories", () => {});
+  it('should return empty array for no eligible stories', () => {});
 });
 ```
 
@@ -160,50 +162,50 @@ describe("rankEligibleStories", () => {
 
 ```typescript
 // packages/domain/src/tests/assignment/recommended-task-order.test.ts
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 import {
   computeRecommendedTaskOrder,
   getNextReadyTasks,
-} from "@/assignment/recommended-task-order";
-import { buildAdjacencyList } from "@/dag/cycle-detection";
+} from '@/assignment/recommended-task-order';
+import { buildAdjacencyList } from '@/dag/cycle-detection';
 
-describe("computeRecommendedTaskOrder", () => {
-  it("should order tasks respecting dependencies", () => {
+describe('computeRecommendedTaskOrder', () => {
+  it('should order tasks respecting dependencies', () => {
     // A -> B -> C (linear chain)
     // Assert: orderedTasks is [A, B, C]
   });
 
-  it("should classify ready tasks correctly", () => {
+  it('should classify ready tasks correctly', () => {
     // A -> C, B -> C. A and B have no deps.
     // Assert: readyNow includes A and B, blocked includes C
   });
 
-  it("should classify completed tasks", () => {
+  it('should classify completed tasks', () => {
     // A is complete, B depends on A
     // Assert: completed includes A, readyNow includes B
   });
 
-  it("should classify in-progress tasks", () => {
+  it('should classify in-progress tasks', () => {
     // A is in-progress
     // Assert: inProgress includes A
   });
 
-  it("should handle story with all tasks complete", () => {
+  it('should handle story with all tasks complete', () => {
     // Assert: readyNow is empty, completed has all tasks
   });
 
-  it("should handle story with no dependencies (all tasks ready)", () => {
+  it('should handle story with no dependencies (all tasks ready)', () => {
     // Three tasks, no deps between them
     // Assert: all in readyNow
   });
 
-  it("should handle empty story", () => {
+  it('should handle empty story', () => {
     const result = computeRecommendedTaskOrder([], new Map(), new Map());
     expect(result.orderedTasks).toHaveLength(0);
     expect(result.readyNow).toHaveLength(0);
   });
 
-  it("should only consider intra-story dependencies for readiness", () => {
+  it('should only consider intra-story dependencies for readiness', () => {
     // Task A depends on external Task X (in another story)
     // Task A should be in readyNow if all intra-story deps are satisfied
     // (cross-story deps handled at story eligibility level)
@@ -215,22 +217,22 @@ describe("computeRecommendedTaskOrder", () => {
 
 ```typescript
 // packages/domain/src/tests/assignment/optimistic-locking.test.ts
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 import {
   checkVersionConflict,
   generateRetryGuidance,
   nextVersion,
   buildConflictResponse,
   isValidVersion,
-} from "@/assignment/optimistic-locking";
+} from '@/assignment/optimistic-locking';
 
-describe("checkVersionConflict", () => {
-  it("should return no conflict when versions match", () => {
+describe('checkVersionConflict', () => {
+  it('should return no conflict when versions match', () => {
     const result = checkVersionConflict(1, 1);
     expect(result.conflict).toBe(false);
   });
 
-  it("should detect conflict when versions differ", () => {
+  it('should detect conflict when versions differ', () => {
     const result = checkVersionConflict(1, 3);
     expect(result.conflict).toBe(true);
     if (result.conflict) {
@@ -240,61 +242,61 @@ describe("checkVersionConflict", () => {
   });
 });
 
-describe("generateRetryGuidance", () => {
-  it("should recommend refetch-and-retry for small gaps", () => {
+describe('generateRetryGuidance', () => {
+  it('should recommend refetch-and-retry for small gaps', () => {
     const guidance = generateRetryGuidance(1, 2);
     expect(guidance.shouldRetry).toBe(true);
-    expect(guidance.strategy).toBe("refetch-and-retry");
+    expect(guidance.strategy).toBe('refetch-and-retry');
   });
 
-  it("should recommend refetch-and-retry with warning for large gaps", () => {
+  it('should recommend refetch-and-retry with warning for large gaps', () => {
     const guidance = generateRetryGuidance(1, 10);
     expect(guidance.shouldRetry).toBe(true);
-    expect(guidance.explanation).toContain("out of date");
+    expect(guidance.explanation).toContain('out of date');
   });
 
-  it("should recommend abort for invalid version state", () => {
+  it('should recommend abort for invalid version state', () => {
     const guidance = generateRetryGuidance(5, 3);
     expect(guidance.shouldRetry).toBe(false);
-    expect(guidance.strategy).toBe("abort");
+    expect(guidance.strategy).toBe('abort');
   });
 });
 
-describe("isValidVersion", () => {
-  it("should accept positive integers", () => {
+describe('isValidVersion', () => {
+  it('should accept positive integers', () => {
     expect(isValidVersion(1)).toBe(true);
     expect(isValidVersion(100)).toBe(true);
   });
 
-  it("should reject zero", () => {
+  it('should reject zero', () => {
     expect(isValidVersion(0)).toBe(false);
   });
 
-  it("should reject negative numbers", () => {
+  it('should reject negative numbers', () => {
     expect(isValidVersion(-1)).toBe(false);
   });
 
-  it("should reject floats", () => {
+  it('should reject floats', () => {
     expect(isValidVersion(1.5)).toBe(false);
   });
 
-  it("should reject non-numbers", () => {
-    expect(isValidVersion("1")).toBe(false);
+  it('should reject non-numbers', () => {
+    expect(isValidVersion('1')).toBe(false);
     expect(isValidVersion(null)).toBe(false);
     expect(isValidVersion(undefined)).toBe(false);
   });
 });
 
-describe("buildConflictResponse", () => {
-  it("should produce a well-structured 409 error response", () => {
+describe('buildConflictResponse', () => {
+  it('should produce a well-structured 409 error response', () => {
     const conflictResult = checkVersionConflict(1, 3);
-    if (!conflictResult.conflict) throw new Error("Expected conflict");
+    if (!conflictResult.conflict) throw new Error('Expected conflict');
 
-    const response = buildConflictResponse("user-story", "story-1", conflictResult);
+    const response = buildConflictResponse('user-story', 'story-1', conflictResult);
 
-    expect(response.error.code).toBe("VERSION_CONFLICT");
-    expect(response.error.details.entityType).toBe("user-story");
-    expect(response.error.details.entityId).toBe("story-1");
+    expect(response.error.code).toBe('VERSION_CONFLICT');
+    expect(response.error.details.entityType).toBe('user-story');
+    expect(response.error.details.entityId).toBe('story-1');
     expect(response.error.details.expectedVersion).toBe(1);
     expect(response.error.details.actualVersion).toBe(3);
     expect(response.error.details.retryGuidance).toBeDefined();
@@ -308,8 +310,8 @@ describe("buildConflictResponse", () => {
 // packages/domain/src/tests/assignment/integration-scenarios.test.ts
 // End-to-end scenarios that test the full assignment pipeline.
 
-describe("Assignment Pipeline Integration", () => {
-  it("scenario: single eligible story is selected and task order computed", () => {
+describe('Assignment Pipeline Integration', () => {
+  it('scenario: single eligible story is selected and task order computed', () => {
     // 1. Create project with one epic, two stories, multiple tasks
     // 2. Evaluate eligibility -> one story eligible
     // 3. Select story -> the eligible story
@@ -317,24 +319,24 @@ describe("Assignment Pipeline Integration", () => {
     // 5. Verify readyNow tasks are the ones with no deps
   });
 
-  it("scenario: multiple eligible stories, highest priority selected", () => {
+  it('scenario: multiple eligible stories, highest priority selected', () => {
     // 1. Create project with multiple eligible stories at different priorities
     // 2. Evaluate eligibility -> multiple eligible
     // 3. Select story -> highest priority story
   });
 
-  it("scenario: no eligible stories — all blocked", () => {
+  it('scenario: no eligible stories — all blocked', () => {
     // 1. Create project where all stories have unsatisfied cross-story deps
     // 2. Evaluate eligibility -> zero eligible
     // 3. Select story -> selected: false
   });
 
-  it("scenario: all stories complete", () => {
+  it('scenario: all stories complete', () => {
     // 1. Create project where all stories are complete
     // 2. Evaluate eligibility -> zero eligible
   });
 
-  it("scenario: concurrency conflict during assignment", () => {
+  it('scenario: concurrency conflict during assignment', () => {
     // 1. Agent A reads story at version 1
     // 2. Agent B reads story at version 1
     // 3. Agent A assigns story (version 1 -> 2)

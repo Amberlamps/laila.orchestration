@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Eligibility Rules
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Work Assignment Engine](./tasks.md)
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
@@ -25,7 +25,7 @@ Implement a pure function that determines which user stories are eligible for as
 // A story is eligible when its lifecycle, dependencies, parent epic,
 // and project state all permit assignment.
 // Pure function: no database calls, no side effects.
-import type { UserStoryStatus, EpicStatus, ProjectStatus } from "../status/transition-definitions";
+import type { UserStoryStatus, EpicStatus, ProjectStatus } from '../status/transition-definitions';
 
 /**
  * Minimal project information needed for eligibility checking.
@@ -79,43 +79,34 @@ export interface EligibilityResult {
 export function evaluateEligibility(
   stories: StoryEligibilityInfo[],
   epics: Map<string, EpicInfo>,
-  project: ProjectInfo
+  project: ProjectInfo,
 ): EligibilityResult[] {
   return stories.map((story) => {
     const reasons: string[] = [];
 
     // Rule 1: Project must be in ready or in-progress state.
-    if (project.status !== "ready" && project.status !== "in-progress") {
-      reasons.push(
-        `Project is in "${project.status}" state — must be "ready" or "in-progress"`
-      );
+    if (project.status !== 'ready' && project.status !== 'in-progress') {
+      reasons.push(`Project is in "${project.status}" state — must be "ready" or "in-progress"`);
     }
 
     // Rule 2: Story must be in not-started status.
-    if (story.status !== "not-started") {
-      reasons.push(
-        `Story is in "${story.status}" status — must be "not-started"`
-      );
+    if (story.status !== 'not-started') {
+      reasons.push(`Story is in "${story.status}" status — must be "not-started"`);
     }
 
     // Rule 3: Parent epic must be in not-started or in-progress status.
     const parentEpic = epics.get(story.epicId);
     if (!parentEpic) {
       reasons.push(`Parent epic "${story.epicId}" not found`);
-    } else if (
-      parentEpic.status !== "not-started" &&
-      parentEpic.status !== "in-progress"
-    ) {
+    } else if (parentEpic.status !== 'not-started' && parentEpic.status !== 'in-progress') {
       reasons.push(
-        `Parent epic is "${parentEpic.status}" — must be "not-started" or "in-progress"`
+        `Parent epic is "${parentEpic.status}" — must be "not-started" or "in-progress"`,
       );
     }
 
     // Rule 4: Cross-story dependencies must be satisfied.
     if (!story.crossStoryDepsSatisfied) {
-      reasons.push(
-        "Cross-story task dependencies are not yet satisfied"
-      );
+      reasons.push('Cross-story task dependencies are not yet satisfied');
     }
 
     return {
@@ -137,7 +128,7 @@ export function evaluateEligibility(
 export function getEligibleStoryIds(
   stories: StoryEligibilityInfo[],
   epics: Map<string, EpicInfo>,
-  project: ProjectInfo
+  project: ProjectInfo,
 ): string[] {
   return evaluateEligibility(stories, epics, project)
     .filter((result) => result.eligible)

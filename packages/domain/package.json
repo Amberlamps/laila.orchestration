@@ -8,7 +8,8 @@
     "./orchestration": "./src/orchestration/index.ts",
     "./dag": "./src/dag/index.ts",
     "./status": "./src/status/index.ts",
-    "./validation": "./src/validation/index.ts"
+    "./validation": "./src/validation/index.ts",
+    "./assignment": "./src/assignment/index.ts"
   },
   "dependencies": {
     "@laila/shared": "workspace:*"
