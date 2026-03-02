@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    /* Type Checking — strictest settings */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Modules */
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    /* Language & Environment */
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+
+    /* Emit */
+    "declaration": true,
+    "declarationMap": true,
+    "skipLibCheck": true,
+
+    /* Project References */
+    "composite": false,
+
+    /* Path Aliases — workspace packages */
+    "paths": {
+      "@laila/shared": ["./packages/shared/src"],
+      "@laila/shared/*": ["./packages/shared/src/*"],
+      "@laila/domain": ["./packages/domain/src"],
+      "@laila/domain/*": ["./packages/domain/src/*"],
+      "@laila/database": ["./packages/database/src"],
+      "@laila/database/*": ["./packages/database/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", ".next", "coverage", "build"]
+}

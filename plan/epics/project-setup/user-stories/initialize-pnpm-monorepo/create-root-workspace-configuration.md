@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Root Workspace Configuration
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Initialize pnpm Monorepo Workspace](./tasks.md)
 - **Parent Epic:** [Project Setup & Monorepo Scaffold](../../user-stories.md)
@@ -16,6 +16,7 @@ Create the foundational root-level configuration files for the pnpm monorepo. Th
 The root `package.json` should be marked as `private: true` (monorepo root is never published) and include workspace-level scripts for common operations like `dev`, `build`, `lint`, `format`, `test`, and `typecheck`. These scripts should use pnpm's recursive (`-r`) or filter (`--filter`) commands to operate across all workspace packages.
 
 The `pnpm-workspace.yaml` must define three workspace directories:
+
 - `apps/*` — deployable applications (Next.js web app)
 - `packages/*` — shared libraries (shared, domain, database, api-spec)
 - `functions/*` — AWS Lambda functions (timeout-checker, dag-reconciler, audit-archiver)
