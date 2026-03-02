@@ -4,7 +4,7 @@
 
 - **Title:** Implement Status Transition Engine
 - **Description:** Define all valid status transitions for tasks, user stories, epics, and projects. Implement cascading status re-evaluation and status derivation logic. All functions are pure and deterministic.
-- **Status:** Not Started
+- **Status:** In Progress (laila-agent-3)
 - **Parent Epic:** [Domain Logic Engine](../../user-stories.md)
 - **Total Tasks:** 6
 - **Dependencies:** Implement DAG Operations
@@ -13,14 +13,14 @@
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Define Valid Status Transitions](./define-valid-status-transitions.md) | Define all valid state machines for tasks, user stories, epics, and projects | Not Started | backend-developer | None |
-| [Implement Cascading Status Re-evaluation](./implement-cascading-status-reevaluation.md) | Re-evaluate dependent task/story/epic statuses when a task completes | Not Started | backend-developer | Define Valid Status Transitions |
-| [Implement Task Status Determination](./implement-task-status-determination.md) | Determine a task's status from the DAG state and completed tasks set | Not Started | backend-developer | Define Valid Status Transitions |
-| [Implement Story Status Derivation](./implement-story-status-derivation.md) | Derive user story status from its child tasks and cross-story dependencies | Not Started | backend-developer | Implement Cascading Status Re-evaluation, Implement Task Status Determination |
-| [Implement Epic Status Derivation](./implement-epic-status-derivation.md) | Derive epic status from its child user stories | Not Started | backend-developer | Implement Story Status Derivation |
-| [Write Status Engine Tests](./write-status-engine-tests.md) | Exhaustive tests for all transition paths, cascading propagation, and edge cases | Not Started | qa-expert | Define Valid Status Transitions, Implement Cascading Status Re-evaluation, Implement Task Status Determination, Implement Story Status Derivation, Implement Epic Status Derivation |
+| Task                                                                                     | Description                                                                      | Status      | Assigned Agent    | Dependencies                                                                                                                                                                        |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Define Valid Status Transitions](./define-valid-status-transitions.md)                  | Define all valid state machines for tasks, user stories, epics, and projects     | Not Started | backend-developer | None                                                                                                                                                                                |
+| [Implement Cascading Status Re-evaluation](./implement-cascading-status-reevaluation.md) | Re-evaluate dependent task/story/epic statuses when a task completes             | Not Started | backend-developer | Define Valid Status Transitions                                                                                                                                                     |
+| [Implement Task Status Determination](./implement-task-status-determination.md)          | Determine a task's status from the DAG state and completed tasks set             | Not Started | backend-developer | Define Valid Status Transitions                                                                                                                                                     |
+| [Implement Story Status Derivation](./implement-story-status-derivation.md)              | Derive user story status from its child tasks and cross-story dependencies       | Not Started | backend-developer | Implement Cascading Status Re-evaluation, Implement Task Status Determination                                                                                                       |
+| [Implement Epic Status Derivation](./implement-epic-status-derivation.md)                | Derive epic status from its child user stories                                   | Not Started | backend-developer | Implement Story Status Derivation                                                                                                                                                   |
+| [Write Status Engine Tests](./write-status-engine-tests.md)                              | Exhaustive tests for all transition paths, cascading propagation, and edge cases | Not Started | qa-expert         | Define Valid Status Transitions, Implement Cascading Status Re-evaluation, Implement Task Status Determination, Implement Story Status Derivation, Implement Epic Status Derivation |
 
 ## Dependency Graph
 
