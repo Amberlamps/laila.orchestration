@@ -14,7 +14,7 @@
 | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------- | ------- | -------------------------------------------------------------------------------------- |
 | [Initialize pnpm Monorepo Workspace](./user-stories/initialize-pnpm-monorepo/tasks.md)         | Set up root workspace configuration, TypeScript, linting, formatting, and git hooks              | Complete                    | 5 tasks | None                                                                                   |
 | [Scaffold Workspace Packages](./user-stories/scaffold-workspace-packages/tasks.md)             | Create all workspace packages: web app, shared, domain, database, api-spec, and Lambda functions | Complete                    | 6 tasks | Initialize pnpm Monorepo Workspace                                                     |
-| [Configure Development Environment](./user-stories/configure-development-environment/tasks.md) | Set up editor config, environment templates, and Vitest workspace                                | Not Started                 | 3 tasks | Initialize pnpm Monorepo Workspace (partial), Scaffold Workspace Packages (for Vitest) |
+| [Configure Development Environment](./user-stories/configure-development-environment/tasks.md) | Set up editor config, environment templates, and Vitest workspace                                | In Progress (laila-agent-1) | 3 tasks | Initialize pnpm Monorepo Workspace (partial), Scaffold Workspace Packages (for Vitest) |
 
 ## Dependency Graph
 
