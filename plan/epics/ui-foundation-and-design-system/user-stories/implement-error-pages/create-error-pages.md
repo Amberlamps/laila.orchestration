@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Error Pages
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Error Pages](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -16,6 +16,7 @@ Create four error pages with consistent styling: 404 (Not Found), 403 (Forbidden
 ### Shared Layout
 
 All error pages share a common layout:
+
 - **Background:** zinc-50
 - **Container:** Centered vertically and horizontally, max-width 480px
 - **Icon:** 64px Lucide icon in zinc-300
@@ -56,9 +57,9 @@ All error pages share a common layout:
 // apps/web/src/components/error/error-page.tsx
 // Shared error page layout used by 404, 403, 500, and OAuth error pages.
 // Provides consistent visual treatment for all error states.
-import { type LucideIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { type LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 interface ErrorPageProps {
   /** Lucide icon component for the error illustration */
@@ -92,16 +93,12 @@ export function ErrorPage({
   secondaryAction,
 }: ErrorPageProps) {
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center px-4">
-      <div className="text-center max-w-[480px]">
-        <Icon className="w-16 h-16 text-zinc-300 mx-auto mb-4" />
-        {code && (
-          <p className="text-display text-zinc-300 mb-2">{code}</p>
-        )}
-        <h1 className="text-h1 text-zinc-900 mb-3">{title}</h1>
-        <p className="text-body text-zinc-500 max-w-[400px] mx-auto mb-8">
-          {description}
-        </p>
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
+      <div className="max-w-[480px] text-center">
+        <Icon className="mx-auto mb-4 h-16 w-16 text-zinc-300" />
+        {code && <p className="text-display mb-2 text-zinc-300">{code}</p>}
+        <h1 className="text-h1 mb-3 text-zinc-900">{title}</h1>
+        <p className="text-body mx-auto mb-8 max-w-[400px] text-zinc-500">{description}</p>
         <div className="flex flex-col items-center gap-2">
           {primaryAction.href ? (
             <Button asChild>
@@ -110,8 +107,8 @@ export function ErrorPage({
           ) : (
             <Button onClick={primaryAction.onClick}>{primaryAction.label}</Button>
           )}
-          {secondaryAction && (
-            secondaryAction.href ? (
+          {secondaryAction &&
+            (secondaryAction.href ? (
               <Button variant="ghost" asChild>
                 <Link href={secondaryAction.href}>{secondaryAction.label}</Link>
               </Button>
@@ -119,8 +116,7 @@ export function ErrorPage({
               <Button variant="ghost" onClick={secondaryAction.onClick}>
                 {secondaryAction.label}
               </Button>
-            )
-          )}
+            ))}
         </div>
       </div>
     </div>
@@ -159,7 +155,7 @@ export function ErrorPage({
 
 - **Design Specification:** Section 4.4 (Error Pages), Section 4.4.1 (Error Page Layout)
 - **Functional Requirements:** FR-UI-015 (error pages), FR-UI-016 (error recovery CTAs)
-- **Next.js Docs:** Custom error pages (404.tsx, 500.tsx, _error.tsx)
+- **Next.js Docs:** Custom error pages (404.tsx, 500.tsx, \_error.tsx)
 - **Lucide Icons Docs:** FileQuestion, ShieldX, ServerCrash, KeyRound icons
 
 ## Estimated Complexity

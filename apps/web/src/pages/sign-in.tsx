@@ -8,10 +8,12 @@
  * Public page: opts out of AppLayout via `getLayout` to render without
  * the sidebar/navigation shell.
  */
+import { KeyRound } from 'lucide-react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 
+import { ErrorPage } from '@/components/error/error-page';
 import { Card } from '@/components/ui/card';
 import { signIn, useSession } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
@@ -144,13 +146,15 @@ const SignInPage: NextPageWithLayout = () => {
   // ---------------------------------------------------------------------------
   // Handle ?error= query parameter from Better Auth callbacks
   // ---------------------------------------------------------------------------
+  const oauthErrorCode = router.query.error;
+  const hasOAuthError = typeof oauthErrorCode === 'string' && oauthErrorCode.length > 0;
+
   useEffect(() => {
-    const errorCode = router.query.error;
-    if (typeof errorCode === 'string' && errorCode.length > 0) {
+    if (hasOAuthError) {
       setStatus('error');
-      setErrorMessage(getErrorMessage(errorCode));
+      setErrorMessage(getErrorMessage(oauthErrorCode));
     }
-  }, [router.query.error]);
+  }, [hasOAuthError, oauthErrorCode]);
 
   // ---------------------------------------------------------------------------
   // Redirect authenticated users to the dashboard
@@ -210,6 +214,25 @@ const SignInPage: NextPageWithLayout = () => {
           <title>Sign In - laila.works</title>
         </Head>
         <div className="flex min-h-screen items-center justify-center bg-zinc-50" />
+      </>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // OAuth Error — full-page error when redirected back with ?error= param
+  // ---------------------------------------------------------------------------
+  if (hasOAuthError) {
+    return (
+      <>
+        <Head>
+          <title>Authentication Error - laila.works</title>
+        </Head>
+        <ErrorPage
+          icon={KeyRound}
+          title="Authentication Error"
+          description={errorMessage ?? getErrorMessage(oauthErrorCode)}
+          primaryAction={{ label: 'Try Again', href: '/sign-in' }}
+        />
       </>
     );
   }
