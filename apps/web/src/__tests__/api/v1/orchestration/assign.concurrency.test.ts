@@ -28,6 +28,7 @@
 
 import { randomUUID } from 'node:crypto';
 
+import { sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createMockRequest, createMockResponse } from '@/__tests__/helpers/mock-api';
@@ -137,11 +138,7 @@ const seedProject = async (
   return { id, name };
 };
 
-const seedEpic = async (
-  db: PoolDatabase,
-  tenantId: string,
-  projectId: string,
-): Promise<string> => {
+const seedEpic = async (db: PoolDatabase, tenantId: string, projectId: string): Promise<string> => {
   const id = randomUUID();
   await db.execute(
     sql`INSERT INTO epics (id, tenant_id, project_id, name, work_status, sort_order, version)
@@ -173,10 +170,7 @@ const seedStory = async (
   return { id, version: 1 };
 };
 
-const seedWorker = async (
-  db: PoolDatabase,
-  tenantId: string,
-): Promise<string> => {
+const seedWorker = async (db: PoolDatabase, tenantId: string): Promise<string> => {
   const id = randomUUID();
   // Workers need an API key hash/prefix for the table constraints.
   // These are dummy values since auth is mocked.
@@ -238,10 +232,7 @@ const cleanupTenant = async (db: PoolDatabase, tenantId: string): Promise<void> 
 // Request helpers
 // ---------------------------------------------------------------------------
 
-const makeAssignRequest = (
-  projectId: string,
-  apiKeyToken: string,
-): NextApiRequest => {
+const makeAssignRequest = (projectId: string, apiKeyToken: string): NextApiRequest => {
   return createMockRequest({
     method: 'POST',
     url: '/api/v1/orchestration/assign',
@@ -265,9 +256,7 @@ const registerWorkerAuth = (
   });
 };
 
-const callHandler = async (
-  req: NextApiRequest,
-): Promise<MockApiResponse> => {
+const callHandler = async (req: NextApiRequest): Promise<MockApiResponse> => {
   const res = createMockResponse();
   await handler(req, res as unknown as NextApiResponse);
   return res;
@@ -303,10 +292,6 @@ describe.skipIf(!HAS_DATABASE)('POST /api/v1/orchestration/assign (DB-backed)', 
   afterAll(async () => {
     if (_poolDb) {
       await _poolDb.execute(sql`DELETE FROM users WHERE id = ${tenantId}`);
-    }
-    if (_pool) {
-      await _pool.end();
-      _pool = null;
       _poolDb = null;
     }
   });
