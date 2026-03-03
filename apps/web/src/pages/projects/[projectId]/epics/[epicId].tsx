@@ -23,6 +23,7 @@ import { CreateEditEpicModal } from '@/components/epics/create-edit-epic-modal';
 import { DeleteEpicButton, DeleteEpicFlow } from '@/components/epics/delete-epic-flow';
 import { PublishEpicFlow } from '@/components/epics/publish-epic-flow';
 import { AppLayout } from '@/components/layout/app-layout';
+import { CreateEditStoryModal } from '@/components/stories/create-edit-story-modal';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -356,6 +357,7 @@ const EpicDetailPage: NextPageWithLayout = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [publishFlowOpen, setPublishFlowOpen] = useState(false);
   const [deleteFlowOpen, setDeleteFlowOpen] = useState(false);
+  const [createStoryModalOpen, setCreateStoryModalOpen] = useState(false);
 
   // Fetch epic detail
   const {
@@ -562,7 +564,7 @@ const EpicDetailPage: NextPageWithLayout = () => {
           <h2 className="text-lg font-semibold text-zinc-900">User Stories</h2>
           <Button
             onClick={() => {
-              void router.push(`/projects/${projectId}/epics/${epicId}/stories/new`);
+              setCreateStoryModalOpen(true);
             }}
           >
             + Add Story
@@ -590,12 +592,20 @@ const EpicDetailPage: NextPageWithLayout = () => {
               description="This epic doesn't have any user stories. Add a story to get started."
               actionLabel="+ Add Story"
               onAction={() => {
-                void router.push(`/projects/${projectId}/epics/${epicId}/stories/new`);
+                setCreateStoryModalOpen(true);
               }}
             />
           }
         />
       </div>
+
+      {/* Create story modal (pre-selected to this epic) */}
+      <CreateEditStoryModal
+        open={createStoryModalOpen}
+        onOpenChange={setCreateStoryModalOpen}
+        projectId={projectId}
+        epicId={epicId}
+      />
     </div>
   );
 };

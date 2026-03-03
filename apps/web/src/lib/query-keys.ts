@@ -148,6 +148,8 @@ export const queryKeys = {
     detail: (storyId: string) => ['stories', 'detail', storyId] as const,
     /** Matches all stories listed at the project level (cross-level query). */
     byProject: (projectId: string) => ['projects', projectId, 'stories'] as const,
+    /** Matches the attempt history query for a specific story. */
+    attemptHistory: (storyId: string) => ['stories', 'attemptHistory', storyId] as const,
   },
 
   // ---------------------------------------------------------------------------

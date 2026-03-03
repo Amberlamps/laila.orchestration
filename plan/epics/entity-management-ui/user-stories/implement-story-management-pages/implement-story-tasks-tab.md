@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Story Tasks Tab
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement User Story Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -44,13 +44,13 @@ Build the Tasks sub-tab for the story detail page. This tab displays the task br
 // apps/web/src/components/stories/story-tasks-tab.tsx
 // Tasks sub-tab for the story detail page.
 // Shows the task breakdown with execution order, dependencies, and read-only guards.
-import { Plus, Lock, ArrowRight } from "lucide-react";
-import { EntityTable, type ColumnDef } from "@/components/ui/entity-table";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { useStoryTasks } from "@/hooks/use-tasks";
+import { Plus, Lock, ArrowRight } from 'lucide-react';
+import { EntityTable, type ColumnDef } from '@/components/ui/entity-table';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { useStoryTasks } from '@/hooks/use-tasks';
 
 interface StoryTasksTabProps {
   storyId: string;
@@ -63,22 +63,25 @@ interface StoryTasksTabProps {
 // Each column maps a task field to a visual representation.
 const taskColumns: ColumnDef<Task>[] = [
   {
-    key: "order",
-    header: "#",
-    width: "60px",
+    key: 'order',
+    header: '#',
+    width: '60px',
     cell: (task) => (
       // Execution order number in a circular badge
-      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-zinc-100 text-xs font-medium text-zinc-600">
+      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600">
         {task.executionOrder}
       </span>
     ),
   },
   {
-    key: "title",
-    header: "Task",
+    key: 'title',
+    header: 'Task',
     sortable: true,
     cell: (task) => (
-      <Link href={`/projects/${task.projectId}/tasks/${task.id}`} className="text-indigo-600 hover:underline">
+      <Link
+        href={`/projects/${task.projectId}/tasks/${task.id}`}
+        className="text-indigo-600 hover:underline"
+      >
         {task.title}
       </Link>
     ),

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Story Detail Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement User Story Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -50,23 +50,21 @@ Build the user story detail page at `/projects/{projectId}/stories/{storyId}` th
 // apps/web/src/pages/projects/[projectId]/stories/[storyId].tsx
 // Story detail page with header, metadata grid, and tabbed content.
 // Shows error messages prominently when story has Failed status.
-import { useRouter } from "next/router";
-import {
-  Pencil, Trash2, Send, UserMinus, RotateCcw, AlertCircle,
-} from "lucide-react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useStory } from "@/hooks/use-stories";
+import { useRouter } from 'next/router';
+import { Pencil, Trash2, Send, UserMinus, RotateCcw, AlertCircle } from 'lucide-react';
+import { AppLayout } from '@/components/layout/app-layout';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useStory } from '@/hooks/use-stories';
 
 // Priority badge color mapping.
 // Each priority level has a distinct color for quick visual identification.
 const PRIORITY_COLORS = {
-  high: { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500" },
-  medium: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
-  low: { bg: "bg-green-50", text: "text-green-700", dot: "bg-green-500" },
+  high: { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
+  medium: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
+  low: { bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500' },
 };
 ```
 

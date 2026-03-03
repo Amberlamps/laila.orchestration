@@ -435,7 +435,7 @@ export const useUpdateStory = (storyId: string, epicId: string) => {
 };
 
 /** Deletes a story, removes its detail cache, and invalidates list caches. */
-export const useDeleteStory = (epicId: string) => {
+export const useDeleteStory = (epicId: string, projectId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -448,9 +448,254 @@ export const useDeleteStory = (epicId: string) => {
     onSuccess: (_data, storyId) => {
       queryClient.removeQueries({ queryKey: queryKeys.stories.detail(storyId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.stories.lists(epicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.epics.detail(epicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.stories.byProject(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.stats() });
     },
   });
 };
+
+// ---------------------------------------------------------------------------
+// Story Validation & Publishing
+// ---------------------------------------------------------------------------
+
+interface ValidateStoryResult {
+  valid: boolean;
+  issues?: Array<{
+    taskId: string;
+    taskTitle: string;
+    issues: string[];
+  }>;
+}
+
+/** Validates a story's structure before publishing without changing state. */
+export const useValidateStory = () => {
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      epicId,
+      storyId,
+    }: {
+      projectId: string;
+      epicId: string;
+      storyId: string;
+    }): Promise<ValidateStoryResult> => {
+      const response = await fetch(
+        `/api/v1/projects/${projectId}/epics/${epicId}/stories/${storyId}/validate`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<ValidateStoryResult>;
+    },
+  });
+};
+
+/** Publishes a story (transitions from Draft to Ready status). */
+export const usePublishStory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      epicId,
+      storyId,
+    }: {
+      projectId: string;
+      epicId: string;
+      storyId: string;
+    }) => {
+      const response = await fetch(
+        `/api/v1/projects/${projectId}/epics/${epicId}/stories/${storyId}/publish`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<unknown>;
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.stories.detail(variables.storyId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.stories.lists(variables.epicId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.epics.detail(variables.epicId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.stories.byProject(variables.projectId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.detail(variables.projectId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.stats(),
+      });
+    },
+  });
+};
+
+// ---------------------------------------------------------------------------
+// Story Reset
+// ---------------------------------------------------------------------------
+
+/** Resets a failed story back to a system-determined status (e.g., not_started or ready). */
+export const useResetStory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      epicId,
+      storyId,
+    }: {
+      projectId: string;
+      epicId: string;
+      storyId: string;
+    }) => {
+      const response = await fetch(
+        `/api/v1/projects/${projectId}/epics/${epicId}/stories/${storyId}/reset`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<unknown>;
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.stories.detail(variables.storyId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.stories.lists(variables.epicId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.epics.detail(variables.epicId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.stories.byProject(variables.projectId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.detail(variables.projectId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.stats(),
+      });
+    },
+  });
+};
+
+// ---------------------------------------------------------------------------
+// Story Unassign
+// ---------------------------------------------------------------------------
+
+/** Removes the current worker assignment from a story. */
+export const useUnassignStory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      epicId,
+      storyId,
+    }: {
+      projectId: string;
+      epicId: string;
+      storyId: string;
+    }) => {
+      const response = await fetch(
+        `/api/v1/projects/${projectId}/epics/${epicId}/stories/${storyId}/unassign`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ confirmation: true }),
+        },
+      );
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<unknown>;
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.stories.detail(variables.storyId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.stories.lists(variables.epicId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.epics.detail(variables.epicId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.stories.byProject(variables.projectId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.detail(variables.projectId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.stats(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workers.lists(),
+      });
+    },
+  });
+};
+
+// ---------------------------------------------------------------------------
+// Story Attempt History
+// ---------------------------------------------------------------------------
+
+/** Response shape for a single attempt history entry. */
+export interface AttemptEntry {
+  id: string;
+  workerId: string | null;
+  workerName: string;
+  assignedAt: string;
+  unassignedAt: string | null;
+  reason: 'timeout' | 'manual' | 'failure' | 'complete' | null;
+  durationSeconds: number | null;
+}
+
+/** Fetches attempt history for a story. Disabled when storyId is falsy. */
+export const useStoryAttemptHistory = (storyId: string) =>
+  useQuery({
+    queryKey: queryKeys.stories.attemptHistory(storyId),
+    queryFn: async (): Promise<AttemptEntry[]> => {
+      const response = await fetch(`/api/v1/stories/${storyId}/attempt-history`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      const json = (await response.json()) as { data: AttemptEntry[] };
+      return json.data;
+    },
+    enabled: !!storyId,
+  });
 
 // ===========================================================================
 // Tasks (scoped under a story)
