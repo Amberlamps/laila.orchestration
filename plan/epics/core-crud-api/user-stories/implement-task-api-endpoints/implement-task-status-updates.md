@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Task Status Updates
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Task API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -79,16 +79,8 @@ Implement the start and complete status update endpoints for tasks. These endpoi
 // Triggers cascading status re-evaluation after a task status change.
 // Uses the domain logic engine's cascading functions.
 
-import {
-  cascadeTaskCompletion,
-  deriveStoryStatus,
-  deriveEpicStatus,
-} from "@laila/domain";
-import {
-  taskRepository,
-  storyRepository,
-  dependencyEdgeRepository,
-} from "@laila/database";
+import { cascadeTaskCompletion, deriveStoryStatus, deriveEpicStatus } from '@laila/domain';
+import { taskRepository, storyRepository, dependencyEdgeRepository } from '@laila/database';
 
 /**
  * After a task completes, re-evaluate downstream statuses:
@@ -108,28 +100,22 @@ import {
  */
 export async function triggerCascadingReevaluation(
   completedTaskId: string,
-  tx: DatabaseTransaction
+  tx: DatabaseTransaction,
 ): Promise<void> {
   // Step 1: Find dependent tasks
-  const dependentTaskIds = await dependencyEdgeRepository.findDependents(
-    completedTaskId,
-    tx
-  );
+  const dependentTaskIds = await dependencyEdgeRepository.findDependents(completedTaskId, tx);
 
   // Step 2-3: Check and unblock dependent tasks
   for (const dependentId of dependentTaskIds) {
-    const allDeps = await dependencyEdgeRepository.findDependencies(
-      dependentId,
-      tx
-    );
+    const allDeps = await dependencyEdgeRepository.findDependencies(dependentId, tx);
     const depTasks = await taskRepository.findByIds(
       allDeps.map((e) => e.to),
-      tx
+      tx,
     );
-    const allComplete = depTasks.every((t) => t.status === "complete");
+    const allComplete = depTasks.every((t) => t.status === 'complete');
 
     if (allComplete) {
-      await taskRepository.updateStatus(dependentId, "not_started", tx);
+      await taskRepository.updateStatus(dependentId, 'not_started', tx);
     }
   }
 

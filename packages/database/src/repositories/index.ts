@@ -22,6 +22,7 @@ export {
   ValidationError,
 
   // Types
+  type DrizzleDb,
   type BaseTable,
   type BaseTableColumns,
   type PaginatedResult,
@@ -110,4 +111,7 @@ export {
   type TaskGraph,
   type CreateTaskData,
   type UpdateTaskData,
+  type TaskSummary as TaskSummaryRecord,
+  type FindTasksOptions,
+  type TaskWithDependencyIds,
 } from './task-repository';

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Task CRUD Routes
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Task API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -94,7 +94,7 @@ Implement CRUD API routes for the Task entity. Tasks are the leaf nodes in the o
 // packages/shared/src/schemas/task.ts
 // Zod schemas for task API request validation.
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const createTaskSchema = z.object({
   story_id: z.string().uuid(),

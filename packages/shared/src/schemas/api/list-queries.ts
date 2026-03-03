@@ -153,6 +153,9 @@ export const listTasksQuerySchema = paginationQuerySchema.extend({
 
   /** Filter by priority level */
   priority: prioritySchema.optional(),
+
+  /** Filter by persona (role/skill profile) */
+  personaId: z.string().uuid().optional(),
 });
 
 /** Inferred TypeScript type for list tasks query parameters */

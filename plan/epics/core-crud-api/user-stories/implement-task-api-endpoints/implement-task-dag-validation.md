@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Task DAG Validation
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Task API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -23,10 +23,10 @@ Integrate the DAG cycle detection from `@laila/domain` into the task API routes.
 // Loads the current project DAG from the database, then validates
 // proposed edges using the domain cycle detection function.
 
-import { detectCycle, buildAdjacencyList } from "@laila/domain";
-import { dependencyEdgeRepository } from "@laila/database";
-import { ValidationError, DomainErrorCode } from "@laila/shared";
-import type { DagEdge } from "@laila/domain";
+import { detectCycle, buildAdjacencyList } from '@laila/domain';
+import { dependencyEdgeRepository } from '@laila/database';
+import { ValidationError, DomainErrorCode } from '@laila/shared';
+import type { DagEdge } from '@laila/domain';
 
 /**
  * Validate that adding the proposed dependency edges does not create
@@ -46,7 +46,7 @@ import type { DagEdge } from "@laila/domain";
 export async function validateDagEdges(
   projectId: string,
   taskId: string,
-  proposedDependencyIds: string[]
+  proposedDependencyIds: string[],
 ): Promise<void> {
   // Load all edges in the project
   const existingEdges = await dependencyEdgeRepository.findByProjectId(projectId);
@@ -65,11 +65,11 @@ export async function validateDagEdges(
     if (result.hasCycle) {
       throw new ValidationError(
         DomainErrorCode.DAG_CYCLE_DETECTED,
-        `Adding dependency would create a cycle: ${result.cyclePath.join(" -> ")}`,
+        `Adding dependency would create a cycle: ${result.cyclePath.join(' -> ')}`,
         {
           cyclePath: result.cyclePath,
           proposedEdge: { from: taskId, to: dependencyId },
-        }
+        },
       );
     }
 
@@ -91,7 +91,7 @@ export async function validateDagEdges(
 // Removes all edges where the deleted task is either the
 // dependent (from) or the dependency (to).
 
-import { dependencyEdgeRepository } from "@laila/database";
+import { dependencyEdgeRepository } from '@laila/database';
 
 /**
  * Remove all dependency edges referencing a deleted task.
@@ -105,13 +105,10 @@ import { dependencyEdgeRepository } from "@laila/database";
  */
 export async function cleanupDependencyEdges(
   taskId: string,
-  tx: DatabaseTransaction
+  tx: DatabaseTransaction,
 ): Promise<string[]> {
   // Find tasks that depend on the deleted task (they may become unblocked)
-  const dependentTaskIds = await dependencyEdgeRepository.findDependents(
-    taskId,
-    tx
-  );
+  const dependentTaskIds = await dependencyEdgeRepository.findDependents(taskId, tx);
 
   // Remove all edges referencing the deleted task
   await dependencyEdgeRepository.removeAllForTask(taskId, tx);
@@ -137,14 +134,11 @@ export async function cleanupDependencyEdges(
 export async function validateDependencyIds(
   taskId: string,
   projectId: string,
-  dependencyIds: string[]
+  dependencyIds: string[],
 ): Promise<void> {
   // Check for self-dependency
   if (dependencyIds.includes(taskId)) {
-    throw new ValidationError(
-      DomainErrorCode.INVALID_DEPENDENCY,
-      "A task cannot depend on itself"
-    );
+    throw new ValidationError(DomainErrorCode.INVALID_DEPENDENCY, 'A task cannot depend on itself');
   }
 
   // Verify all dependency tasks exist and are in the same project

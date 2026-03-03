@@ -62,6 +62,12 @@ export const taskSchema = z.object({
   /** Execution status of this task */
   workStatus: workStatusSchema,
 
+  /** Timestamp when the task was started by a worker (ISO 8601); null if not yet started */
+  startedAt: z.string().datetime().nullable(),
+
+  /** Timestamp when the task was completed (ISO 8601); null if not yet completed */
+  completedAt: z.string().datetime().nullable(),
+
   /** Links to external resources relevant to this task (docs, specs, examples) */
   references: z.array(taskReferenceSchema),
 
