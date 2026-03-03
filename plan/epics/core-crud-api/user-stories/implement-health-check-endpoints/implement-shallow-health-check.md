@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Shallow Health Check
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** sre-engineer
 - **Parent User Story:** [Implement Health Check Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -21,7 +21,7 @@ Implement a lightweight health check endpoint that indicates whether the applica
 // No authentication required (public endpoint).
 // Must respond quickly (< 100ms) for load balancer compatibility.
 
-import type { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse } from 'next';
 
 /**
  * GET /api/v1/health
@@ -44,27 +44,24 @@ import type { NextApiRequest, NextApiResponse } from "next";
  *   database: "disconnected"
  * (Load balancers use the deep readiness check for routing decisions)
  */
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", "GET");
-    return res.status(405).json({ error: { message: "Method not allowed" } });
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    return res.status(405).json({ error: { message: 'Method not allowed' } });
   }
 
   // Quick database reachability check (SELECT 1)
-  let databaseStatus = "connected";
+  let databaseStatus = 'connected';
   try {
     await db.execute(sql`SELECT 1`);
   } catch {
-    databaseStatus = "disconnected";
+    databaseStatus = 'disconnected';
   }
 
   return res.status(200).json({
-    status: "healthy",
+    status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: process.env.APP_VERSION ?? "unknown",
+    version: process.env.APP_VERSION ?? 'unknown',
     database: databaseStatus,
   });
 }

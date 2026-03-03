@@ -40,8 +40,36 @@ export interface DynamoClientOptions {
 }
 
 // ---------------------------------------------------------------------------
-// Client factory
+// Shared configuration resolver
 // ---------------------------------------------------------------------------
+
+/**
+ * Resolves DynamoDB client configuration from options and environment variables.
+ */
+const resolveDynamoConfig = (options?: DynamoClientOptions) => {
+  const endpoint = options?.endpoint ?? process.env['DYNAMODB_ENDPOINT'] ?? undefined;
+  const region =
+    options?.region ?? process.env['DYNAMODB_REGION'] ?? process.env['AWS_REGION'] ?? 'us-east-1';
+
+  return { region, ...(endpoint !== undefined ? { endpoint } : {}) };
+};
+
+// ---------------------------------------------------------------------------
+// Client factories
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates a low-level DynamoDB client configured for the current environment.
+ *
+ * Use this when you need to call service-level APIs such as `DescribeTable`
+ * that are not available on the Document Client.
+ *
+ * @param options - Optional overrides for endpoint and region
+ * @returns A configured DynamoDBClient instance
+ */
+export const createDynamoBaseClient = (options?: DynamoClientOptions): DynamoDBClient => {
+  return new DynamoDBClient(resolveDynamoConfig(options));
+};
 
 /**
  * Creates a DynamoDB Document Client configured for the current environment.
@@ -58,14 +86,7 @@ export interface DynamoClientOptions {
  * @returns A configured DynamoDB Document Client instance
  */
 export const createDynamoClient = (options?: DynamoClientOptions): DynamoDBDocumentClient => {
-  const endpoint = options?.endpoint ?? process.env['DYNAMODB_ENDPOINT'] ?? undefined;
-  const region =
-    options?.region ?? process.env['DYNAMODB_REGION'] ?? process.env['AWS_REGION'] ?? 'us-east-1';
-
-  const baseClient = new DynamoDBClient({
-    region,
-    ...(endpoint !== undefined ? { endpoint } : {}),
-  });
+  const baseClient = new DynamoDBClient(resolveDynamoConfig(options));
 
   return DynamoDBDocumentClient.from(baseClient, {
     marshallOptions: {

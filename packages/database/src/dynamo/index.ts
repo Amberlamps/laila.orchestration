@@ -24,7 +24,7 @@ export {
   type AuditEventItem,
 } from './schema';
 
-export { createDynamoClient, type DynamoClientOptions } from './client';
+export { createDynamoBaseClient, createDynamoClient, type DynamoClientOptions } from './client';
 
 export {
   writeAuditEvent,

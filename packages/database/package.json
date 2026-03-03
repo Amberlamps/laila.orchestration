@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1000.0",
+    "@aws-sdk/client-sqs": "^3.1000.0",
     "@aws-sdk/lib-dynamodb": "^3.1000.0",
     "@laila/shared": "workspace:*",
     "@neondatabase/serverless": "^1.0.2",
