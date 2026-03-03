@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Story CRUD Routes
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement User Story API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -76,7 +76,7 @@ Implement CRUD API routes for the User Story entity. User stories are scoped und
 // packages/shared/src/schemas/story.ts
 // Zod schemas for user story API request validation.
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const createStorySchema = z.object({
   name: z.string().min(1).max(255),
@@ -95,12 +95,12 @@ export const updateStorySchema = z.object({
 export const storyListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
-  status: z.enum([
-    "draft", "not_started", "blocked", "in_progress", "completed", "failed"
-  ]).optional(),
+  status: z
+    .enum(['draft', 'not_started', 'blocked', 'in_progress', 'completed', 'failed'])
+    .optional(),
   assigned_worker_id: z.string().uuid().optional(),
-  sort_by: z.enum(["name", "priority", "created_at", "updated_at"]).default("priority"),
-  sort_order: z.enum(["asc", "desc"]).default("desc"),
+  sort_by: z.enum(['name', 'priority', 'created_at', 'updated_at']).default('priority'),
+  sort_order: z.enum(['asc', 'desc']).default('desc'),
 });
 ```
 
@@ -112,7 +112,7 @@ export const storyListQuerySchema = z.object({
 // Used by PATCH and DELETE handlers to enforce read-only constraints.
 // Stories in "in_progress" or "completed" status are read-only.
 
-import { ConflictError, DomainErrorCode } from "@laila/shared";
+import { ConflictError, DomainErrorCode } from '@laila/shared';
 
 /**
  * Throws ConflictError if the story is in a read-only state.
@@ -120,11 +120,11 @@ import { ConflictError, DomainErrorCode } from "@laila/shared";
  * or completed (work is done and costs recorded).
  */
 export function assertStoryEditable(storyStatus: string): void {
-  const readOnlyStatuses = ["in_progress", "completed"];
+  const readOnlyStatuses = ['in_progress', 'completed'];
   if (readOnlyStatuses.includes(storyStatus)) {
     throw new ConflictError(
       DomainErrorCode.READ_ONLY_VIOLATION,
-      `Cannot modify story in "${storyStatus}" status. The story is read-only while work is in progress or completed.`
+      `Cannot modify story in "${storyStatus}" status. The story is read-only while work is in progress or completed.`,
     );
   }
 }

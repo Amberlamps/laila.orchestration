@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Story Lifecycle Transitions
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement User Story API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)

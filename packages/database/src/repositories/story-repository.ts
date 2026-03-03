@@ -27,13 +27,18 @@ import {
   inArray,
   sql,
   asc,
+  desc,
+  count,
+  or,
   type SQL,
   type InferSelectModel,
   type InferInsertModel,
 } from 'drizzle-orm';
 
 import { attemptHistoryTable } from '../schema/attempt-history';
+import { taskDependencyEdgesTable } from '../schema/dependency-edges';
 import { epicsTable } from '../schema/epics';
+import { tasksTable } from '../schema/tasks';
 import { userStoriesTable } from '../schema/user-stories';
 
 import {
@@ -109,6 +114,12 @@ export interface FindByEpicOptions {
   pagination?: PaginationQuery;
   status?: string;
   priority?: string;
+  assignedWorkerId?: string;
+}
+
+/** A user story record augmented with a count of non-deleted child tasks */
+export interface UserStoryWithTaskCount extends UserStory {
+  taskCount: number;
 }
 
 /**
@@ -289,6 +300,10 @@ export const createStoryRepository = (db: DatabaseClient) => {
 
     if (options.priority) {
       conditions.push(eq(userStoriesTable.priority, options.priority));
+    }
+
+    if (options.assignedWorkerId) {
+      conditions.push(eq(userStoriesTable.assignedWorkerId, options.assignedWorkerId));
     }
 
     const combinedFilters = and(...conditions) as SQL;
@@ -749,6 +764,607 @@ export const createStoryRepository = (db: DatabaseClient) => {
   };
 
   // -------------------------------------------------------------------------
+  // findByEpicWithTaskCount (paginated with task counts)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns paginated stories for an epic, each augmented with a count of
+   * non-deleted child tasks. Supports optional status, priority, and
+   * assignedWorkerId filters.
+   *
+   * @param tenantId - The tenant UUID for data isolation
+   * @param epicId   - The parent epic UUID to filter by
+   * @param options  - Pagination parameters and optional filters
+   * @returns Paginated result with stories including task counts
+   */
+  const findByEpicWithTaskCount = async (
+    tenantId: string,
+    epicId: string,
+    options: FindByEpicOptions = {},
+  ): Promise<PaginatedResult<UserStoryWithTaskCount>> => {
+    const {
+      pagination: paginationParams = {
+        page: 1,
+        limit: 20,
+        sortBy: 'priority',
+        sortOrder: 'desc' as const,
+      },
+    } = options;
+
+    const { page, limit, sortBy, sortOrder } = paginationParams;
+    const offset = (page - 1) * limit;
+
+    // Build WHERE clause
+    let whereClause = and(base.tenantScope(tenantId), eq(userStoriesTable.epicId, epicId)) as SQL;
+
+    if (options.status) {
+      whereClause = and(whereClause, eq(userStoriesTable.workStatus, options.status)) as SQL;
+    }
+    if (options.priority) {
+      whereClause = and(whereClause, eq(userStoriesTable.priority, options.priority)) as SQL;
+    }
+    if (options.assignedWorkerId) {
+      whereClause = and(
+        whereClause,
+        eq(userStoriesTable.assignedWorkerId, options.assignedWorkerId),
+      ) as SQL;
+    }
+
+    // Resolve sort column - use priority ordering for priority sort
+    const resolveSortOrder = () => {
+      if (sortBy === 'priority') {
+        return sortOrder === 'asc' ? asc(priorityOrderExpression) : desc(priorityOrderExpression);
+      }
+      const columns = userStoriesTable as unknown as Record<string, unknown>;
+      const col = columns[sortBy] ?? userStoriesTable.createdAt;
+      return sortOrder === 'asc' ? asc(col) : desc(col);
+    };
+
+    // Execute count and data queries in parallel
+    const [countResult, data] = await Promise.all([
+      typedDb.select({ total: count() }).from(userStoriesTable).where(whereClause),
+      typedDb
+        .select()
+        .from(userStoriesTable)
+        .where(whereClause)
+        .orderBy(resolveSortOrder())
+        .limit(limit)
+        .offset(offset),
+    ]);
+
+    const total = countResult[0]?.total ?? 0;
+    const pagination = base.computePaginationMeta(total, page, limit);
+
+    const stories = data as UserStory[];
+
+    // Fetch task counts for all returned stories in a single query
+    if (stories.length === 0) {
+      return { data: [] as UserStoryWithTaskCount[], pagination };
+    }
+
+    const storyIds = stories.map((s) => s.id);
+    const taskCounts = await typedDb
+      .select({
+        userStoryId: tasksTable.userStoryId,
+        count: sql<number>`count(*)`,
+      })
+      .from(tasksTable)
+      .where(
+        and(
+          inArray(tasksTable.userStoryId, storyIds),
+          eq(tasksTable.tenantId, tenantId),
+          isNull(tasksTable.deletedAt),
+        ),
+      )
+      .groupBy(tasksTable.userStoryId);
+
+    // Build a map of storyId -> taskCount
+    const taskCountMap = new Map<string, number>();
+    for (const row of taskCounts) {
+      taskCountMap.set(row.userStoryId, row.count);
+    }
+
+    // Augment each story with its task count
+    const storiesWithCounts: UserStoryWithTaskCount[] = stories.map((story) => ({
+      ...story,
+      taskCount: taskCountMap.get(story.id) ?? 0,
+    }));
+
+    return { data: storiesWithCounts, pagination };
+  };
+
+  // -------------------------------------------------------------------------
+  // findWithTaskCount (single story with task count)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns a single story augmented with a count of non-deleted child tasks.
+   *
+   * @param tenantId - The tenant UUID for data isolation
+   * @param storyId  - The story UUID to retrieve
+   * @returns The story record with task count, or null if not found
+   */
+  const findWithTaskCount = async (
+    tenantId: string,
+    storyId: string,
+  ): Promise<UserStoryWithTaskCount | null> => {
+    const story = await base.findById(tenantId, storyId);
+    if (!story) {
+      return null;
+    }
+
+    const taskCountResult = await typedDb
+      .select({ count: sql<number>`count(*)` })
+      .from(tasksTable)
+      .where(
+        and(
+          eq(tasksTable.userStoryId, storyId),
+          eq(tasksTable.tenantId, tenantId),
+          isNull(tasksTable.deletedAt),
+        ),
+      );
+
+    const taskCount = taskCountResult[0]?.count ?? 0;
+
+    return { ...story, taskCount } as UserStoryWithTaskCount;
+  };
+
+  // -------------------------------------------------------------------------
+  // softDeleteWithCascade (story -> tasks + dependency edge cleanup)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Soft-deletes a story and cascades to all child tasks within a single
+   * transaction. Also cleans up dependency edges referencing deleted tasks.
+   *
+   * The cascade order is:
+   * 1. Collect task IDs belonging to this story
+   * 2. Delete dependency edges referencing those tasks
+   * 3. Soft-delete all tasks belonging to the story
+   * 4. Soft-delete the story itself
+   *
+   * @param tenantId - The tenant UUID for data isolation
+   * @param storyId  - The story UUID to soft-delete
+   * @returns The soft-deleted story record, or null if not found
+   */
+  const softDeleteWithCascade = async (
+    tenantId: string,
+    storyId: string,
+  ): Promise<UserStory | null> => {
+    const existing = await base.findById(tenantId, storyId);
+    if (!existing) {
+      return null;
+    }
+
+    const now = new Date();
+
+    const result = await typedDb.transaction(async (tx: DrizzleDb) => {
+      // 1. Collect task IDs belonging to this story
+      const tasks = await tx
+        .select({ id: tasksTable.id })
+        .from(tasksTable)
+        .where(
+          and(
+            eq(tasksTable.userStoryId, storyId),
+            eq(tasksTable.tenantId, tenantId),
+            isNull(tasksTable.deletedAt),
+          ),
+        );
+
+      // 2. Clean up dependency edges and soft-delete tasks
+      if (tasks.length > 0) {
+        const taskIds = tasks.map((t: { id: string }) => t.id);
+
+        // Delete dependency edges referencing any of these tasks
+        await tx
+          .delete(taskDependencyEdgesTable)
+          .where(
+            and(
+              eq(taskDependencyEdgesTable.tenantId, tenantId),
+              or(
+                inArray(taskDependencyEdgesTable.dependentTaskId, taskIds),
+                inArray(taskDependencyEdgesTable.prerequisiteTaskId, taskIds),
+              ),
+            ),
+          );
+
+        // 3. Soft-delete all tasks belonging to this story
+        await tx
+          .update(tasksTable)
+          .set({
+            deletedAt: now,
+            updatedAt: now,
+            version: sql`${tasksTable.version} + 1`,
+          })
+          .where(
+            and(
+              eq(tasksTable.userStoryId, storyId),
+              eq(tasksTable.tenantId, tenantId),
+              isNull(tasksTable.deletedAt),
+            ),
+          );
+      }
+
+      // 4. Soft-delete the story itself with optimistic locking
+      const existingVersion = existing.version as number;
+      const deletedStories = await tx
+        .update(userStoriesTable)
+        .set({
+          deletedAt: now,
+          updatedAt: now,
+          version: sql`${userStoriesTable.version} + 1`,
+        })
+        .where(
+          and(
+            eq(userStoriesTable.id, storyId),
+            eq(userStoriesTable.tenantId, tenantId),
+            eq(userStoriesTable.version, existingVersion),
+            isNull(userStoriesTable.deletedAt),
+          ),
+        )
+        .returning();
+
+      if (deletedStories.length === 0) {
+        throw new ConflictError('UserStory', storyId, existingVersion);
+      }
+
+      return deletedStories[0] as UserStory;
+    });
+
+    return result;
+  };
+
+  // -------------------------------------------------------------------------
+  // findTasksByStory (for publish validation)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Task data relevant for story publish validation.
+   * Includes the fields checked during publish: persona reference and
+   * acceptance criteria.
+   */
+  interface StoryTaskValidationInfo {
+    id: string;
+    title: string;
+    personaId: string | null;
+    acceptanceCriteria: string[];
+    workStatus: string;
+  }
+
+  /**
+   * Returns all non-deleted tasks for a story with the fields needed
+   * for publish validation (persona, acceptance criteria).
+   *
+   * @param tenantId - The tenant UUID for data isolation
+   * @param storyId  - The story UUID to retrieve tasks for
+   * @returns Array of task validation info records
+   */
+  const findTasksForValidation = async (
+    tenantId: string,
+    storyId: string,
+  ): Promise<StoryTaskValidationInfo[]> => {
+    const results = await typedDb
+      .select({
+        id: tasksTable.id,
+        title: tasksTable.title,
+        personaId: tasksTable.personaId,
+        acceptanceCriteria: tasksTable.acceptanceCriteria,
+        workStatus: tasksTable.workStatus,
+      })
+      .from(tasksTable)
+      .where(
+        and(
+          eq(tasksTable.tenantId, tenantId),
+          eq(tasksTable.userStoryId, storyId),
+          isNull(tasksTable.deletedAt),
+        ),
+      );
+
+    return results as StoryTaskValidationInfo[];
+  };
+
+  // -------------------------------------------------------------------------
+  // hasIncompleteUpstreamDependencies (DAG analysis)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Determines whether a story has any incomplete upstream dependencies.
+   *
+   * Checks the task dependency edges table for tasks in this story that
+   * depend on tasks in other stories. If any prerequisite task from another
+   * story is not in 'done' status, the story has incomplete upstream deps
+   * and should be set to 'blocked' rather than 'not_started'.
+   *
+   * @param tenantId - The tenant UUID for data isolation
+   * @param storyId  - The story UUID to check upstream deps for
+   * @returns true if any upstream cross-story dependency is incomplete
+   */
+  const hasIncompleteUpstreamDependencies = async (
+    tenantId: string,
+    storyId: string,
+  ): Promise<boolean> => {
+    // Get all task IDs belonging to this story
+    const storyTasks = await typedDb
+      .select({ id: tasksTable.id })
+      .from(tasksTable)
+      .where(
+        and(
+          eq(tasksTable.tenantId, tenantId),
+          eq(tasksTable.userStoryId, storyId),
+          isNull(tasksTable.deletedAt),
+        ),
+      );
+
+    if (storyTasks.length === 0) {
+      return false;
+    }
+
+    const storyTaskIds = storyTasks.map((t: { id: string }) => t.id);
+
+    // Find dependency edges where tasks in this story depend on external tasks
+    // that are NOT in 'done' status
+    const incompletePrereqs = await typedDb
+      .select({ id: taskDependencyEdgesTable.id })
+      .from(taskDependencyEdgesTable)
+      .innerJoin(tasksTable, eq(tasksTable.id, taskDependencyEdgesTable.prerequisiteTaskId))
+      .where(
+        and(
+          eq(taskDependencyEdgesTable.tenantId, tenantId),
+          inArray(taskDependencyEdgesTable.dependentTaskId, storyTaskIds),
+          sql`${tasksTable.workStatus} != 'done'`,
+          isNull(tasksTable.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    return incompletePrereqs.length > 0;
+  };
+
+  // -------------------------------------------------------------------------
+  // resetStory (atomic transaction)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Resets a failed story back to not_started or blocked status.
+   *
+   * Within a single transaction:
+   * 1. Reads the current story to capture assignment data for attempt history
+   * 2. Updates the story: clears assignment, sets status to the provided
+   *    target status, increments version
+   * 3. Updates the in-progress attempt history record with completion details
+   *
+   * @param tenantId     - The tenant UUID for data isolation
+   * @param storyId      - The story UUID to reset
+   * @param targetStatus - 'not_started' or 'blocked' (DAG-determined)
+   * @returns The updated user story
+   * @throws {ConflictError} If story not in 'failed' status
+   */
+  const resetStory = async (
+    tenantId: string,
+    storyId: string,
+    targetStatus: string,
+  ): Promise<UserStory> => {
+    return await typedDb.transaction(async (tx: DrizzleDb) => {
+      const now = new Date();
+
+      // Read current story within the transaction
+      const [current] = await tx
+        .select()
+        .from(userStoriesTable)
+        .where(
+          and(
+            eq(userStoriesTable.id, storyId),
+            eq(userStoriesTable.tenantId, tenantId),
+            eq(userStoriesTable.workStatus, 'failed'),
+            isNull(userStoriesTable.deletedAt),
+          ),
+        )
+        .limit(1);
+
+      if (!current) {
+        throw new ConflictError('UserStory', storyId, 0);
+      }
+
+      // Update the story: clear assignment, set target status
+      const [updated] = await tx
+        .update(userStoriesTable)
+        .set({
+          workStatus: targetStatus,
+          assignedWorkerId: null,
+          assignedAt: null,
+          version: sql`${userStoriesTable.version} + 1`,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(userStoriesTable.id, storyId),
+            eq(userStoriesTable.tenantId, tenantId),
+            eq(userStoriesTable.version, current.version),
+          ),
+        )
+        .returning();
+
+      if (!updated) {
+        throw new ConflictError('UserStory', storyId, current.version);
+      }
+
+      // Update the most recent attempt history record if it exists
+      // (failed stories may have an attempt record from the failed assignment)
+      await tx
+        .update(attemptHistoryTable)
+        .set({
+          completedAt: now,
+          status: 'failed',
+          reason: 'manual_reset',
+          durationMs: sql`EXTRACT(EPOCH FROM (${now}::timestamptz - ${attemptHistoryTable.startedAt})) * 1000`,
+        })
+        .where(
+          and(
+            eq(attemptHistoryTable.userStoryId, storyId),
+            eq(attemptHistoryTable.tenantId, tenantId),
+            eq(attemptHistoryTable.attemptNumber, current.attempts),
+            eq(attemptHistoryTable.status, 'in_progress'),
+          ),
+        );
+
+      return updated as UserStory;
+    });
+  };
+
+  // -------------------------------------------------------------------------
+  // unassignStory (atomic transaction)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Manually unassigns a worker from an in-progress story.
+   *
+   * Within a single transaction:
+   * 1. Reads the current story to capture assignment data
+   * 2. Updates the story: clears assignment, sets target status
+   * 3. Resets all in-progress tasks within the story to not_started
+   * 4. Logs the previous attempt with reason 'manual_unassignment'
+   *
+   * @param tenantId     - The tenant UUID for data isolation
+   * @param storyId      - The story UUID to unassign
+   * @param targetStatus - 'not_started' or 'blocked' (DAG-determined)
+   * @returns The updated user story
+   * @throws {ConflictError} If story not in 'in_progress' status
+   */
+  const unassignStory = async (
+    tenantId: string,
+    storyId: string,
+    targetStatus: string,
+  ): Promise<UserStory> => {
+    return await typedDb.transaction(async (tx: DrizzleDb) => {
+      const now = new Date();
+
+      // Read current story within the transaction
+      const [current] = await tx
+        .select()
+        .from(userStoriesTable)
+        .where(
+          and(
+            eq(userStoriesTable.id, storyId),
+            eq(userStoriesTable.tenantId, tenantId),
+            eq(userStoriesTable.workStatus, 'in_progress'),
+            isNull(userStoriesTable.deletedAt),
+          ),
+        )
+        .limit(1);
+
+      if (!current) {
+        throw new ConflictError('UserStory', storyId, 0);
+      }
+
+      // Update the story: clear assignment, set target status
+      const [updated] = await tx
+        .update(userStoriesTable)
+        .set({
+          workStatus: targetStatus,
+          assignedWorkerId: null,
+          assignedAt: null,
+          version: sql`${userStoriesTable.version} + 1`,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(userStoriesTable.id, storyId),
+            eq(userStoriesTable.tenantId, tenantId),
+            eq(userStoriesTable.version, current.version),
+          ),
+        )
+        .returning();
+
+      if (!updated) {
+        throw new ConflictError('UserStory', storyId, current.version);
+      }
+
+      // Reset all in-progress tasks within the story to not_started
+      await tx
+        .update(tasksTable)
+        .set({
+          workStatus: 'not_started',
+          version: sql`${tasksTable.version} + 1`,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(tasksTable.userStoryId, storyId),
+            eq(tasksTable.tenantId, tenantId),
+            eq(tasksTable.workStatus, 'in_progress'),
+            isNull(tasksTable.deletedAt),
+          ),
+        );
+
+      // Log the previous attempt with reason 'manual_unassignment'
+      await tx
+        .update(attemptHistoryTable)
+        .set({
+          completedAt: now,
+          status: 'timed_out',
+          reason: 'manual_unassignment',
+          durationMs: sql`EXTRACT(EPOCH FROM (${now}::timestamptz - ${attemptHistoryTable.startedAt})) * 1000`,
+        })
+        .where(
+          and(
+            eq(attemptHistoryTable.userStoryId, storyId),
+            eq(attemptHistoryTable.tenantId, tenantId),
+            eq(attemptHistoryTable.attemptNumber, current.attempts),
+            eq(attemptHistoryTable.status, 'in_progress'),
+          ),
+        );
+
+      return updated as UserStory;
+    });
+  };
+
+  // -------------------------------------------------------------------------
+  // publishStory (update workStatus from pending to ready)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Publishes a story by transitioning its workStatus from pending to ready.
+   *
+   * @param tenantId - The tenant UUID for data isolation
+   * @param storyId  - The story UUID to publish
+   * @returns The updated user story
+   * @throws {ConflictError} If story is not in 'pending' status
+   */
+  const publishStory = async (tenantId: string, storyId: string): Promise<UserStory> => {
+    const existing = await base.findById(tenantId, storyId);
+    if (!existing) {
+      throw new NotFoundError('UserStory', storyId);
+    }
+
+    const currentVersion = existing.version as number;
+    const now = new Date();
+
+    const results = await typedDb
+      .update(userStoriesTable)
+      .set({
+        workStatus: 'ready',
+        version: sql`${userStoriesTable.version} + 1`,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(userStoriesTable.id, storyId),
+          eq(userStoriesTable.tenantId, tenantId),
+          eq(userStoriesTable.version, currentVersion),
+          eq(userStoriesTable.workStatus, 'pending'),
+          isNull(userStoriesTable.deletedAt),
+        ),
+      )
+      .returning();
+
+    if (results.length === 0) {
+      throw new ConflictError('UserStory', storyId, currentVersion);
+    }
+
+    return results[0] as UserStory;
+  };
+
+  // -------------------------------------------------------------------------
   // Public API
   // -------------------------------------------------------------------------
 
@@ -762,14 +1378,26 @@ export const createStoryRepository = (db: DatabaseClient) => {
 
     // Story-specific query methods
     findByEpic,
+    findByEpicWithTaskCount,
+    findWithTaskCount,
     findAllByEpic,
     findReadyForAssignment,
     findActiveByProject,
+
+    // Cascade soft-delete
+    softDeleteWithCascade,
 
     // Assignment lifecycle methods (require pool mode for transactions)
     assignToWorker,
     completeAssignment,
     releaseAssignment,
+
+    // Lifecycle transition methods
+    findTasksForValidation,
+    hasIncompleteUpstreamDependencies,
+    publishStory,
+    resetStory,
+    unassignStory,
 
     // Attempt history
     getPreviousAttempts,

@@ -88,6 +88,7 @@ export {
 
   // Types
   type UserStory,
+  type UserStoryWithTaskCount,
   type AttemptHistory,
   type CreateStoryData,
   type UpdateStoryData,
