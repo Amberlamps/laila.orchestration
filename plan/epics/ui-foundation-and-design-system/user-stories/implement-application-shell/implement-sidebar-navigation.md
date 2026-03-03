@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Sidebar Navigation
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Application Shell & Navigation](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -29,7 +29,6 @@ Build the primary sidebar navigation component for the laila.works orchestration
    - 24px top padding, 20px bottom padding
 
 2. **Navigation Sections:** Grouped by category with overline-styled section headers
-
    - **WORKSPACE Section:**
      - Dashboard (Lucide `LayoutDashboard` icon) — links to `/dashboard`
      - Projects (Lucide `FolderKanban` icon) — links to `/projects`
@@ -68,11 +67,18 @@ Build the primary sidebar navigation component for the laila.works orchestration
 // apps/web/src/components/layout/sidebar-navigation.tsx
 // Primary sidebar navigation with collapsible behavior,
 // grouped nav sections, active item styling, and user info.
-import { useRouter } from "next/router";
+import { useRouter } from 'next/router';
 import {
-  LayoutDashboard, FolderKanban, Bot, UserCog,
-  ScrollText, Settings, ChevronsLeft, ChevronsRight, LogOut,
-} from "lucide-react";
+  LayoutDashboard,
+  FolderKanban,
+  Bot,
+  UserCog,
+  ScrollText,
+  Settings,
+  ChevronsLeft,
+  ChevronsRight,
+  LogOut,
+} from 'lucide-react';
 
 interface NavItem {
   label: string;
@@ -81,30 +87,30 @@ interface NavItem {
 }
 
 interface NavSection {
-  title: string;    // Overline-styled section label
+  title: string; // Overline-styled section label
   items: NavItem[];
 }
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    title: "WORKSPACE",
+    title: 'WORKSPACE',
     items: [
-      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { label: "Projects", href: "/projects", icon: FolderKanban },
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { label: 'Projects', href: '/projects', icon: FolderKanban },
     ],
   },
   {
-    title: "MANAGEMENT",
+    title: 'MANAGEMENT',
     items: [
-      { label: "Workers", href: "/workers", icon: Bot },
-      { label: "Personas", href: "/personas", icon: UserCog },
+      { label: 'Workers', href: '/workers', icon: Bot },
+      { label: 'Personas', href: '/personas', icon: UserCog },
     ],
   },
   {
-    title: "SYSTEM",
+    title: 'SYSTEM',
     items: [
-      { label: "Audit", href: "/audit", icon: ScrollText },
-      { label: "Settings", href: "/settings", icon: Settings },
+      { label: 'Audit', href: '/audit', icon: ScrollText },
+      { label: 'Settings', href: '/settings', icon: Settings },
     ],
   },
 ];

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Page Layout Wrapper
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Application Shell & Navigation](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -46,18 +46,18 @@ Create the `AppLayout` component that serves as the primary layout wrapper for a
 // Primary layout wrapper for all authenticated pages.
 // Composes sidebar (desktop/tablet) and mobile tab bar into a responsive shell.
 // The `variant` prop controls content max-width behavior.
-import { type ReactNode } from "react";
-import { SidebarNavigation } from "./sidebar-navigation";
-import { MobileTabBar } from "./mobile-tab-bar";
+import { type ReactNode } from 'react';
+import { SidebarNavigation } from './sidebar-navigation';
+import { MobileTabBar } from './mobile-tab-bar';
 
 interface AppLayoutProps {
   children: ReactNode;
   /** "constrained" applies max-width: 1200px for forms/detail pages.
    *  "full" uses all available width for tables/dashboards. */
-  variant?: "constrained" | "full";
+  variant?: 'constrained' | 'full';
 }
 
-export function AppLayout({ children, variant = "constrained" }: AppLayoutProps) {
+export function AppLayout({ children, variant = 'constrained' }: AppLayoutProps) {
   // The sidebar width is dynamic based on collapsed state.
   // Use CSS margin-left to offset content area from sidebar.
   // On mobile, sidebar is hidden and content is full-width.
@@ -69,10 +69,10 @@ export function AppLayout({ children, variant = "constrained" }: AppLayoutProps)
       {/* Main content area — offset by sidebar width on desktop/tablet */}
       <main
         className={cn(
-          "transition-[margin-left] duration-200 ease-in-out",
-          "px-4 pt-4 md:px-6 md:pt-8 lg:px-8",
-          "pb-20 md:pb-8", // extra bottom padding on mobile for tab bar
-          variant === "constrained" && "max-w-[1200px] mx-auto",
+          'transition-[margin-left] duration-200 ease-in-out',
+          'px-4 pt-4 md:px-6 md:pt-8 lg:px-8',
+          'pb-20 md:pb-8', // extra bottom padding on mobile for tab bar
+          variant === 'constrained' && 'mx-auto max-w-[1200px]',
         )}
       >
         {children}

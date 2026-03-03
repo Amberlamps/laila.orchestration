@@ -1,6 +1,9 @@
 import Head from 'next/head';
 
-export default function HomePage() {
+import type { NextPageWithLayout } from './_app';
+import type { ReactElement } from 'react';
+
+const HomePage: NextPageWithLayout = () => {
   return (
     <>
       <Head>
@@ -29,4 +32,9 @@ export default function HomePage() {
       </main>
     </>
   );
-}
+};
+
+/** Public page — opt out of the default AppLayout shell. */
+HomePage.getLayout = (page: ReactElement) => page;
+
+export default HomePage;
