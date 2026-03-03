@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Sign-In Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Authentication UI](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -35,22 +35,22 @@ Build the sign-in page at `/sign-in` that serves as the entry point for user aut
 // apps/web/src/pages/sign-in.tsx
 // Sign-in page with Google OAuth authentication.
 // Handles loading, error, and success states during the OAuth flow.
-import { useRouter } from "next/router";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export default function SignInPage() {
   const router = useRouter();
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // The returnUrl query parameter preserves the user's intended destination
   // after authentication. Defaults to /dashboard if not specified.
-  const returnUrl = (router.query.returnUrl as string) ?? "/dashboard";
+  const returnUrl = (router.query.returnUrl as string) ?? '/dashboard';
 
   async function handleGoogleSignIn() {
-    setStatus("loading");
+    setStatus('loading');
     setErrorMessage(null);
     try {
       // Trigger Better Auth's Google OAuth flow.
@@ -58,35 +58,36 @@ export default function SignInPage() {
       // On success, Better Auth handles the callback and sets the session cookie.
       window.location.href = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(returnUrl)}`;
     } catch (error) {
-      setStatus("error");
-      setErrorMessage("Authentication failed. Please try again.");
+      setStatus('error');
+      setErrorMessage('Authentication failed. Please try again.');
     }
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center px-4">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
       <Card className="w-full max-w-[400px] p-10">
         {/* Branding */}
-        <div className="text-center mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-display text-zinc-900">laila.works</h1>
-          <p className="text-body-lg text-zinc-500 mt-2">
-            Orchestrate your AI workers
-          </p>
+          <p className="text-body-lg mt-2 text-zinc-500">Orchestrate your AI workers</p>
         </div>
 
         {/* Google Sign-In Button */}
         {/* ... */}
 
         {/* Error Alert */}
-        {status === "error" && errorMessage && (
-          <div role="alert" className="mt-4 p-3 bg-red-50 border-l-3 border-red-500 rounded-r text-sm text-red-700">
+        {status === 'error' && errorMessage && (
+          <div
+            role="alert"
+            className="mt-4 rounded-r border-l-3 border-red-500 bg-red-50 p-3 text-sm text-red-700"
+          >
             {errorMessage}
           </div>
         )}
 
         {/* Footer */}
-        <p className="mt-6 text-center text-body-sm text-zinc-400">
-          By signing in, you agree to our{" "}
+        <p className="text-body-sm mt-6 text-center text-zinc-400">
+          By signing in, you agree to our{' '}
           <a href="/terms" className="text-indigo-600 hover:underline">
             Terms of Service
           </a>

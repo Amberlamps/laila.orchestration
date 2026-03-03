@@ -4,18 +4,18 @@
 
 - **Title:** Implement Authentication UI
 - **Description:** Build the sign-in page with Google OAuth, a protected route wrapper with useAuth hook for client-side auth checking, and session handling with TanStack Query for token refresh and session expiry detection.
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
 - **Total Tasks:** 3
 - **Dependencies:** Configure Tailwind CSS & shadcn/ui, Implement Application Shell & Navigation
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Sign-In Page](./implement-sign-in-page.md) | Build centered sign-in page with Google OAuth button, loading/error/success states | Not Started | fullstack-developer | None |
-| [Implement Protected Route Wrapper](./implement-protected-route-wrapper.md) | Create useAuth hook and ProtectedRoute HOC for client-side auth checking and redirects | Not Started | fullstack-developer | Implement Sign-In Page |
-| [Implement Session Handling](./implement-session-handling.md) | Set up TanStack Query session hook with token refresh and 401 redirect handling | Not Started | fullstack-developer | Implement Protected Route Wrapper |
+| Task                                                                        | Description                                                                            | Status   | Assigned Agent      | Dependencies                      |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------- | ------------------- | --------------------------------- |
+| [Implement Sign-In Page](./implement-sign-in-page.md)                       | Build centered sign-in page with Google OAuth button, loading/error/success states     | Complete | fullstack-developer | None                              |
+| [Implement Protected Route Wrapper](./implement-protected-route-wrapper.md) | Create useAuth hook and ProtectedRoute HOC for client-side auth checking and redirects | Complete | fullstack-developer | Implement Sign-In Page            |
+| [Implement Session Handling](./implement-session-handling.md)               | Set up TanStack Query session hook with token refresh and 401 redirect handling        | Complete | fullstack-developer | Implement Protected Route Wrapper |
 
 ## Dependency Graph
 

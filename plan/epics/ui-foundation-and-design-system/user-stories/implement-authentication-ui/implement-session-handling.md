@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Session Handling
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Authentication UI](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -19,10 +19,10 @@ Set up TanStack Query-based session state management that handles token refresh,
 // apps/web/src/hooks/use-session.ts
 // TanStack Query hook for session state with automatic refresh and expiry handling.
 // Wraps the Better Auth session API with TanStack Query for caching and refetching.
-import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/router";
-import { queryKeys } from "@/lib/query-keys";
-import { authClient } from "@/lib/auth-client";
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/router';
+import { queryKeys } from '@/lib/query-keys';
+import { authClient } from '@/lib/auth-client';
 
 export function useSession() {
   const router = useRouter();
@@ -34,7 +34,7 @@ export function useSession() {
       // Better Auth handles token refresh automatically via the session cookie.
       const session = await authClient.getSession();
       if (!session) {
-        throw new Error("No active session");
+        throw new Error('No active session');
       }
       return session;
     },
@@ -46,7 +46,9 @@ export function useSession() {
     // On error (session expired), redirect to sign-in
     meta: {
       onError: () => {
-        router.replace(`/sign-in?returnUrl=${encodeURIComponent(router.asPath)}&reason=session_expired`);
+        router.replace(
+          `/sign-in?returnUrl=${encodeURIComponent(router.asPath)}&reason=session_expired`,
+        );
       },
     },
   });
@@ -62,7 +64,7 @@ Configure a global response interceptor for the API client that detects 401 Unau
 // Global 401 response handler for the API client.
 // When the API returns 401, the session has expired and the user
 // must re-authenticate. Redirect to sign-in with a session_expired reason.
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient } from '@tanstack/react-query';
 
 export function setup401Handler(queryClient: QueryClient) {
   // Register a global callback that fires on any query/mutation error.
@@ -80,7 +82,7 @@ export function createAuthenticatedFetch(baseUrl: string) {
   return async (url: string, init?: RequestInit): Promise<Response> => {
     const response = await fetch(`${baseUrl}${url}`, {
       ...init,
-      credentials: "include", // Include session cookies
+      credentials: 'include', // Include session cookies
     });
 
     if (response.status === 401) {

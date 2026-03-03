@@ -4,9 +4,10 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState } from 'react';
 
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import { AppLayout } from '@/components/layout/app-layout';
 import { ToastProvider } from '@/components/ui/toast';
-import { inter, jetbrainsMono } from '@/lib/fonts';
+import { inter, jetbrainsMono, roboto } from '@/lib/fonts';
 import { createQueryClient } from '@/lib/query-client';
 
 import type { NextPage } from 'next';
@@ -31,8 +32,12 @@ type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
 
-/** Default layout: wraps the page in the application shell. */
-const defaultGetLayout = (page: ReactElement): ReactNode => <AppLayout>{page}</AppLayout>;
+/** Default layout: enforces authentication, then wraps the page in the application shell. */
+const defaultGetLayout = (page: ReactElement): ReactNode => (
+  <ProtectedRoute>
+    <AppLayout>{page}</AppLayout>
+  </ProtectedRoute>
+);
 
 export default function App({ Component, pageProps }: AppPropsWithLayout) {
   // Create QueryClient once per app lifecycle.
@@ -46,7 +51,7 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <div
-          className={`${inter.variable} ${jetbrainsMono.variable} bg-background min-h-screen font-sans antialiased`}
+          className={`${inter.variable} ${jetbrainsMono.variable} ${roboto.variable} bg-background min-h-screen font-sans antialiased`}
         >
           {getLayout(<Component {...pageProps} />)}
         </div>

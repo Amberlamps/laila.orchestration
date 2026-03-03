@@ -170,6 +170,7 @@
    * ------------------------------------------------------------------------- */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-roboto: var(--font-roboto), 'Roboto', arial, sans-serif;
 }
 
 /* ---------------------------------------------------------------------------
