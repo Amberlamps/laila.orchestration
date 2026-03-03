@@ -32,12 +32,27 @@ import type { WorkStatus } from '@laila/shared';
 // ---------------------------------------------------------------------------
 
 /**
+ * A task that was unblocked by the cascading re-evaluation.
+ * Contains the task's id, name (title), and new status for the API response.
+ */
+export interface UnblockedTask {
+  /** The unblocked task's UUID. */
+  id: string;
+  /** The unblocked task's human-readable name (title). */
+  name: string;
+  /** The new status the task transitioned to (always 'pending' in the DB). */
+  newStatus: string;
+}
+
+/**
  * Summary of the cascading changes applied after a task completes.
  * Returned to the caller for logging and response enrichment.
  */
 export interface CascadeResult {
-  /** Task IDs that were unblocked (transitioned from blocked to pending). */
-  unblockedTaskIds: string[];
+  /** Tasks that were unblocked (transitioned from blocked to pending), with id, name, and new status. */
+  unblockedTasks: UnblockedTask[];
+  /** Whether all tasks in the parent story are now done. */
+  allTasksComplete: boolean;
   /** The parent story's new work status after re-derivation. */
   storyStatus: string;
   /** The parent epic's new work status after re-derivation. */
@@ -90,7 +105,7 @@ export const triggerCascadingReevaluation = async (
   // -------------------------------------------------------------------------
 
   const dependentTasks = await taskRepo.getDependents(tenantId, completedTaskId);
-  const unblockedTaskIds: string[] = [];
+  const unblockedTasks: UnblockedTask[] = [];
 
   for (const dependent of dependentTasks) {
     // Only consider tasks that are currently blocked
@@ -104,16 +119,22 @@ export const triggerCascadingReevaluation = async (
 
     if (allDepsComplete) {
       await taskRepo.bulkUpdateStatus(tenantId, [dependent.id], 'pending');
-      unblockedTaskIds.push(dependent.id);
+      unblockedTasks.push({ id: dependent.id, name: dependent.title, newStatus: 'pending' });
     }
   }
 
   // -------------------------------------------------------------------------
-  // Step 4: Re-derive parent story work status
+  // Step 4: Check if all tasks in the parent story are complete and
+  //         re-derive story work status.
+  //
+  // IMPORTANT: The story is NOT auto-completed to 'done' even when all
+  // tasks are done. The worker must explicitly call the story completion
+  // endpoint with cost data. We only signal `allTasksComplete` as a hint.
   // -------------------------------------------------------------------------
 
   const parentStory = await taskRepo.getParentStory(tenantId, completedTaskId);
   let storyStatus = parentStory?.workStatus ?? 'pending';
+  let allTasksComplete = false;
 
   if (parentStory) {
     // Fetch all tasks in the story (use high limit to get all)
@@ -121,6 +142,11 @@ export const triggerCascadingReevaluation = async (
       pagination: { page: 1, limit: 1000, sortBy: 'createdAt', sortOrder: 'asc' },
     });
 
+    allTasksComplete = storyTasks.data.every((t) => t.workStatus === 'done');
+
+    // Re-derive story status but never auto-complete to 'done'.
+    // The story stays 'in_progress' even when all tasks are done;
+    // the worker must explicitly complete the story with cost data.
     const derivedStoryStatus = deriveStoryWorkStatus(
       storyTasks.data.map((t) => t.workStatus),
       parentStory.workStatus,
@@ -169,7 +195,8 @@ export const triggerCascadingReevaluation = async (
   }
 
   return {
-    unblockedTaskIds,
+    unblockedTasks,
+    allTasksComplete,
     storyStatus,
     epicStatus,
     projectStatus,
@@ -183,38 +210,27 @@ export const triggerCascadingReevaluation = async (
 /**
  * Derives the story work status from its child task statuses.
  *
+ * IMPORTANT: The story is NEVER auto-completed to 'done' by task
+ * completion. The worker must explicitly call the story completion
+ * endpoint with cost data (cost_usd, cost_tokens). This function
+ * only handles transitions that do not require explicit worker action.
+ *
  * Derivation rules (evaluated in priority order):
- * 1. If the story is 'in_progress' and all tasks are 'done' -> 'done'
- * 2. If the story is 'in_progress' and tasks are still being worked -> keep 'in_progress'
- * 3. Otherwise -> keep current status
+ * 1. If the story is not 'in_progress' -> keep current status
+ * 2. If the story is 'in_progress' -> keep 'in_progress'
+ *    (even when all tasks are done; the worker must explicitly complete)
  *
- * Note: We only auto-derive from 'in_progress' stories since that's the
- * state the story is in while tasks are being worked on. Draft/pending/blocked
- * transitions are handled by other flows (assignment, dependency resolution).
+ * Note: Draft/pending/blocked transitions are handled by other flows
+ * (assignment, dependency resolution).
  *
- * @param taskStatuses   - Array of work_status values for all tasks in the story
+ * @param _taskStatuses  - Array of work_status values for all tasks in the story (unused; kept for signature compatibility)
  * @param currentStatus  - The story's current work_status
- * @returns The derived work status
+ * @returns The derived work status (never 'done' from this function)
  */
-const deriveStoryWorkStatus = (taskStatuses: string[], currentStatus: string): string => {
-  // Only auto-derive when the story is in progress
-  if (currentStatus !== 'in_progress') {
-    return currentStatus;
-  }
-
-  // No tasks means we cannot derive
-  if (taskStatuses.length === 0) {
-    return currentStatus;
-  }
-
-  // If all tasks are done, the story is done
-  const allDone = taskStatuses.every((s) => s === 'done');
-  if (allDone) {
-    return 'done';
-  }
-
-  // Story stays in_progress while tasks are being worked on
-  return 'in_progress';
+const deriveStoryWorkStatus = (_taskStatuses: string[], currentStatus: string): string => {
+  // Story status is never auto-derived to 'done' during task completion.
+  // The worker must explicitly complete the story with cost data.
+  return currentStatus;
 };
 
 // ---------------------------------------------------------------------------

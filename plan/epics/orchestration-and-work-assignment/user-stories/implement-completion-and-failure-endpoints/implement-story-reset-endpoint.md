@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Story Reset Endpoint
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Completion & Failure Endpoints](./tasks.md)
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
@@ -72,7 +72,7 @@ Implement the story reset endpoint that allows human operators to reset a failed
 // apps/web/src/lib/orchestration/story-status-determination.ts
 // Determines the correct status for a story based on the DAG.
 
-import { dependencyEdgeRepository, taskRepository } from "@laila/database";
+import { dependencyEdgeRepository, taskRepository } from '@laila/database';
 
 /**
  * Determine whether a story should be "not_started" or "blocked"
@@ -90,17 +90,14 @@ import { dependencyEdgeRepository, taskRepository } from "@laila/database";
  */
 export async function determineStoryStatus(
   storyId: string,
-  tx: DatabaseTransaction
-): Promise<"not_started" | "blocked"> {
+  tx: DatabaseTransaction,
+): Promise<'not_started' | 'blocked'> {
   // Get all tasks in this story
   const storyTasks = await taskRepository.findByStoryId(storyId, tx);
   const storyTaskIds = new Set(storyTasks.map((t) => t.id));
 
   // Get all dependency edges for tasks in this story
-  const edges = await dependencyEdgeRepository.findByTaskIds(
-    [...storyTaskIds],
-    tx
-  );
+  const edges = await dependencyEdgeRepository.findByTaskIds([...storyTaskIds], tx);
 
   // Find cross-story dependencies (deps that point to tasks NOT in this story)
   const crossStoryDepIds = edges
@@ -108,14 +105,14 @@ export async function determineStoryStatus(
     .map((e) => e.to);
 
   if (crossStoryDepIds.length === 0) {
-    return "not_started"; // No cross-story deps, story is ready
+    return 'not_started'; // No cross-story deps, story is ready
   }
 
   // Check if all cross-story dependency tasks are complete
   const depTasks = await taskRepository.findByIds(crossStoryDepIds, tx);
-  const allComplete = depTasks.every((t) => t.status === "complete");
+  const allComplete = depTasks.every((t) => t.status === 'complete');
 
-  return allComplete ? "not_started" : "blocked";
+  return allComplete ? 'not_started' : 'blocked';
 }
 ```
 

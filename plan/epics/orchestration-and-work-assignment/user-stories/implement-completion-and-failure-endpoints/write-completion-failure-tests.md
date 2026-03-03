@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Completion & Failure Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Completion & Failure Endpoints](./tasks.md)
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
@@ -21,143 +21,137 @@ Write comprehensive integration tests for all completion, failure, and reset flo
 // apps/web/src/__tests__/api/v1/orchestration/completion.integration.test.ts
 // Integration tests for task completion, story completion, failure, and reset.
 
-import { describe, it, expect, beforeAll, beforeEach } from "vitest";
-import {
-  createWorkerClient,
-  createTestClient,
-} from "@/__tests__/helpers/test-client";
-import {
-  seedAssignedStory,
-  seedTaskChain,
-} from "@/__tests__/helpers/seed";
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { createWorkerClient, createTestClient } from '@/__tests__/helpers/test-client';
+import { seedAssignedStory, seedTaskChain } from '@/__tests__/helpers/seed';
 
-describe("Task Completion", () => {
-  it("marks task as complete and sets completed_at", async () => {
+describe('Task Completion', () => {
+  it('marks task as complete and sets completed_at', async () => {
     // ...
   });
 
-  it("unblocks downstream tasks when all dependencies are complete", async () => {
+  it('unblocks downstream tasks when all dependencies are complete', async () => {
     // Create chain: A -> B -> C (B, C blocked)
     // Complete A, verify B becomes not_started (C still blocked)
     // Complete B, verify C becomes not_started
   });
 
-  it("does not unblock downstream task if other dependencies remain", async () => {
+  it('does not unblock downstream task if other dependencies remain', async () => {
     // Create: A -> C, B -> C (A, B not complete)
     // Complete A, verify C is still blocked (B not complete)
   });
 
-  it("handles cross-story downstream tasks", async () => {
+  it('handles cross-story downstream tasks', async () => {
     // Task in Story 1 depends on task in Story 2
     // Complete the Story 2 task, verify Story 1 task is re-evaluated
   });
 
-  it("reports all_tasks_complete flag when all tasks done", async () => {
+  it('reports all_tasks_complete flag when all tasks done', async () => {
     // Complete all tasks in a story, verify flag is true
   });
 
-  it("does not auto-complete the story", async () => {
+  it('does not auto-complete the story', async () => {
     // Complete all tasks, verify story is still in-progress
     // (worker must explicitly call story complete)
   });
 
-  it("rejects completion from non-assigned worker", async () => {
+  it('rejects completion from non-assigned worker', async () => {
     // ...
   });
 });
 
-describe("Story Completion", () => {
-  it("records cost data and sets completed_at", async () => {
+describe('Story Completion', () => {
+  it('records cost data and sets completed_at', async () => {
     // Complete all tasks, then complete story with cost
     // Verify cost_usd and cost_tokens recorded
   });
 
-  it("clears worker assignment on completion", async () => {
+  it('clears worker assignment on completion', async () => {
     // Complete story, verify assigned_worker_id is null
   });
 
-  it("propagates completion to epic and project", async () => {
+  it('propagates completion to epic and project', async () => {
     // Complete the last story in an epic, verify epic becomes completed
     // Complete the last epic in a project, verify project becomes completed
   });
 
-  it("rejects negative cost values", async () => {
+  it('rejects negative cost values', async () => {
     // Verify COST_VALIDATION_FAILED for negative cost_usd or cost_tokens
   });
 
-  it("rejects completion when tasks are not all complete", async () => {
+  it('rejects completion when tasks are not all complete', async () => {
     // ...
   });
 
-  it("computes correct duration_seconds", async () => {
+  it('computes correct duration_seconds', async () => {
     // ...
   });
 });
 
-describe("Story Failure", () => {
-  it("marks story as failed with error message", async () => {
+describe('Story Failure', () => {
+  it('marks story as failed with error message', async () => {
     // ...
   });
 
-  it("preserves worker assignment for debugging", async () => {
+  it('preserves worker assignment for debugging', async () => {
     // Fail a story, verify assigned_worker_id is NOT cleared
   });
 
-  it("creates attempt history record with task snapshot", async () => {
+  it('creates attempt history record with task snapshot', async () => {
     // Fail a story after completing some tasks
     // Verify attempt history includes task_statuses snapshot
   });
 
-  it("records partial cost data when provided", async () => {
+  it('records partial cost data when provided', async () => {
     // ...
   });
 
-  it("accepts both worker and human auth", async () => {
+  it('accepts both worker and human auth', async () => {
     // Test with worker client, test with human client
   });
 
-  it("keeps downstream tasks blocked", async () => {
+  it('keeps downstream tasks blocked', async () => {
     // Fail a story, verify tasks in other stories remain blocked
   });
 });
 
-describe("Story Reset", () => {
-  it("resets failed story to not_started when no upstream deps", async () => {
+describe('Story Reset', () => {
+  it('resets failed story to not_started when no upstream deps', async () => {
     // Fail then reset a story with no cross-story dependencies
   });
 
-  it("resets failed story to blocked when upstream deps incomplete", async () => {
+  it('resets failed story to blocked when upstream deps incomplete', async () => {
     // Fail then reset a story with incomplete cross-story dependencies
   });
 
-  it("clears worker assignment", async () => {
+  it('clears worker assignment', async () => {
     // ...
   });
 
-  it("preserves completed tasks (does not reset them)", async () => {
+  it('preserves completed tasks (does not reset them)', async () => {
     // Complete 2 of 3 tasks, fail the story, reset
     // Verify 2 tasks are still complete, 1 is reset to not_started
   });
 
-  it("re-evaluates blocked tasks after reset", async () => {
+  it('re-evaluates blocked tasks after reset', async () => {
     // ...
   });
 
-  it("rejects worker auth (human only)", async () => {
+  it('rejects worker auth (human only)', async () => {
     // ...
   });
 
-  it("increments previous_attempts count", async () => {
+  it('increments previous_attempts count', async () => {
     // Fail and reset twice, verify count is 2
   });
 });
 
-describe("End-to-End Lifecycle", () => {
-  it("full lifecycle: assign -> complete tasks -> complete story", async () => {
+describe('End-to-End Lifecycle', () => {
+  it('full lifecycle: assign -> complete tasks -> complete story', async () => {
     // Walk through the entire happy path
   });
 
-  it("lifecycle with failure: assign -> partial work -> fail -> reset -> re-assign -> complete", async () => {
+  it('lifecycle with failure: assign -> partial work -> fail -> reset -> re-assign -> complete', async () => {
     // Walk through a failure recovery scenario
   });
 });

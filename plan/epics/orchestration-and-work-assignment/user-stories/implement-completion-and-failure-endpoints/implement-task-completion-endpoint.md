@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Task Completion Endpoint
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Completion & Failure Endpoints](./tasks.md)
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
@@ -70,17 +70,13 @@ Implement the task completion endpoint that workers call when they finish execut
 // apps/web/src/lib/orchestration/task-completion.ts
 // Handles the cascading logic after a task is marked complete.
 
-import {
-  cascadeTaskCompletion,
-  deriveStoryStatus,
-  deriveEpicStatus,
-} from "@laila/domain";
+import { cascadeTaskCompletion, deriveStoryStatus, deriveEpicStatus } from '@laila/domain';
 import {
   taskRepository,
   storyRepository,
   epicRepository,
   dependencyEdgeRepository,
-} from "@laila/database";
+} from '@laila/database';
 
 /**
  * Process task completion with cascading side effects.
@@ -103,47 +99,37 @@ import {
  */
 export async function processTaskCompletion(
   taskId: string,
-  tx: DatabaseTransaction
+  tx: DatabaseTransaction,
 ): Promise<{
   unblockedTasks: Array<{ id: string; name: string }>;
   allTasksComplete: boolean;
 }> {
   // Step 1: Mark task complete
-  const task = await taskRepository.updateStatus(taskId, "complete", tx);
+  const task = await taskRepository.updateStatus(taskId, 'complete', tx);
   await taskRepository.setCompletedAt(taskId, new Date(), tx);
 
   // Step 2: Find downstream dependents
-  const dependentEdges = await dependencyEdgeRepository.findDependents(
-    taskId,
-    tx
-  );
+  const dependentEdges = await dependencyEdgeRepository.findDependents(taskId, tx);
 
   // Step 3: Evaluate each downstream task
   const unblockedTasks: Array<{ id: string; name: string }> = [];
   for (const depTaskId of dependentEdges) {
-    const allDeps = await dependencyEdgeRepository.findDependencies(
-      depTaskId,
-      tx
-    );
+    const allDeps = await dependencyEdgeRepository.findDependencies(depTaskId, tx);
     const depTasks = await taskRepository.findByIds(
       allDeps.map((e) => e.to),
-      tx
+      tx,
     );
-    const allComplete = depTasks.every((t) => t.status === "complete");
+    const allComplete = depTasks.every((t) => t.status === 'complete');
 
     if (allComplete) {
-      const unblocked = await taskRepository.updateStatus(
-        depTaskId,
-        "not_started",
-        tx
-      );
+      const unblocked = await taskRepository.updateStatus(depTaskId, 'not_started', tx);
       unblockedTasks.push({ id: unblocked.id, name: unblocked.name });
     }
   }
 
   // Step 4: Check story completion
   const storyTasks = await taskRepository.findByStoryId(task.story_id, tx);
-  const allTasksComplete = storyTasks.every((t) => t.status === "complete");
+  const allTasksComplete = storyTasks.every((t) => t.status === 'complete');
 
   // Steps 5-7: Re-derive parent statuses
   await rederiveParentStatuses(task.story_id, tx);

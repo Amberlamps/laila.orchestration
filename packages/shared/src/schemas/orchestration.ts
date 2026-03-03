@@ -252,3 +252,75 @@ export type BlockingStoryInfo = z.infer<typeof blockingStoryInfoSchema>;
 export type TaskDependencyInfo = z.infer<typeof taskDependencyInfoSchema>;
 export type TaskPersonaInfo = z.infer<typeof taskPersonaInfoSchema>;
 export type AssignedEpicInfo = z.infer<typeof assignedEpicInfoSchema>;
+
+// ---------------------------------------------------------------------------
+// Story failure request schema
+// ---------------------------------------------------------------------------
+
+/**
+ * Request body schema for the story failure endpoint.
+ *
+ * Workers or human operators send this when a story execution encounters
+ * an unrecoverable error. The `error_message` is required to ensure every
+ * failure is documented; optional fields capture partial cost data and
+ * structured error details for debugging.
+ */
+export const storyFailSchema = z.object({
+  /** Human-readable description of what went wrong (required) */
+  error_message: z.string().min(1).max(10000),
+  /** Optional structured error data (e.g., stack traces, API responses) */
+  error_details: z.record(z.unknown()).optional(),
+  /** Optional partial cost incurred before failure (USD, rounded to cents) */
+  partial_cost_usd: z.number().min(0).multipleOf(0.01).optional(),
+  /** Optional token count consumed before failure */
+  partial_cost_tokens: z.number().int().min(0).optional(),
+});
+
+/** TypeScript type for the story failure request body */
+export type StoryFailRequest = z.infer<typeof storyFailSchema>;
+
+// ---------------------------------------------------------------------------
+// Story completion request schema
+// ---------------------------------------------------------------------------
+
+/**
+ * Request body schema for the story completion endpoint.
+ *
+ * Workers send this after all tasks in a story are done. The `cost_usd` and
+ * `cost_tokens` fields capture the total cost incurred during story execution
+ * for budget tracking and worker efficiency analysis.
+ */
+export const storyCompleteSchema = z.object({
+  /** Total cost in USD incurred during story execution (non-negative, up to 2 decimal places) */
+  cost_usd: z
+    .number()
+    .min(0, 'Cost must be non-negative')
+    .multipleOf(0.01, 'Cost must have at most 2 decimal places'),
+  /** Total token count consumed during story execution (non-negative integer) */
+  cost_tokens: z
+    .number()
+    .int('Token count must be an integer')
+    .min(0, 'Token count must be non-negative'),
+});
+
+/** TypeScript type for the story completion request body */
+export type StoryCompleteRequest = z.infer<typeof storyCompleteSchema>;
+
+// ---------------------------------------------------------------------------
+// Story reset request schema
+// ---------------------------------------------------------------------------
+
+/**
+ * Request body schema for the story reset endpoint.
+ *
+ * Human operators send this to reset a failed story back into the assignment
+ * pool. The `reset_tasks` flag (default: true) controls whether non-complete
+ * tasks are reset alongside the story.
+ */
+export const storyResetSchema = z.object({
+  /** Whether to reset non-complete tasks (in_progress, failed) to pending. Defaults to true. */
+  reset_tasks: z.boolean().default(true),
+});
+
+/** TypeScript type for the story reset request body */
+export type StoryResetRequest = z.infer<typeof storyResetSchema>;

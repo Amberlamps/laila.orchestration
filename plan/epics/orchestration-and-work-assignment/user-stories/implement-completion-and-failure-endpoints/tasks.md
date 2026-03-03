@@ -4,7 +4,7 @@
 
 - **Title:** Implement Task Completion & Story Completion/Failure Endpoints
 - **Description:** Implement the work result endpoints: task completion with cascading re-evaluation, story completion with cost recording, story failure with error logging, and story reset from failed state. These endpoints handle the outcomes of worker execution and drive the orchestration lifecycle forward.
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
 - **Total Tasks:** 5
 - **Dependencies:** Implement Work Assignment Endpoint
@@ -13,13 +13,13 @@
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Task Completion Endpoint](./implement-task-completion-endpoint.md) | POST /api/v1/tasks/:id/complete with cascading re-evaluation and auto-complete detection | Not Started | backend-developer | None |
-| [Implement Story Completion Endpoint](./implement-story-completion-endpoint.md) | POST /api/v1/stories/:id/complete with cost recording and status propagation | Not Started | backend-developer | Implement Task Completion Endpoint |
-| [Implement Story Failure Endpoint](./implement-story-failure-endpoint.md) | POST /api/v1/stories/:id/fail with error logging and downstream blocking | Not Started | backend-developer | None |
-| [Implement Story Reset Endpoint](./implement-story-reset-endpoint.md) | POST /api/v1/stories/:id/reset from failed to not-started/blocked | Not Started | backend-developer | Implement Story Failure Endpoint |
-| [Write Completion & Failure Tests](./write-completion-failure-tests.md) | Integration tests for all completion, failure, and reset flows | Not Started | qa-expert | Implement Task Completion Endpoint, Implement Story Completion Endpoint, Implement Story Failure Endpoint, Implement Story Reset Endpoint |
+| Task                                                                            | Description                                                                              | Status   | Assigned Agent    | Dependencies                                                                                                                              |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| [Implement Task Completion Endpoint](./implement-task-completion-endpoint.md)   | POST /api/v1/tasks/:id/complete with cascading re-evaluation and auto-complete detection | Complete | backend-developer | None                                                                                                                                      |
+| [Implement Story Completion Endpoint](./implement-story-completion-endpoint.md) | POST /api/v1/stories/:id/complete with cost recording and status propagation             | Complete | backend-developer | Implement Task Completion Endpoint                                                                                                        |
+| [Implement Story Failure Endpoint](./implement-story-failure-endpoint.md)       | POST /api/v1/stories/:id/fail with error logging and downstream blocking                 | Complete | backend-developer | None                                                                                                                                      |
+| [Implement Story Reset Endpoint](./implement-story-reset-endpoint.md)           | POST /api/v1/stories/:id/reset from failed to not-started/blocked                        | Complete | backend-developer | Implement Story Failure Endpoint                                                                                                          |
+| [Write Completion & Failure Tests](./write-completion-failure-tests.md)         | Integration tests for all completion, failure, and reset flows                           | Complete | qa-expert         | Implement Task Completion Endpoint, Implement Story Completion Endpoint, Implement Story Failure Endpoint, Implement Story Reset Endpoint |
 
 ## Dependency Graph
 

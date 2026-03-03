@@ -10,7 +10,8 @@
  *
  * Pre-conditions:
  *   - Task must be in 'in_progress' status
- *   - Requesting worker must be the one assigned to the parent story
+ *   - Requesting worker must be assigned to the parent story
+ *   - Parent story must be in 'in_progress' status
  *
  * Post-conditions:
  *   - Task status changes to 'done'
@@ -18,14 +19,25 @@
  *   - Cascading re-evaluation is triggered (within the same transaction):
  *     1. Downstream tasks that depend on this task are re-evaluated
  *        (may transition from 'blocked' to 'pending')
- *     2. Parent story work status is re-derived
+ *     2. Parent story work status is re-derived (NOT auto-completed)
  *     3. Parent epic work status is re-derived
  *     4. Parent project work status is re-derived
+ *   - Audit event is logged
+ *
+ * Response: 200 with {
+ *   data: {
+ *     task: { id, name, status, completed_at },
+ *     cascading_updates: {
+ *       unblocked_tasks: [{ id, name, new_status }],
+ *       all_tasks_complete: boolean
+ *     }
+ *   }
+ * }
  *
  * Uses the standard middleware composition: withErrorHandler > withAuth > withValidation.
  */
 
-import { createTaskRepository, getDb } from '@laila/database';
+import { createTaskRepository, getDb, writeAuditEvent } from '@laila/database';
 import { NotFoundError, ConflictError, AuthorizationError, DomainErrorCode } from '@laila/shared';
 import { z } from 'zod';
 
@@ -61,11 +73,14 @@ const taskIdParamsSchema = z.object({
  * After completion, triggers cascading re-evaluation to:
  * - Unblock downstream tasks whose dependencies are now all complete
  * - Re-derive parent story, epic, and project work statuses
+ * - Log an audit event for the task completion
  *
- * Response: 200 with { data: task, cascade: CascadeResult }
+ * Response: 200 with spec-compliant response shape including
+ * unblocked_tasks (id, name, new_status) and all_tasks_complete flag.
+ *
  * Throws: 404 NotFoundError if task or parent story does not exist
  * Throws: 403 AuthorizationError with WORKER_NOT_ASSIGNED if worker is not assigned
- * Throws: 409 ConflictError with INVALID_STATUS_TRANSITION if task is not in_progress
+ * Throws: 409 ConflictError with INVALID_STATUS_TRANSITION if task or parent story is not in_progress
  */
 const handleComplete = withErrorHandler(
   withAuth(
@@ -110,7 +125,15 @@ const handleComplete = withErrorHandler(
           );
         }
 
-        // 4. Verify the requesting worker is assigned to the parent story
+        // 4. Verify the parent story is in 'in_progress' status
+        if (parentStory.workStatus !== 'in_progress') {
+          throw new ConflictError(
+            DomainErrorCode.INVALID_STATUS_TRANSITION,
+            `Cannot complete task: parent story is in "${parentStory.workStatus}" status. Parent story must be in "in_progress" status.`,
+          );
+        }
+
+        // 5. Verify the requesting worker is assigned to the parent story
         if (parentStory.assignedWorkerId !== workerId) {
           throw new AuthorizationError(
             DomainErrorCode.WORKER_NOT_ASSIGNED,
@@ -118,10 +141,10 @@ const handleComplete = withErrorHandler(
           );
         }
 
-        // 5. Atomic operation: task completion + cascading re-evaluation
+        // 6. Atomic operation: task completion + cascading re-evaluation
         //    All succeed or all roll back.
         const { updated, cascadeResult } = await taskRepo.withTransaction(async (tx) => {
-          // 5a. Transition the task to 'done' with completedAt timestamp
+          // 6a. Transition the task to 'done' with completedAt timestamp
           const completedTask = await taskRepo.updateInTx(
             tenantId,
             id,
@@ -130,19 +153,49 @@ const handleComplete = withErrorHandler(
             tx,
           );
 
-          // 5b. Trigger cascading re-evaluation within the same transaction
+          // 6b. Trigger cascading re-evaluation within the same transaction
           const cascade = await triggerCascadingReevaluation(tenantId, id, tx);
 
           return { updated: completedTask, cascadeResult: cascade };
         });
 
+        // 7. Log audit event for the task completion (outside transaction;
+        //    audit writes to DynamoDB and should not block the PG transaction).
+        await writeAuditEvent({
+          entityType: 'task',
+          entityId: id,
+          action: 'completed',
+          actorType: 'worker',
+          actorId: workerId,
+          tenantId,
+          changes: {
+            before: { workStatus: 'in_progress' },
+            after: { workStatus: 'done', completedAt: updated.completedAt?.toISOString() },
+          },
+          metadata: {
+            parentStoryId: parentStory.id,
+            unblockedTaskCount: cascadeResult.unblockedTasks.length,
+            allTasksComplete: cascadeResult.allTasksComplete,
+          },
+        });
+
+        // 8. Send spec-compliant response
         res.status(200).json({
-          data: updated,
-          cascade: {
-            unblockedTaskIds: cascadeResult.unblockedTaskIds,
-            storyStatus: cascadeResult.storyStatus,
-            epicStatus: cascadeResult.epicStatus,
-            projectStatus: cascadeResult.projectStatus,
+          data: {
+            task: {
+              id: updated.id,
+              name: updated.title,
+              status: 'complete',
+              completed_at: updated.completedAt?.toISOString() ?? null,
+            },
+            cascading_updates: {
+              unblocked_tasks: cascadeResult.unblockedTasks.map((t) => ({
+                id: t.id,
+                name: t.name,
+                new_status: 'not_started',
+              })),
+              all_tasks_complete: cascadeResult.allTasksComplete,
+            },
           },
         });
       },

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Story Completion Endpoint
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Completion & Failure Endpoints](./tasks.md)
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
@@ -73,17 +73,17 @@ Implement the story completion endpoint that workers call after all tasks in a s
 // packages/shared/src/schemas/orchestration.ts
 // Zod schema for story completion request.
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const storyCompleteSchema = z.object({
   cost_usd: z
     .number()
-    .min(0, "Cost must be non-negative")
-    .multipleOf(0.01, "Cost must have at most 2 decimal places"),
+    .min(0, 'Cost must be non-negative')
+    .multipleOf(0.01, 'Cost must have at most 2 decimal places'),
   cost_tokens: z
     .number()
-    .int("Token count must be an integer")
-    .min(0, "Token count must be non-negative"),
+    .int('Token count must be an integer')
+    .min(0, 'Token count must be non-negative'),
 });
 ```
 
@@ -103,34 +103,29 @@ export const storyCompleteSchema = z.object({
  */
 export async function propagateCompletionStatus(
   storyId: string,
-  tx: DatabaseTransaction
+  tx: DatabaseTransaction,
 ): Promise<{ epicStatus: string; projectStatus: string }> {
   const story = await storyRepository.findById(storyId, tx);
 
   // Check epic completion
   const epicStories = await storyRepository.findByEpicId(story.epic_id, tx);
-  const epicComplete = epicStories.every((s) => s.status === "completed");
+  const epicComplete = epicStories.every((s) => s.status === 'completed');
   if (epicComplete) {
-    await epicRepository.updateWorkStatus(story.epic_id, "completed", tx);
+    await epicRepository.updateWorkStatus(story.epic_id, 'completed', tx);
   }
   const epic = await epicRepository.findById(story.epic_id, tx);
 
   // Check project completion
-  const projectEpics = await epicRepository.findByProjectId(
-    epic.project_id,
-    tx
-  );
-  const projectComplete = projectEpics.every(
-    (e) => e.work_status === "completed"
-  );
+  const projectEpics = await epicRepository.findByProjectId(epic.project_id, tx);
+  const projectComplete = projectEpics.every((e) => e.work_status === 'completed');
   if (projectComplete) {
-    await projectRepository.updateStatus(epic.project_id, "completed", tx);
+    await projectRepository.updateStatus(epic.project_id, 'completed', tx);
   }
   const project = await projectRepository.findById(epic.project_id, tx);
 
   return {
-    epicStatus: epicComplete ? "completed" : epic.work_status,
-    projectStatus: projectComplete ? "completed" : project.status,
+    epicStatus: epicComplete ? 'completed' : epic.work_status,
+    projectStatus: projectComplete ? 'completed' : project.status,
   };
 }
 ```

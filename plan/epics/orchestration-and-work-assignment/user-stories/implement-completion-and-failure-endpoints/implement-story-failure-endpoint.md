@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Story Failure Endpoint
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Completion & Failure Endpoints](./tasks.md)
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
@@ -90,7 +90,7 @@ interface AttemptHistoryRecord {
   worker_id: string;
   started_at: Date;
   ended_at: Date;
-  reason: "failed" | "timeout" | "manual_unassignment";
+  reason: 'failed' | 'timeout' | 'manual_unassignment';
   error_message: string | null;
   cost_usd: number | null;
   cost_tokens: number | null;
