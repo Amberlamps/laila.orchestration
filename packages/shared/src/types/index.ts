@@ -17,3 +17,18 @@ export type {
   WithOptimisticLock,
   TenantScoped,
 } from './utility';
+
+// Orchestration assignment types (derived from Zod schemas)
+export type {
+  AssignRequest,
+  AssignResponse,
+  AssignedResponse,
+  BlockedResponse,
+  AllCompleteResponse,
+  AssignedStoryDetail,
+  AssignedTaskDetail,
+  BlockingStoryInfo,
+  TaskDependencyInfo,
+  TaskPersonaInfo,
+  AssignedEpicInfo,
+} from './orchestration';

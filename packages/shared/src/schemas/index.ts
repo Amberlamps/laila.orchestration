@@ -34,6 +34,32 @@ export {
   type ErrorEnvelope,
 } from './error';
 
+// Orchestration assignment schemas
+export {
+  assignRequestSchema,
+  type AssignRequest,
+  assignResponseSchema,
+  type AssignResponse,
+  assignedResponseSchema,
+  type AssignedResponse,
+  blockedResponseSchema,
+  type BlockedResponse,
+  allCompleteResponseSchema,
+  type AllCompleteResponse,
+  assignedStoryDetailSchema,
+  type AssignedStoryDetail,
+  assignedTaskDetailSchema,
+  type AssignedTaskDetail,
+  blockingStoryInfoSchema,
+  type BlockingStoryInfo,
+  taskDependencyInfoSchema,
+  type TaskDependencyInfo,
+  taskPersonaInfoSchema,
+  type TaskPersonaInfo,
+  assignedEpicInfoSchema,
+  type AssignedEpicInfo,
+} from './orchestration';
+
 // Audit event schemas
 export {
   auditActionSchema,
