@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Task Detail Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Task Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -28,55 +28,55 @@ The page uses a single-column layout with multiple bordered card sections, rathe
 3. **Content Sections (bordered cards):**
 
    a. **Description Card:**
-      - Header: "Description" in H3
-      - Content: Rendered Markdown via MarkdownRenderer
+   - Header: "Description" in H3
+   - Content: Rendered Markdown via MarkdownRenderer
 
    b. **Acceptance Criteria Card:**
-      - Header: "Acceptance Criteria" in H3
-      - Background: neutral-50 (zinc-50) to distinguish from regular description
-      - Content: Rendered Markdown (typically a checklist)
+   - Header: "Acceptance Criteria" in H3
+   - Background: neutral-50 (zinc-50) to distinguish from regular description
+   - Content: Rendered Markdown (typically a checklist)
 
    c. **Technical Notes Card (optional):**
-      - Header: "Technical Notes" in H3
-      - Content: Rendered Markdown
-      - Hidden if empty
+   - Header: "Technical Notes" in H3
+   - Content: Rendered Markdown
+   - Hidden if empty
 
    d. **References Card (optional):**
-      - Header: "References" in H3
-      - Content: Rendered Markdown (links to specs, docs, etc.)
-      - Hidden if empty
+   - Header: "References" in H3
+   - Content: Rendered Markdown (links to specs, docs, etc.)
+   - Hidden if empty
 
    e. **Dependencies Card:**
-      - Two sub-sections:
-        - **"Depends on" list:** Tasks this task depends on, with arrow-right icon, task title (linked), and StatusBadge
-        - **"Blocks" list:** Tasks that depend on this task, with arrow-right icon, task title (linked), and StatusBadge
-      - Hidden if no dependencies in either direction
+   - Two sub-sections:
+     - **"Depends on" list:** Tasks this task depends on, with arrow-right icon, task title (linked), and StatusBadge
+     - **"Blocks" list:** Tasks that depend on this task, with arrow-right icon, task title (linked), and StatusBadge
+   - Hidden if no dependencies in either direction
 
    f. **Persona Card (collapsible):**
-      - Header: "Assigned Persona" with expand/collapse toggle
-      - Content: Persona title (H3, linked), rendered persona description via MarkdownRenderer
-      - Default: collapsed (shows just title), expandable to show full description
+   - Header: "Assigned Persona" with expand/collapse toggle
+   - Content: Persona title (H3, linked), rendered persona description via MarkdownRenderer
+   - Default: collapsed (shows just title), expandable to show full description
 
    g. **Metadata Card:**
-      - Two-column grid:
-        - ID: Monospace (JetBrains Mono), full CUID
-        - Parent Story: Title linked to story detail page
-        - Parent Epic: Title linked to epic detail page
-        - Created At: Formatted timestamp
-        - Updated At: Formatted timestamp
+   - Two-column grid:
+     - ID: Monospace (JetBrains Mono), full CUID
+     - Parent Story: Title linked to story detail page
+     - Parent Epic: Title linked to epic detail page
+     - Created At: Formatted timestamp
+     - Updated At: Formatted timestamp
 
 ```tsx
 // apps/web/src/pages/projects/[projectId]/tasks/[taskId].tsx
 // Task detail page showing the complete task specification.
 // Uses bordered card sections for each content type.
-import { useRouter } from "next/router";
-import { ArrowRight, ChevronDown, ChevronUp, Lock } from "lucide-react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { Card } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
-import { useTask } from "@/hooks/use-tasks";
+import { useRouter } from 'next/router';
+import { ArrowRight, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { AppLayout } from '@/components/layout/app-layout';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { Card } from '@/components/ui/card';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
+import { useTask } from '@/hooks/use-tasks';
 
 export default function TaskDetailPage() {
   const router = useRouter();

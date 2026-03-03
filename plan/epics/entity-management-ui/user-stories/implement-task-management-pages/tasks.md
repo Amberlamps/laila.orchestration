@@ -4,18 +4,18 @@
 
 - **Title:** Implement Task Management Pages
 - **Description:** Build the task detail page with multiple content sections (description, acceptance criteria, technical notes, references, dependencies, persona, metadata), create/edit task modal with the dependency picker, and the reusable task dependency picker component.
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
 - **Total Tasks:** 3
 - **Dependencies:** Implement User Story Management Pages
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Task Detail Page](./implement-task-detail-page.md) | Build task detail page with content sections, dependency lists, persona card, and metadata | Not Started | frontend-developer | None |
-| [Implement Create Edit Task Modal](./implement-create-edit-task-modal.md) | Build create/edit modal with title, description, acceptance criteria, persona, and dependency picker | Not Started | fullstack-developer | Implement Task Detail Page |
-| [Implement Task Dependency Picker](./implement-task-dependency-picker.md) | Build searchable multi-select dependency picker with cycle detection validation | Not Started | fullstack-developer | Implement Create Edit Task Modal |
+| Task                                                                      | Description                                                                                          | Status   | Assigned Agent      | Dependencies                     |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------- | ------------------- | -------------------------------- |
+| [Implement Task Detail Page](./implement-task-detail-page.md)             | Build task detail page with content sections, dependency lists, persona card, and metadata           | Complete | frontend-developer  | None                             |
+| [Implement Create Edit Task Modal](./implement-create-edit-task-modal.md) | Build create/edit modal with title, description, acceptance criteria, persona, and dependency picker | Complete | fullstack-developer | Implement Task Detail Page       |
+| [Implement Task Dependency Picker](./implement-task-dependency-picker.md) | Build searchable multi-select dependency picker with cycle detection validation                      | Complete | fullstack-developer | Implement Create Edit Task Modal |
 
 ## Dependency Graph
 

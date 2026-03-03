@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Create Edit Task Modal
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Task Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -58,26 +58,30 @@ Build a combined create/edit modal for tasks. This is the most complex form in t
 // apps/web/src/components/tasks/create-edit-task-modal.tsx
 // Combined create/edit modal for tasks — the most complex form in the application.
 // Includes multiple Markdown editors, persona selection, and dependency picker.
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useCreateTask, useUpdateTask } from "@/hooks/use-tasks";
-import { usePersonas } from "@/hooks/use-personas";
-import { MarkdownEditor } from "@/components/ui/markdown-editor";
-import { TaskDependencyPicker } from "./task-dependency-picker";
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useCreateTask, useUpdateTask } from '@/hooks/use-tasks';
+import { usePersonas } from '@/hooks/use-personas';
+import { MarkdownEditor } from '@/components/ui/markdown-editor';
+import { TaskDependencyPicker } from './task-dependency-picker';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // Zod schema for task creation/editing.
 // AcceptanceCriteria is optional during creation but required for publish.
 const taskFormSchema = z.object({
-  title: z.string().min(1, "Task title is required").max(200),
+  title: z.string().min(1, 'Task title is required').max(200),
   description: z.string().optional(),
   acceptanceCriteria: z.string().optional(),
   technicalNotes: z.string().optional(),
   references: z.string().optional(),
-  personaId: z.string().min(1, "Persona is required"),
+  personaId: z.string().min(1, 'Persona is required'),
   dependencyIds: z.array(z.string()).default([]),
 });
 

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Task Dependency Picker
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Task Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -29,13 +29,13 @@ Build a reusable `TaskDependencyPicker` component that allows users to select wh
 // apps/web/src/components/tasks/task-dependency-picker.tsx
 // Searchable multi-select picker for task dependencies.
 // Groups tasks by epic/story and validates for circular dependencies.
-import { useState, useMemo } from "react";
-import { Search, X, AlertTriangle } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Badge } from "@/components/ui/badge";
-import { useProjectTasks } from "@/hooks/use-tasks";
+import { useState, useMemo } from 'react';
+import { Search, X, AlertTriangle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Badge } from '@/components/ui/badge';
+import { useProjectTasks } from '@/hooks/use-tasks';
 
 interface TaskOption {
   id: string;
@@ -78,9 +78,9 @@ When the user selects a task as a dependency, call the API to validate that the 
 // If a cycle is detected, show the cycle path and prevent the selection.
 async function validateNoCycle(
   taskId: string,
-  proposedDependencyIds: string[]
+  proposedDependencyIds: string[],
 ): Promise<{ valid: boolean; cyclePath?: string[] }> {
-  const response = await apiClient.POST("/api/tasks/{taskId}/validate-dependencies", {
+  const response = await apiClient.POST('/api/tasks/{taskId}/validate-dependencies', {
     params: { path: { taskId } },
     body: { dependencyIds: proposedDependencyIds },
   });

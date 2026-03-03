@@ -359,6 +359,98 @@ export const useDeleteEpic = (projectId: string) => {
   });
 };
 
+// ---------------------------------------------------------------------------
+// Epic Validation & Publishing
+// ---------------------------------------------------------------------------
+
+interface ValidateEpicResult {
+  valid: boolean;
+  issues?: Array<{ entityType: string; entityName: string; issue: string }>;
+}
+
+/** Validates an epic's structure before publishing without changing state. */
+export const useValidateEpic = () => {
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      epicId,
+    }: {
+      projectId: string;
+      epicId: string;
+    }): Promise<ValidateEpicResult> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/epics/${epicId}/validate`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<ValidateEpicResult>;
+    },
+  });
+};
+
+/** Publishes an epic (transitions from Draft to Ready status). */
+export const usePublishEpic = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ projectId, epicId }: { projectId: string; epicId: string }) => {
+      const response = await fetch(`/api/v1/projects/${projectId}/epics/${epicId}/publish`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<unknown>;
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.epics.detail(variables.epicId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.epics.counts(variables.epicId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.stats(),
+      });
+    },
+  });
+};
+
+// ---------------------------------------------------------------------------
+// Epic Counts
+// ---------------------------------------------------------------------------
+
+interface EpicCountsResult {
+  totalStories: number;
+  totalTasks: number;
+  hasInProgressWork: boolean;
+}
+
+/** Fetches authoritative aggregate counts for an epic (stories, tasks, in-progress work). */
+export const useEpicCounts = (projectId: string, epicId: string) =>
+  useQuery({
+    queryKey: queryKeys.epics.counts(epicId),
+    queryFn: async (): Promise<EpicCountsResult> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/epics/${epicId}/counts`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<EpicCountsResult>;
+    },
+    enabled: !!projectId && !!epicId,
+  });
+
 // ===========================================================================
 // Stories (scoped under an epic)
 // ===========================================================================
@@ -787,6 +879,54 @@ export const useDeleteTask = (storyId: string) => {
     },
   });
 };
+
+// ---------------------------------------------------------------------------
+// Project-level task listing (used by TaskDependencyPicker)
+// ---------------------------------------------------------------------------
+
+/** Shape of a task returned from the project-level task list endpoint. */
+export interface ProjectTask {
+  id: string;
+  title: string;
+  userStoryId: string;
+  workStatus: string;
+  dependencyIds: string[];
+}
+
+/** Paginated task list response from /api/v1/tasks. */
+interface ProjectTaskListResponse {
+  data: ProjectTask[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+/**
+ * Fetches all tasks for a project via the internal flat task list endpoint.
+ *
+ * Uses `GET /api/v1/tasks?projectId=X&limit=500` which joins through
+ * stories and epics. The high limit ensures we get all tasks in one request
+ * for the dependency picker.
+ *
+ * Disabled when projectId is falsy.
+ */
+export const useProjectTasks = (projectId: string) =>
+  useQuery({
+    queryKey: queryKeys.tasks.byProject(projectId),
+    queryFn: async (): Promise<ProjectTaskListResponse> => {
+      const response = await fetch(
+        `/api/v1/tasks?projectId=${projectId}&limit=500&sortBy=title&sortOrder=asc`,
+        {
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<ProjectTaskListResponse>;
+    },
+    enabled: !!projectId,
+  });
 
 // ===========================================================================
 // Workers (top-level entity)
