@@ -136,18 +136,25 @@ const handleGrant = withErrorHandler(
 // DELETE /api/v1/workers/:id/projects/:projectId -- Revoke project access
 // ---------------------------------------------------------------------------
 
+/** Query schema for the DELETE endpoint — optional force parameter. */
+const revokeQuerySchema = z.object({
+  force: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((val) => val === 'true'),
+});
+
 /**
  * Revokes a worker's access to a specific project.
  *
  * Before revoking, checks if the worker has in-progress or assigned stories
  * that belong to the target project (via the epic -> project chain). If such
- * stories exist, the revoke is blocked with a 409 ASSIGNMENT_CONFLICT to
- * prevent disrupting active work. The human must unassign those stories first.
+ * stories exist and force is not set, the revoke is blocked with a 409
+ * ASSIGNMENT_CONFLICT. Pass ?force=true to unassign all stories in the
+ * project before revoking access.
  *
- * Pre-conditions:
- *   - Worker must exist in the tenant
- *   - Project must exist in the tenant
- *   - Worker must not have in-progress/assigned stories in the project
+ * Query parameters:
+ *   - force (optional, default: false) -- unassign stories and force revocation
  *
  * Response: 204 No Content
  * Throws: 404 NotFoundError if worker or project does not exist
@@ -156,10 +163,11 @@ const handleGrant = withErrorHandler(
 const handleRevoke = withErrorHandler(
   withAuth(
     'human',
-    withValidation({ params: workerProjectParamsSchema })(
+    withValidation({ params: workerProjectParamsSchema, query: revokeQuerySchema })(
       async (req: NextApiRequest, res: NextApiResponse, data) => {
         const { tenantId } = (req as AuthenticatedRequest).auth;
         const { id: workerId, projectId } = data.params;
+        const { force } = data.query;
 
         await validateWorkerAndProjectExist(tenantId, workerId, projectId);
 
@@ -189,12 +197,12 @@ const handleRevoke = withErrorHandler(
             ),
           );
 
-        if (inProgressStoriesInProject.length > 0) {
+        if (inProgressStoriesInProject.length > 0 && !force) {
           throw new ConflictError(
             DomainErrorCode.ASSIGNMENT_CONFLICT,
             `Cannot revoke project access: worker ${workerId} has ` +
               `${String(inProgressStoriesInProject.length)} in-progress story assignment(s) ` +
-              `in project ${projectId}. Unassign the stories first.`,
+              `in project ${projectId}. Use ?force=true to unassign stories and revoke access.`,
             {
               inProgressStories: inProgressStoriesInProject.map((story) => ({
                 id: story.id,
@@ -203,6 +211,28 @@ const handleRevoke = withErrorHandler(
               })),
             },
           );
+        }
+
+        // If force=true and there are in-progress stories, unassign them first
+        if (inProgressStoriesInProject.length > 0 && force) {
+          await db
+            .update(userStoriesTable)
+            .set({
+              assignedWorkerId: null,
+              assignedAt: null,
+              workStatus: 'pending',
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(userStoriesTable.tenantId, tenantId),
+                eq(userStoriesTable.assignedWorkerId, workerId),
+                inArray(
+                  userStoriesTable.id,
+                  inProgressStoriesInProject.map((s) => s.id),
+                ),
+              ),
+            );
         }
 
         const revoked = await workerRepo.revokeProjectAccess(tenantId, workerId, projectId);

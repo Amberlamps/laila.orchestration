@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Worker List Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Worker Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -34,32 +34,35 @@ Build the worker list page at `/workers` that displays all of the user's AI exec
 // apps/web/src/pages/workers/index.tsx
 // Worker list page with table layout.
 // Shows each worker's name, assigned projects, current activity, and creation date.
-import { useState } from "react";
-import { useRouter } from "next/router";
-import { Bot, Plus } from "lucide-react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { Button } from "@/components/ui/button";
-import { EntityTable, type ColumnDef } from "@/components/ui/entity-table";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { useWorkers } from "@/hooks/use-workers";
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { Bot, Plus } from 'lucide-react';
+import { AppLayout } from '@/components/layout/app-layout';
+import { Button } from '@/components/ui/button';
+import { EntityTable, type ColumnDef } from '@/components/ui/entity-table';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
+import { useWorkers } from '@/hooks/use-workers';
 
 // Worker column definitions with status-aware rendering.
 const workerColumns: ColumnDef<Worker>[] = [
   {
-    key: "name",
-    header: "Name",
+    key: 'name',
+    header: 'Name',
     sortable: true,
     cell: (worker) => (
-      <Link href={`/workers/${worker.id}`} className="font-semibold text-zinc-900 hover:text-indigo-600">
+      <Link
+        href={`/workers/${worker.id}`}
+        className="font-semibold text-zinc-900 hover:text-indigo-600"
+      >
         {worker.name}
       </Link>
     ),
   },
   {
-    key: "projects",
-    header: "Projects",
+    key: 'projects',
+    header: 'Projects',
     cell: (worker) => (
       // Count badge with Popover listing project names
       <Popover>
@@ -67,8 +70,10 @@ const workerColumns: ColumnDef<Worker>[] = [
           <Badge variant="secondary">{worker.projectCount} projects</Badge>
         </PopoverTrigger>
         <PopoverContent>
-          {worker.projects.map(p => (
-            <Link key={p.id} href={`/projects/${p.id}`}>{p.name}</Link>
+          {worker.projects.map((p) => (
+            <Link key={p.id} href={`/projects/${p.id}`}>
+              {p.name}
+            </Link>
           ))}
         </PopoverContent>
       </Popover>

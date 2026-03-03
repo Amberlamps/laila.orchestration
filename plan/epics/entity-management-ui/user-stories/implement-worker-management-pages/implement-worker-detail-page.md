@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Worker Detail Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Worker Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -53,14 +53,14 @@ Build the worker detail page at `/workers/{workerId}` that displays the worker's
 ```tsx
 // apps/web/src/pages/workers/[workerId].tsx
 // Worker detail page showing identity, API key status, project access, and work history.
-import { useRouter } from "next/router";
-import { Lock, Plus, X } from "lucide-react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { Card } from "@/components/ui/card";
-import { EntityTable } from "@/components/ui/entity-table";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { useWorker, useWorkerHistory } from "@/hooks/use-workers";
+import { useRouter } from 'next/router';
+import { Lock, Plus, X } from 'lucide-react';
+import { AppLayout } from '@/components/layout/app-layout';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { Card } from '@/components/ui/card';
+import { EntityTable } from '@/components/ui/entity-table';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { useWorker, useWorkerHistory } from '@/hooks/use-workers';
 
 export default function WorkerDetailPage() {
   const router = useRouter();

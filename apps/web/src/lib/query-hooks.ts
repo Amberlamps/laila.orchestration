@@ -251,6 +251,96 @@ export const useUpdateEpic = (epicId: string, projectId: string) => {
   });
 };
 
+// ---------------------------------------------------------------------------
+// Epic Validation & Publishing
+// ---------------------------------------------------------------------------
+
+/** Validates an epic for publishing without changing state. */
+export const useValidateEpic = () => {
+  return useMutation({
+    mutationFn: async (params: {
+      projectId: string;
+      epicId: string;
+    }): Promise<{
+      valid: boolean;
+      issues?: Array<{ entityType: string; entityName: string; issue: string }>;
+    }> => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
+      const response = await fetch(
+        `${baseUrl}/v1/projects/${params.projectId}/epics/${params.epicId}/validate`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        },
+      );
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as {
+        valid: boolean;
+        issues?: Array<{ entityType: string; entityName: string; issue: string }>;
+      };
+    },
+  });
+};
+
+/** Publishes an epic (transitions from Draft to Ready). */
+export const usePublishEpic = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { projectId: string; epicId: string }): Promise<void> => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
+      const response = await fetch(
+        `${baseUrl}/v1/projects/${params.projectId}/epics/${params.epicId}/publish`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        },
+      );
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+    },
+    onSuccess: (_data, params) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.epics.detail(params.epicId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.epics.lists(params.projectId),
+      });
+    },
+  });
+};
+
+/** Fetches aggregate counts for an epic (stories, tasks, in-progress status). */
+export const useEpicCounts = (projectId: string, epicId: string) =>
+  useQuery({
+    queryKey: queryKeys.epics.counts(epicId),
+    queryFn: async (): Promise<{
+      hasInProgressWork: boolean;
+      totalStories: number;
+      totalTasks: number;
+    }> => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
+      const response = await fetch(`${baseUrl}/v1/projects/${projectId}/epics/${epicId}/counts`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as {
+        hasInProgressWork: boolean;
+        totalStories: number;
+        totalTasks: number;
+      };
+    },
+    enabled: !!projectId && !!epicId,
+  });
+
 /** Deletes an epic, removes its detail cache, and invalidates list caches. */
 export const useDeleteEpic = (projectId: string) => {
   const queryClient = useQueryClient();
@@ -519,6 +609,199 @@ export const useUpdateWorker = (workerId: string) => {
     },
   });
 };
+
+// ---------------------------------------------------------------------------
+// Worker Sub-resources (projects, history)
+// ---------------------------------------------------------------------------
+
+/** Shape of a worker project access record returned by the API. */
+export interface WorkerProjectAccess {
+  workerId: string;
+  projectId: string;
+  grantedAt: string;
+  currentAssignment: {
+    storyId: string;
+    storyTitle: string;
+  } | null;
+}
+
+/**
+ * Fetches a worker's project access records.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch
+ * through the same base URL that apiClient uses. Disabled when workerId is falsy.
+ */
+export const useWorkerProjects = (workerId: string) =>
+  useQuery({
+    queryKey: queryKeys.workers.projects(workerId),
+    queryFn: async (): Promise<{ data: WorkerProjectAccess[] }> => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
+      const response = await fetch(`${baseUrl}/v1/workers/${workerId}/projects`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as { data: WorkerProjectAccess[] };
+    },
+    enabled: !!workerId,
+  });
+
+/**
+ * Grants a worker access to a specific project.
+ *
+ * Uses optimistic updates: immediately adds the project to the local cache,
+ * then rolls back on failure. Invalidates worker detail, worker projects, and
+ * worker lists on success.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch.
+ */
+export const useAddWorkerProject = (workerId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (projectId: string): Promise<{ data: WorkerProjectAccess }> => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
+      const response = await fetch(`${baseUrl}/v1/workers/${workerId}/projects/${projectId}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as { data: WorkerProjectAccess };
+    },
+    onMutate: async (projectId: string) => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: queryKeys.workers.projects(workerId) });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData<{ data: WorkerProjectAccess[] }>(
+        queryKeys.workers.projects(workerId),
+      );
+
+      // Optimistically update the cache
+      queryClient.setQueryData<{ data: WorkerProjectAccess[] }>(
+        queryKeys.workers.projects(workerId),
+        (old) => {
+          const optimisticRecord: WorkerProjectAccess = {
+            workerId,
+            projectId,
+            grantedAt: new Date().toISOString(),
+          };
+          if (!old) return { data: [optimisticRecord] };
+          return { data: [...old.data, optimisticRecord] };
+        },
+      );
+
+      return { previousData };
+    },
+    onError: (_err, _projectId, context) => {
+      // Roll back to the previous value on error
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKeys.workers.projects(workerId), context.previousData);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workers.projects(workerId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workers.detail(workerId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workers.lists() });
+    },
+  });
+};
+
+/**
+ * Error response shape returned by the DELETE endpoint when there's a 409
+ * conflict (worker has in-progress work in the project).
+ */
+export interface WorkerProjectConflictError {
+  error: {
+    code: string;
+    message: string;
+    details?: {
+      inProgressStories?: Array<{
+        id: string;
+        title: string;
+        workStatus: string;
+      }>;
+    };
+  };
+}
+
+/**
+ * Revokes a worker's access to a specific project.
+ *
+ * The DELETE endpoint returns 409 with `inProgressStories` info if the worker
+ * has active work in that project and force is not set. Pass `{ force: true }`
+ * to unassign stories and force the revocation.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch.
+ */
+export const useRemoveWorkerProject = (workerId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { projectId: string; force?: boolean }): Promise<void> => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
+      const forceParam = params.force ? '?force=true' : '';
+      const response = await fetch(
+        `${baseUrl}/v1/workers/${workerId}/projects/${params.projectId}${forceParam}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        },
+      );
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workers.projects(workerId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workers.detail(workerId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workers.lists() });
+    },
+  });
+};
+
+/** Shape of a work history record for a worker. */
+export interface WorkHistoryRecord {
+  id: string;
+  storyId: string;
+  storyTitle: string;
+  projectId: string;
+  projectName: string;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  durationMs: number | null;
+  cost: string | null;
+}
+
+/**
+ * Fetches a worker's work history from the attempt_history table.
+ *
+ * Returns all assignment attempts for the worker, joined with story titles
+ * and project names. Ordered by startedAt descending (most recent first).
+ */
+export const useWorkerHistory = (workerId: string) =>
+  useQuery({
+    queryKey: queryKeys.workers.history(workerId),
+    queryFn: async (): Promise<{ data: WorkHistoryRecord[] }> => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
+      const response = await fetch(`${baseUrl}/v1/workers/${workerId}/history`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as { data: WorkHistoryRecord[] };
+    },
+    enabled: !!workerId,
+  });
 
 /** Deletes a worker, removes its detail cache, and invalidates list caches. */
 export const useDeleteWorker = () => {

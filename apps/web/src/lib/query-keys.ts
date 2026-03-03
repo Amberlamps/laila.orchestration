@@ -203,6 +203,12 @@ export const queryKeys = {
     list: (params?: Record<string, unknown>) => [...queryKeys.workers.lists(), params] as const,
     /** Matches a specific worker detail query. */
     detail: (workerId: string) => [...queryKeys.workers.all(), 'detail', workerId] as const,
+    /** Matches a specific worker's project access records query. */
+    projects: (workerId: string) =>
+      [...queryKeys.workers.all(), 'detail', workerId, 'projects'] as const,
+    /** Matches a specific worker's work history query. */
+    history: (workerId: string) =>
+      [...queryKeys.workers.all(), 'detail', workerId, 'history'] as const,
   },
 
   // ---------------------------------------------------------------------------
