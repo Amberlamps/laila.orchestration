@@ -115,7 +115,7 @@ const handleValidate = withErrorHandler(
             issues.push({
               entityType: 'Epic',
               entityName: epic.name,
-              issue: `Work status is "${String(epic.workStatus)}" (must be "ready")`,
+              issue: `Work status is "${epic.workStatus}" (must be "ready")`,
             });
           }
         }

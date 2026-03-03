@@ -316,6 +316,7 @@ vi.mock('@/lib/middleware/api-key-validator', () => ({
  */
 vi.mock('@laila/database', () => ({
   getDb: vi.fn(() => ({})),
+  writeAuditEvent: vi.fn(async () => undefined),
   createTaskRepository: vi.fn(() => ({
     create: mockTaskRepoCreate,
     createInTx: mockTaskRepoCreateInTx,
@@ -1626,19 +1627,19 @@ describe('Task API Integration Tests', () => {
       expect(res.getStatusCode()).toBe(200);
       const body = res.getJsonBody() as
         | {
-            data: MockTask;
-            cascade: {
-              unblockedTaskIds: string[];
-              storyStatus: string;
-              epicStatus: string;
-              projectStatus: string;
+            data: {
+              task: { id: string; name: string; status: string; completed_at: string | null };
+              cascading_updates: {
+                unblocked_tasks: Array<{ id: string; name: string; new_status: string }>;
+                all_tasks_complete: boolean;
+              };
             };
           }
         | undefined;
       expect(body).toBeDefined();
-      expect(body!.data.workStatus).toBe('done');
-      expect(body!.cascade).toBeDefined();
-      expect(body!.cascade.unblockedTaskIds).toEqual([]);
+      expect(body!.data.task.status).toBe('complete');
+      expect(body!.data.cascading_updates).toBeDefined();
+      expect(body!.data.cascading_updates.unblocked_tasks).toEqual([]);
     });
 
     it('completes a task and unblocks downstream tasks', async () => {
@@ -1697,14 +1698,17 @@ describe('Task API Integration Tests', () => {
       expect(res.getStatusCode()).toBe(200);
       const body = res.getJsonBody() as
         | {
-            data: MockTask;
-            cascade: {
-              unblockedTaskIds: string[];
-              storyStatus: string;
+            data: {
+              task: { id: string; name: string; status: string; completed_at: string | null };
+              cascading_updates: {
+                unblocked_tasks: Array<{ id: string; name: string; new_status: string }>;
+                all_tasks_complete: boolean;
+              };
             };
           }
         | undefined;
-      expect(body!.cascade.unblockedTaskIds).toContain(TASK_UUID_B);
+      const unblockedIds = body!.data.cascading_updates.unblocked_tasks.map((t) => t.id);
+      expect(unblockedIds).toContain(TASK_UUID_B);
       expect(mockTaskRepoBulkUpdateStatus).toHaveBeenCalledWith(
         TEST_TENANT_ID,
         [TASK_UUID_B],
@@ -1775,12 +1779,17 @@ describe('Task API Integration Tests', () => {
       expect(res.getStatusCode()).toBe(200);
       const body = res.getJsonBody() as
         | {
-            cascade: { unblockedTaskIds: string[] };
+            data: {
+              cascading_updates: {
+                unblocked_tasks: Array<{ id: string; name: string; new_status: string }>;
+              };
+            };
           }
         | undefined;
       // B should be unblocked, C remains blocked (depends on B, not A)
-      expect(body!.cascade.unblockedTaskIds).toContain(TASK_UUID_B);
-      expect(body!.cascade.unblockedTaskIds).not.toContain(TASK_UUID_C);
+      const unblockedIds = body!.data.cascading_updates.unblocked_tasks.map((t) => t.id);
+      expect(unblockedIds).toContain(TASK_UUID_B);
+      expect(unblockedIds).not.toContain(TASK_UUID_C);
     });
 
     it('does not unblock task if other dependencies are still incomplete', async () => {
@@ -1843,11 +1852,16 @@ describe('Task API Integration Tests', () => {
       expect(res.getStatusCode()).toBe(200);
       const body = res.getJsonBody() as
         | {
-            cascade: { unblockedTaskIds: string[] };
+            data: {
+              cascading_updates: {
+                unblocked_tasks: Array<{ id: string; name: string; new_status: string }>;
+              };
+            };
           }
         | undefined;
       // C should NOT be unblocked since B is still pending
-      expect(body!.cascade.unblockedTaskIds).not.toContain(TASK_UUID_C);
+      const unblockedIds = body!.data.cascading_updates.unblocked_tasks.map((t) => t.id);
+      expect(unblockedIds).not.toContain(TASK_UUID_C);
       expect(mockTaskRepoBulkUpdateStatus).not.toHaveBeenCalled();
     });
 

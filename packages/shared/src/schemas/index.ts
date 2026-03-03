@@ -58,6 +58,12 @@ export {
   type TaskPersonaInfo,
   assignedEpicInfoSchema,
   type AssignedEpicInfo,
+  storyFailSchema,
+  type StoryFailRequest,
+  storyCompleteSchema,
+  type StoryCompleteRequest,
+  storyResetSchema,
+  type StoryResetRequest,
 } from './orchestration';
 
 // Audit event schemas

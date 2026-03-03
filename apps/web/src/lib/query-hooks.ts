@@ -120,6 +120,61 @@ export const useUpdateProject = (projectId: string) => {
   });
 };
 
+// ---------------------------------------------------------------------------
+// Project Validation & Publishing (custom endpoints, not in OpenAPI spec)
+// ---------------------------------------------------------------------------
+
+interface ValidateProjectResult {
+  valid: boolean;
+  issues?: Array<{
+    entityType: string;
+    entityName: string;
+    issue: string;
+  }>;
+}
+
+/** Validates a project's structure before publishing. */
+export const useValidateProject = () => {
+  return useMutation({
+    mutationFn: async (projectId: string): Promise<ValidateProjectResult> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/validate`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<ValidateProjectResult>;
+    },
+  });
+};
+
+/** Publishes a project (transitions from Draft to Ready status). */
+export const usePublishProject = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (projectId: string) => {
+      const response = await fetch(`/api/v1/projects/${projectId}/publish`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<unknown>;
+    },
+    onSuccess: (_data, projectId) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.lists() });
+    },
+  });
+};
+
 /** Deletes a project, removes its detail cache, and invalidates list caches. */
 export const useDeleteProject = () => {
   const queryClient = useQueryClient();

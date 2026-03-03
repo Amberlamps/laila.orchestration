@@ -337,11 +337,11 @@ const ProjectsPage: NextPageWithLayout = () => {
   const completedCountQuery = useProjects({ page: 1, limit: 1, status: 'completed' });
 
   const statusCounts: Record<StatusFilter, number | undefined> = {
-    all: allCountQuery.data?.pagination?.total,
-    draft: draftCountQuery.data?.pagination?.total,
-    ready: readyCountQuery.data?.pagination?.total,
-    active: activeCountQuery.data?.pagination?.total,
-    completed: completedCountQuery.data?.pagination?.total,
+    all: allCountQuery.data?.pagination.total,
+    draft: draftCountQuery.data?.pagination.total,
+    ready: readyCountQuery.data?.pagination.total,
+    active: activeCountQuery.data?.pagination.total,
+    completed: completedCountQuery.data?.pagination.total,
   };
 
   const projects = data?.data ?? [];

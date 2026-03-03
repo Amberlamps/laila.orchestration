@@ -467,9 +467,9 @@ const ProjectDetailPage: NextPageWithLayout = () => {
         description={project.description}
         projectId={project.id}
         entityCounts={{
-          epics: ((project as Record<string, unknown>).totalEpics as number) ?? 0,
-          stories: ((project as Record<string, unknown>).totalStories as number) ?? 0,
-          tasks: ((project as Record<string, unknown>).totalTasks as number) ?? 0,
+          epics: ((project as Record<string, unknown>).totalEpics as number | undefined) ?? 0,
+          stories: ((project as Record<string, unknown>).totalStories as number | undefined) ?? 0,
+          tasks: ((project as Record<string, unknown>).totalTasks as number | undefined) ?? 0,
         }}
       />
 
