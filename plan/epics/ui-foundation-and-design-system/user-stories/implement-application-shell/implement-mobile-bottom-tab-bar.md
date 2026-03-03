@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Mobile Bottom Tab Bar
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Application Shell & Navigation](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -42,11 +42,9 @@ Build a mobile bottom tab bar navigation component that replaces the sidebar on 
 // apps/web/src/components/layout/mobile-tab-bar.tsx
 // Bottom tab bar for mobile viewports (< 768px).
 // Provides quick access to primary sections with a "More" overflow menu.
-import Link from "next/link";
-import { useRouter } from "next/router";
-import {
-  LayoutDashboard, FolderKanban, Bot, UserCog, MoreHorizontal,
-} from "lucide-react";
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { LayoutDashboard, FolderKanban, Bot, UserCog, MoreHorizontal } from 'lucide-react';
 
 interface TabItem {
   label: string;
@@ -55,10 +53,10 @@ interface TabItem {
 }
 
 const PRIMARY_TABS: TabItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Projects", href: "/projects", icon: FolderKanban },
-  { label: "Workers", href: "/workers", icon: Bot },
-  { label: "Personas", href: "/personas", icon: UserCog },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Projects', href: '/projects', icon: FolderKanban },
+  { label: 'Workers', href: '/workers', icon: Bot },
+  { label: 'Personas', href: '/personas', icon: UserCog },
 ];
 ```
 
