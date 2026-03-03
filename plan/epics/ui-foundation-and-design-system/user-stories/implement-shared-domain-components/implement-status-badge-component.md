@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement StatusBadge Component
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Implement Shared Domain UI Components](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -23,15 +23,15 @@ Build a reusable `StatusBadge` component that provides consistent visual represe
 
 ### Status Color Mapping
 
-| Status | Background | Text | Dot Color | Usage |
-|---|---|---|---|---|
-| Draft | zinc-100 | zinc-600 | zinc-400 | New entities not yet published |
-| Not Started | gray-100 | gray-600 | gray-400 | Published but no work assigned |
-| Ready | teal-50 | teal-700 | teal-500 | Ready for work assignment |
-| Blocked | amber-50 | amber-700 | amber-500 | Blocked by dependencies |
-| In Progress | blue-50 | blue-700 | blue-500 | Currently being worked on |
-| Complete | green-50 | green-700 | green-500 | Successfully completed |
-| Failed | red-50 | red-700 | red-500 | Failed during execution |
+| Status      | Background | Text      | Dot Color | Usage                          |
+| ----------- | ---------- | --------- | --------- | ------------------------------ |
+| Draft       | zinc-100   | zinc-600  | zinc-400  | New entities not yet published |
+| Not Started | gray-100   | gray-600  | gray-400  | Published but no work assigned |
+| Ready       | teal-50    | teal-700  | teal-500  | Ready for work assignment      |
+| Blocked     | amber-50   | amber-700 | amber-500 | Blocked by dependencies        |
+| In Progress | blue-50    | blue-700  | blue-500  | Currently being worked on      |
+| Complete    | green-50   | green-700 | green-500 | Successfully completed         |
+| Failed      | red-50     | red-700   | red-500   | Failed during execution        |
 
 ```tsx
 // apps/web/src/components/ui/status-badge.tsx
@@ -40,13 +40,13 @@ Build a reusable `StatusBadge` component that provides consistent visual represe
 // Supports all seven work statuses and can be extended for lifecycle states.
 
 type WorkStatus =
-  | "draft"
-  | "not_started"
-  | "ready"
-  | "blocked"
-  | "in_progress"
-  | "complete"
-  | "failed";
+  | 'draft'
+  | 'not_started'
+  | 'ready'
+  | 'blocked'
+  | 'in_progress'
+  | 'complete'
+  | 'failed';
 
 interface StatusBadgeProps {
   status: WorkStatus;
@@ -56,19 +56,32 @@ interface StatusBadgeProps {
 // Map each status to its visual configuration.
 // Background, text, and dot colors are intentionally distinct
 // to support both color and non-color differentiation.
-const STATUS_CONFIG: Record<WorkStatus, {
-  bg: string;
-  text: string;
-  dot: string;
-  label: string;
-}> = {
-  draft:        { bg: "bg-zinc-100",  text: "text-zinc-600",  dot: "bg-zinc-400",  label: "Draft" },
-  not_started:  { bg: "bg-gray-100",  text: "text-gray-600",  dot: "bg-gray-400",  label: "Not Started" },
-  ready:        { bg: "bg-teal-50",   text: "text-teal-700",  dot: "bg-teal-500",  label: "Ready" },
-  blocked:      { bg: "bg-amber-50",  text: "text-amber-700", dot: "bg-amber-500", label: "Blocked" },
-  in_progress:  { bg: "bg-blue-50",   text: "text-blue-700",  dot: "bg-blue-500",  label: "In Progress" },
-  complete:     { bg: "bg-green-50",  text: "text-green-700", dot: "bg-green-500", label: "Complete" },
-  failed:       { bg: "bg-red-50",    text: "text-red-700",   dot: "bg-red-500",   label: "Failed" },
+const STATUS_CONFIG: Record<
+  WorkStatus,
+  {
+    bg: string;
+    text: string;
+    dot: string;
+    label: string;
+  }
+> = {
+  draft: { bg: 'bg-zinc-100', text: 'text-zinc-600', dot: 'bg-zinc-400', label: 'Draft' },
+  not_started: {
+    bg: 'bg-gray-100',
+    text: 'text-gray-600',
+    dot: 'bg-gray-400',
+    label: 'Not Started',
+  },
+  ready: { bg: 'bg-teal-50', text: 'text-teal-700', dot: 'bg-teal-500', label: 'Ready' },
+  blocked: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500', label: 'Blocked' },
+  in_progress: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    dot: 'bg-blue-500',
+    label: 'In Progress',
+  },
+  complete: { bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500', label: 'Complete' },
+  failed: { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500', label: 'Failed' },
 };
 ```
 

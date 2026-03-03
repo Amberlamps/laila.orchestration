@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Markdown Editor Component
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Shared Domain UI Components](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -23,16 +23,22 @@ Build a `MarkdownEditor` component with a formatting toolbar and a live preview 
 
 ### Component API
 
-```tsx
+````tsx
 // apps/web/src/components/ui/markdown-editor.tsx
 // Markdown editor with formatting toolbar and write/preview toggle.
 // Integrates with React Hook Form via forwardRef + onChange/onBlur/value.
-import { forwardRef, useState } from "react";
+import { forwardRef, useState } from 'react';
 import {
-  Bold, Italic, Heading2, List, ListOrdered,
-  Code, FileCode, Link as LinkIcon,
-} from "lucide-react";
-import { MarkdownRenderer } from "./markdown-renderer";
+  Bold,
+  Italic,
+  Heading2,
+  List,
+  ListOrdered,
+  Code,
+  FileCode,
+  Link as LinkIcon,
+} from 'lucide-react';
+import { MarkdownRenderer } from './markdown-renderer';
 
 interface MarkdownEditorProps {
   /** Current Markdown content value */
@@ -57,16 +63,16 @@ interface MarkdownEditorProps {
 // Toolbar button configuration — each button inserts Markdown syntax
 // around the current selection or at the cursor position.
 const TOOLBAR_ACTIONS = [
-  { icon: Bold, label: "Bold", prefix: "**", suffix: "**" },
-  { icon: Italic, label: "Italic", prefix: "_", suffix: "_" },
-  { icon: Heading2, label: "Heading", prefix: "## ", suffix: "" },
-  { icon: List, label: "Bulleted List", prefix: "- ", suffix: "" },
-  { icon: ListOrdered, label: "Numbered List", prefix: "1. ", suffix: "" },
-  { icon: Code, label: "Inline Code", prefix: "`", suffix: "`" },
-  { icon: FileCode, label: "Code Block", prefix: "```\n", suffix: "\n```" },
-  { icon: LinkIcon, label: "Link", prefix: "[", suffix: "](url)" },
+  { icon: Bold, label: 'Bold', prefix: '**', suffix: '**' },
+  { icon: Italic, label: 'Italic', prefix: '_', suffix: '_' },
+  { icon: Heading2, label: 'Heading', prefix: '## ', suffix: '' },
+  { icon: List, label: 'Bulleted List', prefix: '- ', suffix: '' },
+  { icon: ListOrdered, label: 'Numbered List', prefix: '1. ', suffix: '' },
+  { icon: Code, label: 'Inline Code', prefix: '`', suffix: '`' },
+  { icon: FileCode, label: 'Code Block', prefix: '```\n', suffix: '\n```' },
+  { icon: LinkIcon, label: 'Link', prefix: '[', suffix: '](url)' },
 ];
-```
+````
 
 ### Toolbar Behavior
 

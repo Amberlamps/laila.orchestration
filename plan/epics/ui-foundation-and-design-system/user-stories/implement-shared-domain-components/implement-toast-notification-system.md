@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Toast Notification System
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Shared Domain UI Components](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -24,12 +24,12 @@ Build a toast notification system for providing non-blocking feedback on user ac
 
 ### Variants
 
-| Variant | Left Border | Icon | Icon Color | Background | Usage |
-|---|---|---|---|---|---|
-| Success | green-500 (3px) | CheckCircle2 | green-600 | white | Entity created, update saved |
-| Error | red-500 (3px) | XCircle | red-600 | white | API errors, validation failures |
-| Warning | amber-500 (3px) | AlertTriangle | amber-600 | white | Timeout warnings, validation warnings |
-| Info | blue-500 (3px) | Info | blue-600 | white | General information, hints |
+| Variant | Left Border     | Icon          | Icon Color | Background | Usage                                 |
+| ------- | --------------- | ------------- | ---------- | ---------- | ------------------------------------- |
+| Success | green-500 (3px) | CheckCircle2  | green-600  | white      | Entity created, update saved          |
+| Error   | red-500 (3px)   | XCircle       | red-600    | white      | API errors, validation failures       |
+| Warning | amber-500 (3px) | AlertTriangle | amber-600  | white      | Timeout warnings, validation warnings |
+| Info    | blue-500 (3px)  | Info          | blue-600   | white      | General information, hints            |
 
 ### Toast API
 
@@ -37,11 +37,11 @@ Build a toast notification system for providing non-blocking feedback on user ac
 // apps/web/src/components/ui/toast.tsx
 // Toast notification system using a React context provider + imperative API.
 // Toasts stack in the bottom-right corner with auto-dismiss behavior.
-import { CheckCircle2, XCircle, AlertTriangle, Info, X } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 
 interface Toast {
   id: string;
-  variant: "success" | "error" | "warning" | "info";
+  variant: 'success' | 'error' | 'warning' | 'info';
   title: string;
   description?: string;
   /** Duration in ms before auto-dismiss. null = persistent. */
@@ -56,7 +56,7 @@ interface Toast {
 
 interface ToastContextValue {
   toasts: Toast[];
-  addToast: (toast: Omit<Toast, "id">) => void;
+  addToast: (toast: Omit<Toast, 'id'>) => void;
   removeToast: (id: string) => void;
 }
 ```

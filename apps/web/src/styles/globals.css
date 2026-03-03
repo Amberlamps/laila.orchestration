@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@plugin "@tailwindcss/typography";
+
 @config "../../tailwind.config.ts";
 
 /*
@@ -368,5 +370,61 @@
     line-height: 16px;
     letter-spacing: 0;
     font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  }
+
+  /* Shimmer — Skeleton loading animation utility */
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite linear;
+  }
+
+  /* Toast slide-in — enters from the right (200ms) */
+  .animate-toast-in {
+    animation: toast-slide-in 200ms ease-out forwards;
+  }
+
+  /* Toast fade-out — exits with opacity transition (150ms) */
+  .animate-toast-out {
+    animation: toast-fade-out 150ms ease-in forwards;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Toast Animation Keyframes
+ * - toast-slide-in: slides from right (translateX(100%)) to position (200ms)
+ * - toast-fade-out: fades opacity to 0 and slides slightly right (150ms)
+ * --------------------------------------------------------------------------- */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-fade-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(30%);
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Shimmer Animation Keyframes
+ * Used by skeleton loading placeholders. The gradient sweeps left-to-right
+ * using background-position animation for GPU-accelerated performance.
+ * --------------------------------------------------------------------------- */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

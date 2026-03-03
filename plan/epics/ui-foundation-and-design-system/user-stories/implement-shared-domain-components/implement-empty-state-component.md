@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Empty State Component
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Shared Domain UI Components](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -28,7 +28,7 @@ Build an `EmptyState` component displayed when a list, table, or container has n
 // apps/web/src/components/ui/empty-state.tsx
 // Empty state display for lists and containers with no content.
 // Shows icon, title, description, and action button to guide the user.
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 
 interface EmptyStateProps {
   /** Lucide icon component to display (rendered at 48px, zinc-300) */

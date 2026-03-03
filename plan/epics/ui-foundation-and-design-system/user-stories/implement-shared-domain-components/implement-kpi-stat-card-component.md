@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement KPI Stat Card Component
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Implement Shared Domain UI Components](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -27,12 +27,12 @@ Build a `KPICard` (also referred to as `StatCard`) component for displaying key 
 // apps/web/src/components/ui/kpi-card.tsx
 // KPI/Stat card for dashboard metrics and entity detail summaries.
 // Displays a large number with label, optional trend, and optional status breakdown.
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
 interface StatusSegment {
-  status: string;      // Status key for color lookup
-  value: number;       // Count or proportion for this segment
-  color: string;       // Tailwind bg color class (e.g., "bg-green-500")
+  status: string; // Status key for color lookup
+  value: number; // Count or proportion for this segment
+  color: string; // Tailwind bg color class (e.g., "bg-green-500")
 }
 
 interface KPICardProps {

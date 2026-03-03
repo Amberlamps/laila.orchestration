@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Confirm Dialog Component
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Shared Domain UI Components](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -37,11 +37,15 @@ Build a `ConfirmDialog` component for confirming destructive actions such as del
 // apps/web/src/components/ui/confirm-dialog.tsx
 // Confirmation dialog for destructive actions with consequence statement.
 // Supports standard and two-step (force-stop-then-delete) variants.
-import { AlertTriangle, Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from 'lucide-react';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface ConfirmDialogProps {
   /** Whether the dialog is open */
@@ -59,7 +63,7 @@ interface ConfirmDialogProps {
   /** Whether the confirm action is in progress (shows loading state) */
   loading?: boolean;
   /** Dialog variant — "destructive" shows red styling, "warning" shows amber */
-  variant?: "destructive" | "warning";
+  variant?: 'destructive' | 'warning';
 }
 ```
 

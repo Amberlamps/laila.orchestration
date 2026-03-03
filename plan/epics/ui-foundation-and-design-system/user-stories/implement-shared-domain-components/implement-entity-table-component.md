@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Entity Table Component
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Shared Domain UI Components](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -29,10 +29,13 @@ Build a reusable `EntityTable` component for listing entities (projects, epics, 
 // Reusable data table for entity list pages.
 // Supports sortable columns, pagination, row click navigation,
 // and per-row action menus.
-import { MoreHorizontal, ChevronUp, ChevronDown } from "lucide-react";
+import { MoreHorizontal, ChevronUp, ChevronDown } from 'lucide-react';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // Generic column definition — typed to the row data shape.
 interface ColumnDef<T> {
@@ -47,7 +50,7 @@ interface ColumnDef<T> {
   /** Column width — CSS width value (e.g., "200px", "1fr") */
   width?: string;
   /** Horizontal alignment (default: "left") */
-  align?: "left" | "center" | "right";
+  align?: 'left' | 'center' | 'right';
 }
 
 interface RowAction<T> {
@@ -71,7 +74,7 @@ interface EntityTableProps<T> {
   onRowClick?: (row: T) => void;
   /** Current sort state */
   sortBy?: string;
-  sortDirection?: "asc" | "desc";
+  sortDirection?: 'asc' | 'desc';
   onSort?: (key: string) => void;
   /** Pagination state */
   page?: number;

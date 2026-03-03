@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Skeleton Loader Components
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Shared Domain UI Components](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -57,12 +57,12 @@ export function Skeleton({ className, width, height, rounded }: SkeletonProps) {
     <div
       aria-hidden="true"
       className={cn(
-        "animate-shimmer bg-gradient-to-r from-zinc-100 via-zinc-200 to-zinc-100",
-        "bg-[length:200%_100%]",
-        rounded ?? "rounded",
+        'animate-shimmer bg-gradient-to-r from-zinc-100 via-zinc-200 to-zinc-100',
+        'bg-[length:200%_100%]',
+        rounded ?? 'rounded',
         className,
       )}
-      style={{ width: width ?? "100%", height: height ?? "14px" }}
+      style={{ width: width ?? '100%', height: height ?? '14px' }}
     />
   );
 }
@@ -72,20 +72,16 @@ export function SkeletonTable({ columns = 4 }: { columns?: number }) {
   return (
     <div role="status" aria-live="polite" aria-label="Loading table data">
       {/* Header row */}
-      <div className="flex gap-4 px-4 py-3 border-b border-zinc-200 bg-zinc-50">
+      <div className="flex gap-4 border-b border-zinc-200 bg-zinc-50 px-4 py-3">
         {Array.from({ length: columns }).map((_, i) => (
-          <Skeleton key={i} width={i === 0 ? "30%" : "15%"} height="11px" />
+          <Skeleton key={i} width={i === 0 ? '30%' : '15%'} height="11px" />
         ))}
       </div>
       {/* 5 data rows */}
       {Array.from({ length: 5 }).map((_, row) => (
-        <div key={row} className="flex gap-4 px-4 py-3 border-b border-zinc-200">
+        <div key={row} className="flex gap-4 border-b border-zinc-200 px-4 py-3">
           {Array.from({ length: columns }).map((_, col) => (
-            <Skeleton
-              key={col}
-              width={col === 0 ? "30%" : "15%"}
-              height="14px"
-            />
+            <Skeleton key={col} width={col === 0 ? '30%' : '15%'} height="14px" />
           ))}
         </div>
       ))}
@@ -100,8 +96,12 @@ export function SkeletonTable({ columns = 4 }: { columns?: number }) {
 /* apps/web/src/app/globals.css */
 /* Shimmer animation keyframes for skeleton loading states. */
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @layer utilities {
