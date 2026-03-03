@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Story API Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement User Story API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -19,91 +19,91 @@ Write comprehensive integration tests for all user story API endpoints. Tests sh
 // apps/web/src/__tests__/api/v1/stories/stories.integration.test.ts
 // Integration tests for user story CRUD and lifecycle endpoints.
 
-import { describe, it, expect, beforeAll, beforeEach } from "vitest";
-import { createTestClient } from "@/__tests__/helpers/test-client";
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { createTestClient } from '@/__tests__/helpers/test-client';
 import {
   seedTestProject,
   seedTestEpic,
   seedTestStory,
   seedTestTask,
   seedTestWorker,
-} from "@/__tests__/helpers/seed";
+} from '@/__tests__/helpers/seed';
 
-describe("Story API", () => {
-  describe("Read-Only Enforcement", () => {
-    it("allows PATCH when story is in draft status", async () => {
+describe('Story API', () => {
+  describe('Read-Only Enforcement', () => {
+    it('allows PATCH when story is in draft status', async () => {
       // ...
     });
 
-    it("allows PATCH when story is in not_started status", async () => {
+    it('allows PATCH when story is in not_started status', async () => {
       // ...
     });
 
-    it("rejects PATCH when story is in_progress", async () => {
+    it('rejects PATCH when story is in_progress', async () => {
       // Verify 409 with READ_ONLY_VIOLATION code
     });
 
-    it("rejects PATCH when story is completed", async () => {
+    it('rejects PATCH when story is completed', async () => {
       // ...
     });
 
-    it("rejects DELETE when story is in_progress", async () => {
+    it('rejects DELETE when story is in_progress', async () => {
       // ...
     });
   });
 
-  describe("POST .../publish", () => {
-    it("publishes story when all tasks have persona and acceptance criteria", async () => {
+  describe('POST .../publish', () => {
+    it('publishes story when all tasks have persona and acceptance criteria', async () => {
       // ...
     });
 
-    it("fails when tasks lack persona reference", async () => {
+    it('fails when tasks lack persona reference', async () => {
       // Verify error details include task IDs with missing fields
     });
 
-    it("fails when tasks lack acceptance criteria", async () => {
+    it('fails when tasks lack acceptance criteria', async () => {
       // ...
     });
   });
 
-  describe("POST .../reset", () => {
-    it("resets failed story to not_started when no upstream deps", async () => {
+  describe('POST .../reset', () => {
+    it('resets failed story to not_started when no upstream deps', async () => {
       // ...
     });
 
-    it("resets failed story to blocked when upstream deps incomplete", async () => {
+    it('resets failed story to blocked when upstream deps incomplete', async () => {
       // ...
     });
 
-    it("creates attempt history record on reset", async () => {
+    it('creates attempt history record on reset', async () => {
       // Verify attempt record with correct fields
     });
 
-    it("rejects worker auth (human only)", async () => {
+    it('rejects worker auth (human only)', async () => {
       // ...
     });
   });
 
-  describe("POST .../unassign", () => {
-    it("unassigns worker and resets story", async () => {
+  describe('POST .../unassign', () => {
+    it('unassigns worker and resets story', async () => {
       // Verify worker cleared, tasks reset, attempt logged
     });
 
-    it("requires confirmation in request body", async () => {
+    it('requires confirmation in request body', async () => {
       // ...
     });
 
-    it("resets in-progress tasks to not_started", async () => {
+    it('resets in-progress tasks to not_started', async () => {
       // ...
     });
   });
 
-  describe("Cost Fields", () => {
-    it("includes cost_usd and cost_tokens in GET response", async () => {
+  describe('Cost Fields', () => {
+    it('includes cost_usd and cost_tokens in GET response', async () => {
       // ...
     });
 
-    it("does not allow setting cost fields via PATCH", async () => {
+    it('does not allow setting cost fields via PATCH', async () => {
       // Verify cost fields are stripped or rejected
     });
   });
