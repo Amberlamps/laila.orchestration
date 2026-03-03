@@ -19,7 +19,6 @@ import { useState } from 'react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { AppLayout } from '@/components/layout/app-layout';
 import { CreateEditStoryModal } from '@/components/stories/create-edit-story-modal';
-import { CreateTaskModal } from '@/components/stories/create-task-modal';
 import {
   DeleteStoryButton,
   DeleteStoryFlow,
@@ -29,6 +28,7 @@ import {
 } from '@/components/stories/story-action-flows';
 import { StoryAttemptHistoryTab } from '@/components/stories/story-attempt-history-tab';
 import { StoryTasksTab } from '@/components/stories/story-tasks-tab';
+import { CreateEditTaskModal } from '@/components/tasks/create-edit-task-modal';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
@@ -753,10 +753,13 @@ const StoryDetailPage: NextPageWithLayout = () => {
       />
 
       {/* Create task modal */}
-      <CreateTaskModal
+      <CreateEditTaskModal
         open={createTaskModalOpen}
-        onOpenChange={setCreateTaskModalOpen}
+        onClose={() => {
+          setCreateTaskModalOpen(false);
+        }}
         storyId={storyId}
+        projectId={projectId}
       />
 
       {/* Action flow dialogs */}
