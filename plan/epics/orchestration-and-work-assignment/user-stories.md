@@ -4,7 +4,7 @@
 
 - **Title:** Orchestration & Work Assignment API
 - **Description:** Work assignment endpoint, task/story completion, timeout/reclamation logic, manual unassignment. This is the core orchestration logic that drives the AI agent workflow: assigning stories to workers, handling completion and failure, and reclaiming timed-out work.
-- **Status:** In Progress (laila-agent-2)
+- **Status:** Complete
 - **Total User Stories:** 3
 - **Dependencies:** Epic 5 (Domain Logic Engine), Epic 6 (Core CRUD API)
 
@@ -12,11 +12,11 @@
 
 ## User Stories
 
-| User Story                                                                                                     | Description                                                                                          | Status                      | Tasks   | Dependencies                                                                 |
-| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------- | ------- | ---------------------------------------------------------------------------- |
-| [Implement Work Assignment Endpoint](./user-stories/implement-work-assignment-endpoint/tasks.md)               | Atomic story assignment with eligibility rules, priority selection, and typed discriminator response | Complete                    | 4 tasks | None                                                                         |
-| [Implement Completion & Failure Endpoints](./user-stories/implement-completion-and-failure-endpoints/tasks.md) | Task completion with cascading, story completion with cost recording, story failure, and story reset | Complete                    | 5 tasks | Implement Work Assignment Endpoint                                           |
-| [Implement Timeout & Reclamation](./user-stories/implement-timeout-and-reclamation/tasks.md)                   | Timeout checking, manual unassignment, and race condition handling for timed-out work                | In Progress (laila-agent-2) | 4 tasks | Implement Work Assignment Endpoint, Implement Completion & Failure Endpoints |
+| User Story                                                                                                     | Description                                                                                          | Status   | Tasks   | Dependencies                                                                 |
+| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------- | ------- | ---------------------------------------------------------------------------- |
+| [Implement Work Assignment Endpoint](./user-stories/implement-work-assignment-endpoint/tasks.md)               | Atomic story assignment with eligibility rules, priority selection, and typed discriminator response | Complete | 4 tasks | None                                                                         |
+| [Implement Completion & Failure Endpoints](./user-stories/implement-completion-and-failure-endpoints/tasks.md) | Task completion with cascading, story completion with cost recording, story failure, and story reset | Complete | 5 tasks | Implement Work Assignment Endpoint                                           |
+| [Implement Timeout & Reclamation](./user-stories/implement-timeout-and-reclamation/tasks.md)                   | Timeout checking, manual unassignment, and race condition handling for timed-out work                | Complete | 4 tasks | Implement Work Assignment Endpoint, Implement Completion & Failure Endpoints |
 
 ## Dependency Graph
 

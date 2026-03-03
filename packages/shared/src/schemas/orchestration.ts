@@ -324,3 +324,29 @@ export const storyResetSchema = z.object({
 
 /** TypeScript type for the story reset request body */
 export type StoryResetRequest = z.infer<typeof storyResetSchema>;
+
+// ---------------------------------------------------------------------------
+// Story unassign request schema
+// ---------------------------------------------------------------------------
+
+/**
+ * Request body schema for the story manual unassignment endpoint.
+ *
+ * Human operators send this to remove a worker from an in-progress story.
+ * The `confirmation` field must be explicitly set to `true` to prevent
+ * accidental unassignment. The optional `reason` field documents why the
+ * operator decided to unassign the worker.
+ */
+export const storyUnassignSchema = z.object({
+  /** Explicit confirmation required to prevent accidental unassignment */
+  confirmation: z.literal(true, {
+    errorMap: () => ({
+      message: 'Confirmation must be explicitly set to true to unassign a worker',
+    }),
+  }),
+  /** Optional reason for the unassignment, captured in attempt history and audit log */
+  reason: z.string().max(2000).optional(),
+});
+
+/** TypeScript type for the story unassignment request body */
+export type StoryUnassignRequest = z.infer<typeof storyUnassignSchema>;

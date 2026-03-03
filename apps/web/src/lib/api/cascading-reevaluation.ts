@@ -22,7 +22,9 @@ import {
   createStoryRepository,
   createEpicRepository,
   createProjectRepository,
+  userStoriesTable,
 } from '@laila/database';
+import { eq, and } from 'drizzle-orm';
 
 import type { DrizzleDb } from '@laila/database';
 import type { WorkStatus } from '@laila/shared';
@@ -137,6 +139,14 @@ export const triggerCascadingReevaluation = async (
   let allTasksComplete = false;
 
   if (parentStory) {
+    // Update lastActivityAt on the parent story to reflect this task
+    // completion. This is used by the timeout checker to determine
+    // inactivity duration — a worker that completes tasks is active.
+    await tx
+      .update(userStoriesTable)
+      .set({ lastActivityAt: new Date() })
+      .where(and(eq(userStoriesTable.id, parentStory.id), eq(userStoriesTable.tenantId, tenantId)));
+
     // Fetch all tasks in the story (use high limit to get all)
     const storyTasks = await taskRepo.findByStory(tenantId, parentStory.id, {
       pagination: { page: 1, limit: 1000, sortBy: 'createdAt', sortOrder: 'asc' },

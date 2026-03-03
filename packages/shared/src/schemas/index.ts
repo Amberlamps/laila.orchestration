@@ -64,6 +64,8 @@ export {
   type StoryCompleteRequest,
   storyResetSchema,
   type StoryResetRequest,
+  storyUnassignSchema,
+  type StoryUnassignRequest,
 } from './orchestration';
 
 // Audit event schemas

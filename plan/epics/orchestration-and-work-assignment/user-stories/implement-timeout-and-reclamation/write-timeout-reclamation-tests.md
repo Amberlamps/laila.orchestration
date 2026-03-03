@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Timeout & Reclamation Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Timeout & Reclamation](./tasks.md)
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
@@ -21,19 +21,13 @@ Write comprehensive tests for timeout checking, manual unassignment, race condit
 // apps/web/src/__tests__/api/v1/orchestration/timeout.integration.test.ts
 // Integration tests for timeout, reclamation, and race condition handling.
 
-import { describe, it, expect, beforeAll, beforeEach } from "vitest";
-import {
-  createWorkerClient,
-  createTestClient,
-} from "@/__tests__/helpers/test-client";
-import {
-  seedAssignedStory,
-  advanceTime,
-} from "@/__tests__/helpers/seed";
-import { checkAndReclaimTimedOutStories } from "@/lib/orchestration/timeout-checker";
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { createWorkerClient, createTestClient } from '@/__tests__/helpers/test-client';
+import { seedAssignedStory, advanceTime } from '@/__tests__/helpers/seed';
+import { checkAndReclaimTimedOutStories } from '@/lib/orchestration/timeout-checker';
 
-describe("Timeout Checking", () => {
-  it("reclaims story after timeout duration expires", async () => {
+describe('Timeout Checking', () => {
+  it('reclaims story after timeout duration expires', async () => {
     // Seed an assigned story with started_at in the past
     // Set project timeout to 60 minutes
     // Set story.last_activity_at to 61 minutes ago
@@ -41,13 +35,13 @@ describe("Timeout Checking", () => {
     // Verify story is reclaimed: status not_started, worker cleared
   });
 
-  it("does not reclaim story before timeout duration", async () => {
+  it('does not reclaim story before timeout duration', async () => {
     // Set story.last_activity_at to 30 minutes ago (timeout is 60)
     // Run timeout checker
     // Verify story is NOT reclaimed
   });
 
-  it("uses last_activity_at (not started_at) for timeout calculation", async () => {
+  it('uses last_activity_at (not started_at) for timeout calculation', async () => {
     // Assign story 120 minutes ago
     // Complete a task 30 minutes ago (updates last_activity_at)
     // Timeout is 60 minutes
@@ -55,13 +49,13 @@ describe("Timeout Checking", () => {
     // Verify story is NOT reclaimed (last activity was 30 min ago)
   });
 
-  it("resets story to blocked when upstream deps incomplete", async () => {
+  it('resets story to blocked when upstream deps incomplete', async () => {
     // Seed story with incomplete cross-story dependencies
     // Timeout the story
     // Verify status becomes "blocked" (not "not_started")
   });
 
-  it("preserves completed tasks on timeout", async () => {
+  it('preserves completed tasks on timeout', async () => {
     // Complete 2 of 3 tasks, timeout the story
     // Verify 2 tasks remain complete, 1 is reset to not_started
   });
@@ -71,35 +65,35 @@ describe("Timeout Checking", () => {
     // Verify record includes worker_id, timing, task_statuses snapshot
   });
 
-  it("handles multiple timed-out stories in a single check", async () => {
+  it('handles multiple timed-out stories in a single check', async () => {
     // Seed 3 timed-out stories across 2 projects
     // Run timeout checker
     // Verify all 3 are reclaimed
   });
 
-  it("continues processing after individual story reclamation failure", async () => {
+  it('continues processing after individual story reclamation failure', async () => {
     // Seed 2 timed-out stories
     // Make one story's reclamation fail (e.g., constraint violation)
     // Verify the other story is still reclaimed
   });
 });
 
-describe("Race Condition Handling", () => {
-  it("worker completes before timeout — completion preserved", async () => {
+describe('Race Condition Handling', () => {
+  it('worker completes before timeout — completion preserved', async () => {
     // Seed an assigned story near timeout
     // Worker completes the story
     // Run timeout checker
     // Verify story is completed (not reclaimed)
   });
 
-  it("timeout reclaims before worker completes — worker gets error", async () => {
+  it('timeout reclaims before worker completes — worker gets error', async () => {
     // Seed an assigned story that has timed out
     // Run timeout checker (reclaims story)
     // Worker attempts to complete a task
     // Verify worker gets WORKER_NOT_ASSIGNED error
   });
 
-  it("simultaneous completion and timeout — exactly one succeeds", async () => {
+  it('simultaneous completion and timeout — exactly one succeeds', async () => {
     // This is the hardest test to write deterministically.
     // Approach: use database-level serialization to simulate the race.
     //
@@ -113,30 +107,30 @@ describe("Race Condition Handling", () => {
     //   or story not "completed" but worker still assigned)
   });
 
-  it("worker retries completed task (idempotent)", async () => {
+  it('worker retries completed task (idempotent)', async () => {
     // Complete a task, retry the same completion
     // Verify 200 with the already-completed task (not an error)
   });
 });
 
-describe("Manual Unassignment", () => {
-  it("unassigns worker with confirmation", async () => {
+describe('Manual Unassignment', () => {
+  it('unassigns worker with confirmation', async () => {
     // ...
   });
 
-  it("rejects without confirmation field", async () => {
+  it('rejects without confirmation field', async () => {
     // Verify 400 with clear error message
   });
 
-  it("rejects with confirmation: false", async () => {
+  it('rejects with confirmation: false', async () => {
     // Verify 400 — must be explicitly true
   });
 
-  it("clears assignment and resets story", async () => {
+  it('clears assignment and resets story', async () => {
     // Verify assigned_worker_id is null, status is DAG-determined
   });
 
-  it("preserves completed tasks", async () => {
+  it('preserves completed tasks', async () => {
     // ...
   });
 
@@ -144,33 +138,33 @@ describe("Manual Unassignment", () => {
     // Verify attempt record with optional reason field
   });
 
-  it("captures operator-provided reason", async () => {
+  it('captures operator-provided reason', async () => {
     // Send unassign with { confirmation: true, reason: "Worker stuck" }
     // Verify reason is captured in attempt history and audit log
   });
 
-  it("rejects worker auth", async () => {
+  it('rejects worker auth', async () => {
     // Worker cannot unassign themselves
   });
 
-  it("story returns to assignment pool after unassignment", async () => {
+  it('story returns to assignment pool after unassignment', async () => {
     // Unassign worker, have another worker request assignment
     // Verify the unassigned story is offered to the new worker
   });
 });
 
-describe("Attempt History Accumulation", () => {
-  it("accumulates multiple attempt records for repeated failures", async () => {
+describe('Attempt History Accumulation', () => {
+  it('accumulates multiple attempt records for repeated failures', async () => {
     // Assign -> fail -> reset -> assign -> timeout -> reset -> assign -> complete
     // Verify 2 attempt records (failure + timeout)
     // Verify final completion has correct attempt count
   });
 
-  it("each attempt record has correct timing", async () => {
+  it('each attempt record has correct timing', async () => {
     // Verify started_at and ended_at match the actual assignment period
   });
 
-  it("each attempt record has task status snapshot", async () => {
+  it('each attempt record has task status snapshot', async () => {
     // Complete tasks incrementally across attempts
     // Verify each snapshot reflects the state at that attempt's end
   });

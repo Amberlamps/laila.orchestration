@@ -4,7 +4,7 @@
 
 - **Title:** Implement Timeout & Reclamation Logic
 - **Description:** Implement the timeout checking function, manual unassignment endpoint, and race condition handling between timeout and worker submission. This logic ensures that stale assignments (where workers have stopped responding) are reclaimed and returned to the assignment pool.
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
 - **Total Tasks:** 4
 - **Dependencies:** Implement Work Assignment Endpoint, Implement Completion & Failure Endpoints
@@ -13,12 +13,12 @@
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Timeout Checking Logic](./implement-timeout-checking-logic.md) | Function to check all in-progress stories and reclaim timed-out ones | Not Started | backend-developer | None |
-| [Implement Manual Unassignment Endpoint](./implement-manual-unassignment-endpoint.md) | POST /api/v1/stories/:id/unassign with confirmation and attempt logging | Not Started | backend-developer | None |
-| [Implement Timeout Race Condition Handling](./implement-timeout-race-condition-handling.md) | Handle the race between worker completion and timeout reclamation | Not Started | backend-developer | Implement Timeout Checking Logic |
-| [Write Timeout & Reclamation Tests](./write-timeout-reclamation-tests.md) | Tests for timeout, race conditions, manual unassignment, and attempt history | Not Started | qa-expert | Implement Timeout Checking Logic, Implement Manual Unassignment Endpoint, Implement Timeout Race Condition Handling |
+| Task                                                                                        | Description                                                                  | Status   | Assigned Agent    | Dependencies                                                                                                        |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------- | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [Implement Timeout Checking Logic](./implement-timeout-checking-logic.md)                   | Function to check all in-progress stories and reclaim timed-out ones         | Complete | backend-developer | None                                                                                                                |
+| [Implement Manual Unassignment Endpoint](./implement-manual-unassignment-endpoint.md)       | POST /api/v1/stories/:id/unassign with confirmation and attempt logging      | Complete | backend-developer | None                                                                                                                |
+| [Implement Timeout Race Condition Handling](./implement-timeout-race-condition-handling.md) | Handle the race between worker completion and timeout reclamation            | Complete | backend-developer | Implement Timeout Checking Logic                                                                                    |
+| [Write Timeout & Reclamation Tests](./write-timeout-reclamation-tests.md)                   | Tests for timeout, race conditions, manual unassignment, and attempt history | Complete | qa-expert         | Implement Timeout Checking Logic, Implement Manual Unassignment Endpoint, Implement Timeout Race Condition Handling |
 
 ## Dependency Graph
 

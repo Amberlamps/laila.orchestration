@@ -45,6 +45,7 @@ import { triggerCascadingReevaluation } from '@/lib/api/cascading-reevaluation';
 import { withErrorHandler } from '@/lib/api/error-handler';
 import { withValidation } from '@/lib/api/validation';
 import { withAuth } from '@/lib/middleware/with-auth';
+import { guardWorkerStillAssigned } from '@/lib/orchestration/race-condition-guards';
 
 import type { AuthenticatedRequest } from '@/lib/middleware/with-auth';
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -125,7 +126,22 @@ const handleComplete = withErrorHandler(
           );
         }
 
-        // 4. Verify the parent story is in 'in_progress' status
+        // 4. Verify the requesting worker is assigned to the parent story.
+        //    This check comes BEFORE the status check because when a story
+        //    is reclaimed (timeout or manual unassignment), both the worker
+        //    assignment AND status change. Returning WORKER_NOT_ASSIGNED
+        //    gives the worker a clear, actionable signal.
+        if (parentStory.assignedWorkerId !== workerId) {
+          throw new AuthorizationError(
+            DomainErrorCode.WORKER_NOT_ASSIGNED,
+            `Worker ${workerId} is not assigned to the parent story. ` +
+              `The story may have been reclaimed due to timeout or manual unassignment. ` +
+              `Current story status: ${parentStory.workStatus}.`,
+            { storyId: parentStory.id, currentStatus: parentStory.workStatus },
+          );
+        }
+
+        // 5. Verify the parent story is in 'in_progress' status
         if (parentStory.workStatus !== 'in_progress') {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
@@ -133,18 +149,16 @@ const handleComplete = withErrorHandler(
           );
         }
 
-        // 5. Verify the requesting worker is assigned to the parent story
-        if (parentStory.assignedWorkerId !== workerId) {
-          throw new AuthorizationError(
-            DomainErrorCode.WORKER_NOT_ASSIGNED,
-            `Worker ${workerId} is not assigned to the parent story. Only the assigned worker can complete tasks.`,
-          );
-        }
-
         // 6. Atomic operation: task completion + cascading re-evaluation
         //    All succeed or all roll back.
         const { updated, cascadeResult } = await taskRepo.withTransaction(async (tx) => {
-          // 6a. Transition the task to 'done' with completedAt timestamp
+          // 6a. Race condition guard (Defense Layer 3): Re-verify parent story
+          //     status and worker assignment within the transaction. If the
+          //     timeout checker reclaimed the story between steps 3-5 above
+          //     and this point, the guard will throw a descriptive error.
+          await guardWorkerStillAssigned(parentStory.id, workerId, tenantId, tx);
+
+          // 6b. Transition the task to 'done' with completedAt timestamp
           const completedTask = await taskRepo.updateInTx(
             tenantId,
             id,
@@ -153,7 +167,7 @@ const handleComplete = withErrorHandler(
             tx,
           );
 
-          // 6b. Trigger cascading re-evaluation within the same transaction
+          // 6c. Trigger cascading re-evaluation within the same transaction
           const cascade = await triggerCascadingReevaluation(tenantId, id, tx);
 
           return { updated: completedTask, cascadeResult: cascade };

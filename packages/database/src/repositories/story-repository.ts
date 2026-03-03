@@ -38,6 +38,7 @@ import {
 import { attemptHistoryTable } from '../schema/attempt-history';
 import { taskDependencyEdgesTable } from '../schema/dependency-edges';
 import { epicsTable } from '../schema/epics';
+import { projectsTable } from '../schema/projects';
 import { tasksTable } from '../schema/tasks';
 import { userStoriesTable } from '../schema/user-stories';
 
@@ -120,6 +121,27 @@ export interface FindByEpicOptions {
 /** A user story record augmented with a count of non-deleted child tasks */
 export interface UserStoryWithTaskCount extends UserStory {
   taskCount: number;
+}
+
+/**
+ * An in-progress story with the project's timeout configuration.
+ *
+ * Returned by `findInProgressWithTimeout()` to enable the timeout checker
+ * to compute whether each story has exceeded its project's inactivity
+ * timeout threshold.
+ */
+export interface InProgressStoryWithTimeout {
+  id: string;
+  tenantId: string;
+  epicId: string;
+  title: string;
+  workStatus: string;
+  assignedWorkerId: string;
+  assignedAt: Date;
+  lastActivityAt: Date | null;
+  attempts: number;
+  version: number;
+  projectTimeoutMinutes: number;
 }
 
 /**
@@ -764,6 +786,55 @@ export const createStoryRepository = (db: DatabaseClient) => {
   };
 
   // -------------------------------------------------------------------------
+  // findInProgressWithTimeout (for timeout checker)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Finds all in-progress stories across all projects, joined with their
+   * project's timeout configuration.
+   *
+   * Joins through: user_stories -> epics -> projects to retrieve the
+   * `workerInactivityTimeoutMinutes` setting. Only returns stories that
+   * have an assigned worker and a non-null `assignedAt` timestamp.
+   *
+   * Used by the timeout checker to determine which stories have exceeded
+   * their project's inactivity threshold.
+   *
+   * @returns Array of in-progress stories with project timeout settings
+   */
+  const findInProgressWithTimeout = async (): Promise<InProgressStoryWithTimeout[]> => {
+    const results = await typedDb
+      .select({
+        id: userStoriesTable.id,
+        tenantId: userStoriesTable.tenantId,
+        epicId: userStoriesTable.epicId,
+        title: userStoriesTable.title,
+        workStatus: userStoriesTable.workStatus,
+        assignedWorkerId: userStoriesTable.assignedWorkerId,
+        assignedAt: userStoriesTable.assignedAt,
+        lastActivityAt: userStoriesTable.lastActivityAt,
+        attempts: userStoriesTable.attempts,
+        version: userStoriesTable.version,
+        projectTimeoutMinutes: projectsTable.workerInactivityTimeoutMinutes,
+      })
+      .from(userStoriesTable)
+      .innerJoin(epicsTable, eq(userStoriesTable.epicId, epicsTable.id))
+      .innerJoin(projectsTable, eq(epicsTable.projectId, projectsTable.id))
+      .where(
+        and(
+          eq(userStoriesTable.workStatus, 'in_progress'),
+          sql`${userStoriesTable.assignedWorkerId} IS NOT NULL`,
+          sql`${userStoriesTable.assignedAt} IS NOT NULL`,
+          isNull(userStoriesTable.deletedAt),
+          isNull(epicsTable.deletedAt),
+          isNull(projectsTable.deletedAt),
+        ),
+      );
+
+    return results as InProgressStoryWithTimeout[];
+  };
+
+  // -------------------------------------------------------------------------
   // findByEpicWithTaskCount (paginated with task counts)
   // -------------------------------------------------------------------------
 
@@ -1172,6 +1243,7 @@ export const createStoryRepository = (db: DatabaseClient) => {
           workStatus: targetStatus,
           assignedWorkerId: null,
           assignedAt: null,
+          lastActivityAt: null,
           version: sql`${userStoriesTable.version} + 1`,
           updatedAt: now,
         })
@@ -1224,9 +1296,10 @@ export const createStoryRepository = (db: DatabaseClient) => {
    * 3. Resets all in-progress tasks within the story to not_started
    * 4. Logs the previous attempt with reason 'manual_unassignment'
    *
-   * @param tenantId     - The tenant UUID for data isolation
-   * @param storyId      - The story UUID to unassign
-   * @param targetStatus - 'not_started' or 'blocked' (DAG-determined)
+   * @param tenantId       - The tenant UUID for data isolation
+   * @param storyId        - The story UUID to unassign
+   * @param targetStatus   - 'not_started' or 'blocked' (DAG-determined)
+   * @param operatorReason - Optional operator-provided reason for the unassignment
    * @returns The updated user story
    * @throws {ConflictError} If story not in 'in_progress' status
    */
@@ -1234,6 +1307,7 @@ export const createStoryRepository = (db: DatabaseClient) => {
     tenantId: string,
     storyId: string,
     targetStatus: string,
+    operatorReason?: string,
   ): Promise<UserStory> => {
     return await typedDb.transaction(async (tx: DrizzleDb) => {
       const now = new Date();
@@ -1263,6 +1337,7 @@ export const createStoryRepository = (db: DatabaseClient) => {
           workStatus: targetStatus,
           assignedWorkerId: null,
           assignedAt: null,
+          lastActivityAt: null,
           version: sql`${userStoriesTable.version} + 1`,
           updatedAt: now,
         })
@@ -1279,11 +1354,15 @@ export const createStoryRepository = (db: DatabaseClient) => {
         throw new ConflictError('UserStory', storyId, current.version);
       }
 
-      // Reset all in-progress tasks within the story to not_started
+      // Reset all in-progress tasks within the story to 'pending' (DB
+      // representation of not_started). Also clear startedAt/completedAt
+      // to match the reclamation behavior in resetInProgressTasksByStory.
       await tx
         .update(tasksTable)
         .set({
-          workStatus: 'not_started',
+          workStatus: 'pending',
+          startedAt: null,
+          completedAt: null,
           version: sql`${tasksTable.version} + 1`,
           updatedAt: now,
         })
@@ -1296,13 +1375,18 @@ export const createStoryRepository = (db: DatabaseClient) => {
           ),
         );
 
-      // Log the previous attempt with reason 'manual_unassignment'
+      // Log the previous attempt with reason including operator context
+      const attemptReason = JSON.stringify({
+        reason: 'manual_unassignment',
+        ...(operatorReason ? { operator_reason: operatorReason } : {}),
+      });
+
       await tx
         .update(attemptHistoryTable)
         .set({
           completedAt: now,
           status: 'timed_out',
-          reason: 'manual_unassignment',
+          reason: attemptReason,
           durationMs: sql`EXTRACT(EPOCH FROM (${now}::timestamptz - ${attemptHistoryTable.startedAt})) * 1000`,
         })
         .where(
@@ -1383,6 +1467,7 @@ export const createStoryRepository = (db: DatabaseClient) => {
     findAllByEpic,
     findReadyForAssignment,
     findActiveByProject,
+    findInProgressWithTimeout,
 
     // Cascade soft-delete
     softDeleteWithCascade,

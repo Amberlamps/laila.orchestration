@@ -14,3 +14,5 @@
 - [testing]: When mocking `@laila/database`, include ALL imported functions (e.g. `writeAuditEvent`) — missing mocked exports become `undefined` and cause runtime TypeErrors (500s)
 - [testing]: When handler response shape changes, update test assertions to match — check `data.task.status` / `data.cascading_updates.unblocked_tasks` not legacy shapes
 - [query-hooks]: When adding new UI components that import hooks from `@/lib/query-hooks`, ensure the hooks are actually defined in that file — missing exports cause cascading `@typescript-eslint/no-unsafe-*` errors on every usage site
+- [eslint/import-x/export]: Never define two `export const` with the same name in a file — when refactoring hooks (e.g. from manual `fetch` to `apiClient`), remove the old version instead of leaving both
+- [testing/schema-sync]: When adding a new required field to a Zod entity schema (e.g. `projectSchema`), update ALL test fixtures, mock factories (`createMockProject`), mock interfaces (`MockProject`), and request bodies that create or validate that entity — the field propagates via `.omit()` / `.pick()` to create/update/response schemas

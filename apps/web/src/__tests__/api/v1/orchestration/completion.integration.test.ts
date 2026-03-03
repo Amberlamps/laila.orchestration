@@ -423,6 +423,7 @@ describe('Completion & Failure Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(task);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedTask);
       mockTriggerCascadingReevaluation.mockResolvedValue({
         unblockedTasks: [],
@@ -477,6 +478,7 @@ describe('Completion & Failure Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(taskA);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedA);
 
       // Cascading re-evaluation returns B as unblocked
@@ -541,6 +543,7 @@ describe('Completion & Failure Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(taskA);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedA);
 
       // C has two deps; only A is done, so C is NOT unblocked
@@ -600,6 +603,7 @@ describe('Completion & Failure Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(taskInStory2);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory2);
+      mockStoryRepoFindById.mockResolvedValue(parentStory2);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedTask);
 
       // Cascading re-evaluation unblocks a cross-story task
@@ -652,6 +656,7 @@ describe('Completion & Failure Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(task);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedTask);
       mockTriggerCascadingReevaluation.mockResolvedValue({
         unblockedTasks: [],
@@ -699,6 +704,7 @@ describe('Completion & Failure Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(task);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedTask);
       // Cascading says all tasks complete, but story stays in_progress
       mockTriggerCascadingReevaluation.mockResolvedValue({
@@ -2058,6 +2064,7 @@ describe('Completion & Failure Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(taskA);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedTaskA);
       mockTriggerCascadingReevaluation.mockResolvedValue({
         unblockedTasks: [{ id: TASK_UUID_B, name: 'Task B', newStatus: 'pending' }],
@@ -2107,6 +2114,7 @@ describe('Completion & Failure Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(taskB);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedTaskB);
       mockTriggerCascadingReevaluation.mockResolvedValue({
         unblockedTasks: [],
@@ -2205,6 +2213,7 @@ describe('Completion & Failure Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(taskA);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedTaskA);
       mockTriggerCascadingReevaluation.mockResolvedValue({
         unblockedTasks: [],
@@ -2362,6 +2371,7 @@ describe('Completion & Failure Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(taskBRestarted);
       mockTaskRepoGetParentStory.mockResolvedValue(storyReassigned);
+      mockStoryRepoFindById.mockResolvedValue(storyReassigned);
       mockTaskRepoUpdateInTx.mockResolvedValue(taskBDone);
       mockTriggerCascadingReevaluation.mockResolvedValue({
         unblockedTasks: [],

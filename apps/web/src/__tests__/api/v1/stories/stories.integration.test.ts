@@ -59,6 +59,7 @@ interface MockProject {
   description: string | null;
   lifecycleStatus: string;
   workStatus: string;
+  workerInactivityTimeoutMinutes: number;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -123,6 +124,7 @@ const createMockProject = (overrides: Partial<MockProject> = {}): MockProject =>
   description: 'A test project description',
   lifecycleStatus: 'draft',
   workStatus: 'pending',
+  workerInactivityTimeoutMinutes: 30,
   version: 0,
   createdAt: now,
   updatedAt: now,

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Timeout Race Condition Handling
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Timeout & Reclamation](./tasks.md)
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
@@ -76,17 +76,17 @@ Result: CORRECT if implemented with optimistic locking.
 export async function guardWorkerStillAssigned(
   storyId: string,
   workerId: string,
-  tx: DatabaseTransaction
+  tx: DatabaseTransaction,
 ): Promise<StoryRecord> {
   const story = await storyRepository.findById(storyId, tx);
 
   // Check 1: Story must still be in-progress
-  if (story.status !== "in_progress") {
+  if (story.status !== 'in_progress') {
     throw new ConflictError(
       DomainErrorCode.INVALID_STATUS_TRANSITION,
       `Story is no longer in-progress (current status: ${story.status}). ` +
-        "The story may have been reclaimed due to timeout.",
-      { storyId, currentStatus: story.status }
+        'The story may have been reclaimed due to timeout.',
+      { storyId, currentStatus: story.status },
     );
   }
 
@@ -94,9 +94,9 @@ export async function guardWorkerStillAssigned(
   if (story.assigned_worker_id !== workerId) {
     throw new AuthorizationError(
       DomainErrorCode.WORKER_NOT_ASSIGNED,
-      "You are no longer assigned to this story. " +
-        "The story may have been reclaimed due to timeout or manual unassignment.",
-      { storyId, currentAssignee: story.assigned_worker_id }
+      'You are no longer assigned to this story. ' +
+        'The story may have been reclaimed due to timeout or manual unassignment.',
+      { storyId, currentAssignee: story.assigned_worker_id },
     );
   }
 
