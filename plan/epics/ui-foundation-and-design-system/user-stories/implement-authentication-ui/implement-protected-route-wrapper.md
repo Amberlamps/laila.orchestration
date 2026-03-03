@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Protected Route Wrapper
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Authentication UI](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -21,7 +21,7 @@ The `useAuth` hook provides the current authentication state throughout the appl
 // apps/web/src/hooks/use-auth.ts
 // Client-side auth state hook using Better Auth's React integration.
 // Provides user info, loading state, and sign-out function.
-import { authClient } from "@/lib/auth-client";
+import { authClient } from '@/lib/auth-client';
 
 interface AuthState {
   /** Whether the auth state is still being determined */
@@ -51,7 +51,7 @@ export function useAuth(): AuthState {
     signOut: async () => {
       await authClient.signOut();
       // Redirect to sign-in after sign-out
-      window.location.href = "/sign-in";
+      window.location.href = '/sign-in';
     },
   };
 }
@@ -63,9 +63,9 @@ export function useAuth(): AuthState {
 // apps/web/src/components/auth/protected-route.tsx
 // Wrapper component that redirects unauthenticated users to sign-in.
 // Shows a full-page skeleton while auth state is being determined.
-import { useRouter } from "next/router";
-import { useEffect, type ReactNode } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from 'next/router';
+import { useEffect, type ReactNode } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ProtectedRouteProps {
   children: ReactNode;
