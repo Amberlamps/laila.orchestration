@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Worker Project Access Management
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Worker Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -37,17 +37,19 @@ Build the project access management UI within the worker detail page. This allow
 // apps/web/src/components/workers/worker-project-access.tsx
 // Project access management for a worker.
 // Supports adding and removing project access with active work guards.
-import { useState } from "react";
-import { Plus, X } from "lucide-react";
-import { useWorkerProjects, useAddWorkerProject, useRemoveWorkerProject } from "@/hooks/use-workers";
-import { useProjects } from "@/hooks/use-projects";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useState } from 'react';
+import { Plus, X } from 'lucide-react';
 import {
-  Popover, PopoverTrigger, PopoverContent,
-} from "@/components/ui/popover";
-import { toast } from "@/components/ui/toast";
+  useWorkerProjects,
+  useAddWorkerProject,
+  useRemoveWorkerProject,
+} from '@/hooks/use-workers';
+import { useProjects } from '@/hooks/use-projects';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { toast } from '@/components/ui/toast';
 
 interface WorkerProjectAccessProps {
   workerId: string;
@@ -61,8 +63,8 @@ export function WorkerProjectAccess({ workerId }: WorkerProjectAccessProps) {
   // Filter out projects the worker already has access to.
   const availableProjects = useMemo(() => {
     if (!allProjects?.items || !workerProjects) return [];
-    const assignedIds = new Set(workerProjects.map(wp => wp.projectId));
-    return allProjects.items.filter(p => !assignedIds.has(p.id));
+    const assignedIds = new Set(workerProjects.map((wp) => wp.projectId));
+    return allProjects.items.filter((p) => !assignedIds.has(p.id));
   }, [allProjects, workerProjects]);
 
   // ...

@@ -4,19 +4,19 @@
 
 - **Title:** Implement Worker Management Pages
 - **Description:** Build the worker list page with status indicators, worker detail page with API key section and work history, two-step create worker modal with API key reveal, and project access management with add/remove capabilities.
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
 - **Total Tasks:** 4
 - **Dependencies:** None
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Worker List Page](./implement-worker-list-page.md) | Build worker list page with table showing name, projects, current status, and actions | Not Started | frontend-developer | None |
-| [Implement Worker Detail Page](./implement-worker-detail-page.md) | Build worker detail page with API key section, project access table, and work history | Not Started | frontend-developer | Implement Worker List Page |
-| [Implement Create Worker Modal](./implement-create-worker-modal.md) | Build two-step create modal: name input, then API key reveal with copy button | Not Started | fullstack-developer | Implement Worker List Page |
-| [Implement Worker Project Access Management](./implement-worker-project-access-management.md) | Build project access add/remove UI with active work guards | Not Started | fullstack-developer | Implement Worker Detail Page |
+| Task                                                                                          | Description                                                                           | Status   | Assigned Agent      | Dependencies                 |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------- | ------------------- | ---------------------------- |
+| [Implement Worker List Page](./implement-worker-list-page.md)                                 | Build worker list page with table showing name, projects, current status, and actions | Complete | frontend-developer  | None                         |
+| [Implement Worker Detail Page](./implement-worker-detail-page.md)                             | Build worker detail page with API key section, project access table, and work history | Complete | frontend-developer  | Implement Worker List Page   |
+| [Implement Create Worker Modal](./implement-create-worker-modal.md)                           | Build two-step create modal: name input, then API key reveal with copy button         | Complete | fullstack-developer | Implement Worker List Page   |
+| [Implement Worker Project Access Management](./implement-worker-project-access-management.md) | Build project access add/remove UI with active work guards                            | Complete | fullstack-developer | Implement Worker Detail Page |
 
 ## Dependency Graph
 

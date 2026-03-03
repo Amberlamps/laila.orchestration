@@ -6,12 +6,13 @@
  * Requires human authentication. Workers cannot list their own project access
  * through this endpoint.
  *
- * The response includes the access grant records from the worker_project_access
- * join table, each containing the worker_id, project_id, and granted_at timestamp.
+ * The response includes the access grant records enriched with the current
+ * assignment info (if the worker has an in-progress story in that project).
  */
 
-import { createWorkerRepository, getDb } from '@laila/database';
+import { createWorkerRepository, getDb, userStoriesTable, epicsTable } from '@laila/database';
 import { NotFoundError, DomainErrorCode } from '@laila/shared';
+import { eq, and, inArray, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { withErrorHandler } from '@/lib/api/error-handler';
@@ -38,12 +39,14 @@ const workerIdParamsSchema = z.object({
 // ---------------------------------------------------------------------------
 
 /**
- * Returns all project access records for the specified worker.
+ * Returns all project access records for the specified worker, enriched with
+ * the current assignment info per project.
  *
- * Validates that the worker exists before querying access records.
- * Returns an empty array if the worker has no project access grants.
+ * Each record includes:
+ * - workerId, projectId, grantedAt (from worker_project_access)
+ * - currentAssignment: { storyId, storyTitle } | null (from user_stories)
  *
- * Response: 200 with { data: WorkerProjectAccess[] }
+ * Response: 200 with { data: EnrichedProjectAccess[] }
  * Throws: 404 NotFoundError with WORKER_NOT_FOUND if worker does not exist
  */
 const handleList = withErrorHandler(
@@ -68,7 +71,45 @@ const handleList = withErrorHandler(
 
         const accessRecords = await workerRepo.getProjectAccess(tenantId, id);
 
-        res.status(200).json({ data: accessRecords });
+        // Fetch in-progress/assigned stories for this worker, grouped by project
+        const assignedStories = await db
+          .select({
+            storyId: userStoriesTable.id,
+            storyTitle: userStoriesTable.title,
+            workStatus: userStoriesTable.workStatus,
+            projectId: epicsTable.projectId,
+          })
+          .from(userStoriesTable)
+          .innerJoin(epicsTable, eq(userStoriesTable.epicId, epicsTable.id))
+          .where(
+            and(
+              eq(userStoriesTable.tenantId, tenantId),
+              eq(userStoriesTable.assignedWorkerId, id),
+              inArray(userStoriesTable.workStatus, ['in_progress', 'assigned']),
+              isNull(userStoriesTable.deletedAt),
+              isNull(epicsTable.deletedAt),
+            ),
+          );
+
+        // Build a map of projectId -> current assignment
+        const assignmentByProject = new Map<string, { storyId: string; storyTitle: string }>();
+        for (const story of assignedStories) {
+          // Use the first found story per project (worker typically has one active story per project)
+          if (!assignmentByProject.has(story.projectId)) {
+            assignmentByProject.set(story.projectId, {
+              storyId: story.storyId,
+              storyTitle: story.storyTitle,
+            });
+          }
+        }
+
+        // Enrich access records with current assignment info
+        const enrichedRecords = accessRecords.map((record) => ({
+          ...record,
+          currentAssignment: assignmentByProject.get(record.projectId) ?? null,
+        }));
+
+        res.status(200).json({ data: enrichedRecords });
       },
     ),
   ),

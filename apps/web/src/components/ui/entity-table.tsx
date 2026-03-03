@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 /* ---------------------------------------------------------------------------
@@ -47,6 +48,10 @@ export interface RowAction<T> {
   destructive?: boolean;
   /** If provided, action is hidden when this returns false */
   visible?: (row: T) => boolean;
+  /** If provided, action is disabled when this returns true */
+  disabled?: (row: T) => boolean;
+  /** Tooltip text shown when the action is disabled */
+  disabledTooltip?: string;
 }
 
 export interface EntityTableProps<T> {
@@ -169,10 +174,37 @@ function RowActionMenu<T>({ row, actions }: { row: T; actions: RowAction<T>[] })
       <DropdownMenuContent align="end">
         {visibleActions.map((action) => {
           const Icon = action.icon;
+          const isDisabled = action.disabled ? action.disabled(row) : false;
+
+          if (isDisabled && action.disabledTooltip) {
+            return (
+              <TooltipProvider key={action.label} delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownMenuItem
+                        {...(action.destructive ? { destructive: true } : {})}
+                        disabled
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        {Icon && <Icon className="mr-2 h-4 w-4" />}
+                        {action.label}
+                      </DropdownMenuItem>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">{action.disabledTooltip}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            );
+          }
+
           return (
             <DropdownMenuItem
               key={action.label}
               {...(action.destructive ? { destructive: true } : {})}
+              disabled={isDisabled}
               onClick={(e) => {
                 e.stopPropagation();
                 action.onClick(row);
