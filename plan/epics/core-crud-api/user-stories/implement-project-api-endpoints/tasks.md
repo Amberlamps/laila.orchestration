@@ -4,7 +4,7 @@
 
 - **Title:** Implement Project API Endpoints
 - **Description:** Implement full CRUD operations and lifecycle status transitions for the Project entity. Projects are the top-level container in the hierarchy (Project > Epic > User Story > Task). They are created in Draft status, can be published when all children are Ready, and support hard-delete with cascade.
-- **Status:** Not Started
+- **Status:** In Progress (laila-agent-2)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
 - **Total Tasks:** 3
 - **Dependencies:** Implement Error Handling Framework
