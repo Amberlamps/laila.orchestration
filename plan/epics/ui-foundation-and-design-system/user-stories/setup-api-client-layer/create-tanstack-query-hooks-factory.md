@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create TanStack Query Hooks Factory
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Set Up API Client Layer](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -22,25 +22,24 @@ Create a factory pattern for generating TanStack Query hooks that wrap the opena
 // useUpdate, useDelete with appropriate cache invalidation.
 
 import {
-  useQuery, useMutation, useQueryClient,
-  type UseQueryOptions, type UseMutationOptions,
-} from "@tanstack/react-query";
-import { apiClient } from "./api-client";
-import { queryKeys } from "./query-keys";
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type UseQueryOptions,
+  type UseMutationOptions,
+} from '@tanstack/react-query';
+import { apiClient } from './api-client';
+import { queryKeys } from './query-keys';
 
 // --- Project Hooks ---
 
 // Fetches the paginated project list with optional status filter.
 // Cache key includes filter params for separate caching per filter state.
-export function useProjects(params?: {
-  status?: string;
-  page?: number;
-  pageSize?: number;
-}) {
+export function useProjects(params?: { status?: string; page?: number; pageSize?: number }) {
   return useQuery({
     queryKey: queryKeys.projects.list(params),
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/projects", {
+      const { data, error } = await apiClient.GET('/api/projects', {
         params: { query: params },
       });
       if (error) throw error;
@@ -55,7 +54,7 @@ export function useProject(projectId: string) {
   return useQuery({
     queryKey: queryKeys.projects.detail(projectId),
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/projects/{projectId}", {
+      const { data, error } = await apiClient.GET('/api/projects/{projectId}', {
         params: { path: { projectId } },
       });
       if (error) throw error;
@@ -76,7 +75,7 @@ export function useCreateProject() {
       description?: string;
       workerInactivityTimeoutMinutes?: number;
     }) => {
-      const { data, error } = await apiClient.POST("/api/projects", { body });
+      const { data, error } = await apiClient.POST('/api/projects', { body });
       if (error) throw error;
       return data;
     },
@@ -98,7 +97,7 @@ export function useUpdateProject(projectId: string) {
       description?: string;
       workerInactivityTimeoutMinutes?: number;
     }) => {
-      const { data, error } = await apiClient.PATCH("/api/projects/{projectId}", {
+      const { data, error } = await apiClient.PATCH('/api/projects/{projectId}', {
         params: { path: { projectId } },
         body,
       });
@@ -119,7 +118,7 @@ export function useDeleteProject() {
 
   return useMutation({
     mutationFn: async (projectId: string) => {
-      const { data, error } = await apiClient.DELETE("/api/projects/{projectId}", {
+      const { data, error } = await apiClient.DELETE('/api/projects/{projectId}', {
         params: { path: { projectId } },
       });
       if (error) throw error;
@@ -140,7 +139,7 @@ export function useDeleteProject() {
 // Helper utilities for optimistic updates with automatic rollback on error.
 // Optimistic updates provide instant UI feedback while the API call is in flight.
 
-import { type QueryClient } from "@tanstack/react-query";
+import { type QueryClient } from '@tanstack/react-query';
 
 // Generic optimistic update function that snapshots the current cache,
 // applies the optimistic update, and provides a rollback function.

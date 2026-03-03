@@ -13,6 +13,8 @@
       "@laila/shared/*": ["../../packages/shared/src/*"],
       "@laila/domain": ["../../packages/domain/src"],
       "@laila/domain/*": ["../../packages/domain/src/*"],
+      "@laila/api-spec": ["../../packages/api-spec/src"],
+      "@laila/api-spec/*": ["../../packages/api-spec/src/*"],
       "@laila/database": ["../../packages/database/src"],
       "@laila/database/*": ["../../packages/database/src/*"]
     },

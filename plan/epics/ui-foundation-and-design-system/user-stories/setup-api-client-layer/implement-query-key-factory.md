@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Query Key Factory
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Set Up API Client Layer](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -25,92 +25,79 @@ The factory uses a hierarchical key structure where each level narrows the scope
 
 export const queryKeys = {
   // Session / auth state
-  session: () => ["session"] as const,
+  session: () => ['session'] as const,
 
   // Projects
   projects: {
     // Matches ALL project queries (lists + details) — use for broad invalidation.
-    all: () => ["projects"] as const,
+    all: () => ['projects'] as const,
     // Matches all project list queries (any filter combination).
-    lists: () => [...queryKeys.projects.all(), "list"] as const,
+    lists: () => [...queryKeys.projects.all(), 'list'] as const,
     // Matches a specific filtered list query.
-    list: (params?: Record<string, unknown>) =>
-      [...queryKeys.projects.lists(), params] as const,
+    list: (params?: Record<string, unknown>) => [...queryKeys.projects.lists(), params] as const,
     // Matches a specific project detail query.
-    detail: (projectId: string) =>
-      [...queryKeys.projects.all(), "detail", projectId] as const,
+    detail: (projectId: string) => [...queryKeys.projects.all(), 'detail', projectId] as const,
   },
 
   // Epics — scoped under a project
   epics: {
-    all: (projectId: string) => ["projects", projectId, "epics"] as const,
-    lists: (projectId: string) =>
-      [...queryKeys.epics.all(projectId), "list"] as const,
+    all: (projectId: string) => ['projects', projectId, 'epics'] as const,
+    lists: (projectId: string) => [...queryKeys.epics.all(projectId), 'list'] as const,
     list: (projectId: string, params?: Record<string, unknown>) =>
       [...queryKeys.epics.lists(projectId), params] as const,
-    detail: (epicId: string) => ["epics", "detail", epicId] as const,
+    detail: (epicId: string) => ['epics', 'detail', epicId] as const,
   },
 
   // Stories — scoped under an epic
   stories: {
-    all: (epicId: string) => ["epics", epicId, "stories"] as const,
-    lists: (epicId: string) =>
-      [...queryKeys.stories.all(epicId), "list"] as const,
+    all: (epicId: string) => ['epics', epicId, 'stories'] as const,
+    lists: (epicId: string) => [...queryKeys.stories.all(epicId), 'list'] as const,
     list: (epicId: string, params?: Record<string, unknown>) =>
       [...queryKeys.stories.lists(epicId), params] as const,
-    detail: (storyId: string) => ["stories", "detail", storyId] as const,
+    detail: (storyId: string) => ['stories', 'detail', storyId] as const,
     // Stories can also be listed at the project level
-    byProject: (projectId: string) =>
-      ["projects", projectId, "stories"] as const,
+    byProject: (projectId: string) => ['projects', projectId, 'stories'] as const,
   },
 
   // Tasks — scoped under a story
   tasks: {
-    all: (storyId: string) => ["stories", storyId, "tasks"] as const,
-    lists: (storyId: string) =>
-      [...queryKeys.tasks.all(storyId), "list"] as const,
+    all: (storyId: string) => ['stories', storyId, 'tasks'] as const,
+    lists: (storyId: string) => [...queryKeys.tasks.all(storyId), 'list'] as const,
     list: (storyId: string, params?: Record<string, unknown>) =>
       [...queryKeys.tasks.lists(storyId), params] as const,
-    detail: (taskId: string) => ["tasks", "detail", taskId] as const,
+    detail: (taskId: string) => ['tasks', 'detail', taskId] as const,
     // Tasks can also be listed at the project or epic level
-    byProject: (projectId: string) =>
-      ["projects", projectId, "tasks"] as const,
-    byEpic: (epicId: string) =>
-      ["epics", epicId, "tasks"] as const,
+    byProject: (projectId: string) => ['projects', projectId, 'tasks'] as const,
+    byEpic: (epicId: string) => ['epics', epicId, 'tasks'] as const,
   },
 
   // Workers
   workers: {
-    all: () => ["workers"] as const,
-    lists: () => [...queryKeys.workers.all(), "list"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...queryKeys.workers.lists(), params] as const,
-    detail: (workerId: string) =>
-      [...queryKeys.workers.all(), "detail", workerId] as const,
+    all: () => ['workers'] as const,
+    lists: () => [...queryKeys.workers.all(), 'list'] as const,
+    list: (params?: Record<string, unknown>) => [...queryKeys.workers.lists(), params] as const,
+    detail: (workerId: string) => [...queryKeys.workers.all(), 'detail', workerId] as const,
   },
 
   // Personas
   personas: {
-    all: () => ["personas"] as const,
-    lists: () => [...queryKeys.personas.all(), "list"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...queryKeys.personas.lists(), params] as const,
-    detail: (personaId: string) =>
-      [...queryKeys.personas.all(), "detail", personaId] as const,
+    all: () => ['personas'] as const,
+    lists: () => [...queryKeys.personas.all(), 'list'] as const,
+    list: (params?: Record<string, unknown>) => [...queryKeys.personas.lists(), params] as const,
+    detail: (personaId: string) => [...queryKeys.personas.all(), 'detail', personaId] as const,
   },
 
   // Dashboard aggregated data
   dashboard: {
-    all: () => ["dashboard"] as const,
-    stats: () => [...queryKeys.dashboard.all(), "stats"] as const,
-    activity: () => [...queryKeys.dashboard.all(), "activity"] as const,
+    all: () => ['dashboard'] as const,
+    stats: () => [...queryKeys.dashboard.all(), 'stats'] as const,
+    activity: () => [...queryKeys.dashboard.all(), 'activity'] as const,
   },
 
   // Audit log
   audit: {
-    all: () => ["audit"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...queryKeys.audit.all(), "list", params] as const,
+    all: () => ['audit'] as const,
+    list: (params?: Record<string, unknown>) => [...queryKeys.audit.all(), 'list', params] as const,
   },
 } as const;
 ```
