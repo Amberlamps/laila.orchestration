@@ -50,6 +50,10 @@ export {
   type UpdateTask,
   taskResponseSchema,
   type TaskResponse,
+  taskSummarySchema,
+  type TaskSummary,
+  taskDetailResponseSchema,
+  type TaskDetailResponse,
 } from './task';
 
 export {

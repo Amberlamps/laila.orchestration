@@ -58,6 +58,10 @@ export const tasksTable = pgTable(
 
     workStatus: text('work_status').notNull().default('pending'),
 
+    // Lifecycle timestamps for task execution tracking
+    startedAt: timestamp('started_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+
     // References to external resources (docs, specs, examples)
     // e.g., [{ type: "doc", url: "https://...", title: "API Spec" }]
     references: jsonb('references')

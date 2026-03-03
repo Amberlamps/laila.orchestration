@@ -23,9 +23,14 @@ import {
   and,
   isNull,
   sql,
+  count,
+  asc,
+  desc,
   inArray,
+  or,
   notExists,
   aliasedTable,
+  type SQL,
   type InferSelectModel,
 } from 'drizzle-orm';
 
@@ -37,12 +42,16 @@ import { userStoriesTable } from '../schema/user-stories';
 import {
   createBaseRepository,
   asDrizzle,
+  ConflictError,
   ValidationError,
   NotFoundError,
+  type DrizzleDb,
   type FindManyOptions,
+  type PaginatedResult,
 } from './base-repository';
 
 import type { Database, PoolDatabase } from '../client';
+import type { PaginationQuery } from '@laila/shared';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -78,7 +87,30 @@ export interface UpdateTaskData {
   technicalNotes?: string | null;
   personaId?: string | null;
   workStatus?: string;
+  startedAt?: Date | null;
+  completedAt?: Date | null;
   references?: Array<{ type: string; url: string; title: string }>;
+}
+
+/** Summary of a task used in dependency/dependent resolution. */
+export interface TaskSummary {
+  id: string;
+  title: string;
+  workStatus: string;
+}
+
+/** Options for finding tasks with cross-entity filters. */
+export interface FindTasksOptions {
+  pagination?: PaginationQuery;
+  projectId?: string;
+  storyId?: string;
+  status?: string;
+  personaId?: string;
+}
+
+/** A task with its dependency IDs attached. */
+export interface TaskWithDependencyIds extends Task {
+  dependencyIds: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -364,6 +396,8 @@ export const createTaskRepository = (db: Database | PoolDatabase) => {
         technicalNotes: tasksTable.technicalNotes,
         personaId: tasksTable.personaId,
         workStatus: tasksTable.workStatus,
+        startedAt: tasksTable.startedAt,
+        completedAt: tasksTable.completedAt,
         references: tasksTable.references,
         version: tasksTable.version,
         createdAt: tasksTable.createdAt,
@@ -549,6 +583,696 @@ export const createTaskRepository = (db: Database | PoolDatabase) => {
     return blockedTasks as Task[];
   };
 
+  // -------------------------------------------------------------------------
+  // Filtered list query (for GET /api/v1/tasks)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns paginated tasks with optional cross-entity filters.
+   *
+   * Supports filtering by project (joins through stories and epics),
+   * story, status, and persona. Each task includes its dependency IDs
+   * for display in list views.
+   *
+   * @param tenantId - The tenant UUID for isolation
+   * @param options  - Filters and pagination parameters
+   * @returns Paginated result with tasks and dependency IDs
+   */
+  const findWithFilters = async (
+    tenantId: string,
+    options: FindTasksOptions = {},
+  ): Promise<PaginatedResult<TaskWithDependencyIds>> => {
+    const {
+      pagination: paginationParams = {
+        page: 1,
+        limit: 20,
+        sortBy: 'createdAt',
+        sortOrder: 'desc' as const,
+      },
+      projectId,
+      storyId,
+      status,
+      personaId,
+    } = options;
+
+    const { page, limit, sortBy, sortOrder } = paginationParams;
+    const offset = (page - 1) * limit;
+
+    // Build WHERE conditions
+    const conditions: SQL[] = [eq(tasksTable.tenantId, tenantId), isNull(tasksTable.deletedAt)];
+
+    // If filtering by project, we need to join through stories and epics
+    const needsProjectJoin = projectId !== undefined;
+
+    if (storyId) {
+      conditions.push(eq(tasksTable.userStoryId, storyId));
+    }
+    if (status) {
+      conditions.push(eq(tasksTable.workStatus, status));
+    }
+    if (personaId) {
+      conditions.push(eq(tasksTable.personaId, personaId));
+    }
+
+    if (needsProjectJoin) {
+      conditions.push(isNull(userStoriesTable.deletedAt));
+      conditions.push(isNull(epicsTable.deletedAt));
+      conditions.push(eq(epicsTable.projectId, projectId));
+    }
+
+    const whereClause = and(...conditions) as SQL;
+
+    // Resolve sort column on the tasks table
+    const sortColumnMap = {
+      createdAt: tasksTable.createdAt,
+      updatedAt: tasksTable.updatedAt,
+      title: tasksTable.title,
+      workStatus: tasksTable.workStatus,
+    } as unknown as Record<string, typeof tasksTable.createdAt>;
+    const sortColumn = sortColumnMap[sortBy] ?? tasksTable.createdAt;
+    const orderDirection = sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn);
+
+    // Build queries based on whether project join is needed
+    if (needsProjectJoin) {
+      const [countResult, data] = await Promise.all([
+        typedDb
+          .select({ total: count() })
+          .from(tasksTable)
+          .innerJoin(userStoriesTable, eq(tasksTable.userStoryId, userStoriesTable.id))
+          .innerJoin(epicsTable, eq(userStoriesTable.epicId, epicsTable.id))
+          .where(whereClause) as Promise<{ total: number }[]>,
+        typedDb
+          .select({
+            id: tasksTable.id,
+            tenantId: tasksTable.tenantId,
+            userStoryId: tasksTable.userStoryId,
+            title: tasksTable.title,
+            description: tasksTable.description,
+            acceptanceCriteria: tasksTable.acceptanceCriteria,
+            technicalNotes: tasksTable.technicalNotes,
+            personaId: tasksTable.personaId,
+            workStatus: tasksTable.workStatus,
+            startedAt: tasksTable.startedAt,
+            completedAt: tasksTable.completedAt,
+            references: tasksTable.references,
+            version: tasksTable.version,
+            createdAt: tasksTable.createdAt,
+            updatedAt: tasksTable.updatedAt,
+            deletedAt: tasksTable.deletedAt,
+          })
+          .from(tasksTable)
+          .innerJoin(userStoriesTable, eq(tasksTable.userStoryId, userStoriesTable.id))
+          .innerJoin(epicsTable, eq(userStoriesTable.epicId, epicsTable.id))
+          .where(whereClause)
+          .orderBy(orderDirection)
+          .limit(limit)
+          .offset(offset) as Promise<Task[]>,
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+      const pagination = base.computePaginationMeta(total, page, limit);
+
+      // Attach dependency IDs to each task
+      const tasksWithDeps = await attachDependencyIds(tenantId, data);
+
+      return { data: tasksWithDeps, pagination };
+    }
+
+    // Simple query without project join
+    const [countResult, data] = await Promise.all([
+      typedDb.select({ total: count() }).from(tasksTable).where(whereClause) as Promise<
+        { total: number }[]
+      >,
+      typedDb
+        .select()
+        .from(tasksTable)
+        .where(whereClause)
+        .orderBy(orderDirection)
+        .limit(limit)
+        .offset(offset) as Promise<Task[]>,
+    ]);
+
+    const total = countResult[0]?.total ?? 0;
+    const pagination = base.computePaginationMeta(total, page, limit);
+
+    // Attach dependency IDs to each task
+    const tasksWithDeps = await attachDependencyIds(tenantId, data);
+
+    return { data: tasksWithDeps, pagination };
+  };
+
+  /**
+   * Attaches dependency IDs (prerequisite task IDs) to an array of tasks.
+   *
+   * @param tenantId - The tenant UUID for isolation
+   * @param tasks    - Array of task records
+   * @returns Tasks with dependencyIds attached
+   */
+  const attachDependencyIds = async (
+    tenantId: string,
+    tasks: Task[],
+  ): Promise<TaskWithDependencyIds[]> => {
+    if (tasks.length === 0) {
+      return [];
+    }
+
+    const taskIds = tasks.map((t) => t.id);
+
+    const edges = await typedDb
+      .select({
+        dependentTaskId: taskDependencyEdgesTable.dependentTaskId,
+        prerequisiteTaskId: taskDependencyEdgesTable.prerequisiteTaskId,
+      })
+      .from(taskDependencyEdgesTable)
+      .where(
+        and(
+          eq(taskDependencyEdgesTable.tenantId, tenantId),
+          inArray(taskDependencyEdgesTable.dependentTaskId, taskIds),
+        ),
+      );
+
+    // Group prerequisite IDs by dependent task ID
+    const depMap = new Map<string, string[]>();
+    for (const edge of edges) {
+      const existing = depMap.get(edge.dependentTaskId);
+      if (existing) {
+        existing.push(edge.prerequisiteTaskId);
+      } else {
+        depMap.set(edge.dependentTaskId, [edge.prerequisiteTaskId]);
+      }
+    }
+
+    return tasks.map((task) => ({
+      ...task,
+      dependencyIds: depMap.get(task.id) ?? [],
+    }));
+  };
+
+  // -------------------------------------------------------------------------
+  // Detail query (for GET /api/v1/tasks/:id)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns a task with resolved dependency and dependent summaries.
+   *
+   * Dependencies are tasks this task depends on (prerequisites).
+   * Dependents are tasks that depend on this task (downstream).
+   *
+   * @param tenantId - The tenant UUID for isolation
+   * @param taskId   - The task UUID to look up
+   * @returns Task with dependency/dependent summaries, or null if not found
+   */
+  const findDetailById = async (
+    tenantId: string,
+    taskId: string,
+  ): Promise<{ task: Task; dependencies: TaskSummary[]; dependents: TaskSummary[] } | null> => {
+    const result = await base.findById(tenantId, taskId);
+    if (!result) {
+      return null;
+    }
+
+    const task = result as Task;
+
+    // Fetch dependencies and dependents in parallel
+    const [dependencies, dependents] = await Promise.all([
+      getDependencies(tenantId, taskId),
+      getDependents(tenantId, taskId),
+    ]);
+
+    const toSummary = (t: Task): TaskSummary => ({
+      id: t.id,
+      title: t.title,
+      workStatus: t.workStatus,
+    });
+
+    return {
+      task,
+      dependencies: dependencies.map(toSummary),
+      dependents: dependents.map(toSummary),
+    };
+  };
+
+  // -------------------------------------------------------------------------
+  // Dependency replacement (for POST/PATCH with dependency_ids)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Atomically replaces all dependency edges for a task.
+   *
+   * Implements the "replace all" strategy:
+   * 1. Delete all existing edges where this task is the dependent
+   * 2. Insert new edges for each prerequisite task ID
+   *
+   * Does NOT perform cycle detection -- that is the caller's responsibility
+   * (using the domain layer's DAG module after this method succeeds).
+   *
+   * @param tenantId          - The tenant UUID for isolation
+   * @param dependentTaskId   - The task whose dependencies are being replaced
+   * @param prerequisiteIds   - Array of prerequisite task UUIDs
+   */
+  const replaceDependencies = async (
+    tenantId: string,
+    dependentTaskId: string,
+    prerequisiteIds: string[],
+  ): Promise<void> => {
+    // Step 1: Delete all existing outgoing dependency edges for this task
+    await typedDb
+      .delete(taskDependencyEdgesTable)
+      .where(
+        and(
+          eq(taskDependencyEdgesTable.tenantId, tenantId),
+          eq(taskDependencyEdgesTable.dependentTaskId, dependentTaskId),
+        ),
+      );
+
+    // Step 2: Insert new edges (if any)
+    if (prerequisiteIds.length > 0) {
+      const edgeValues = prerequisiteIds.map((prerequisiteTaskId) => ({
+        tenantId,
+        dependentTaskId,
+        prerequisiteTaskId,
+      }));
+
+      await typedDb.insert(taskDependencyEdgesTable).values(edgeValues);
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // Dependency cleanup (for DELETE soft-delete)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Removes all dependency edges where the specified task is either
+   * a dependent or a prerequisite. Used during soft-delete cleanup.
+   *
+   * @param tenantId - The tenant UUID for isolation
+   * @param taskId   - The task UUID whose edges should be removed
+   */
+  const removeAllEdges = async (tenantId: string, taskId: string): Promise<void> => {
+    await typedDb
+      .delete(taskDependencyEdgesTable)
+      .where(
+        and(
+          eq(taskDependencyEdgesTable.tenantId, tenantId),
+          or(
+            eq(taskDependencyEdgesTable.dependentTaskId, taskId),
+            eq(taskDependencyEdgesTable.prerequisiteTaskId, taskId),
+          ),
+        ),
+      );
+  };
+
+  // -------------------------------------------------------------------------
+  // Story lookup helper (for read-only enforcement)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns the parent story record for a given task.
+   * Used to check the story's work status for read-only enforcement.
+   *
+   * @param tenantId - The tenant UUID for isolation
+   * @param taskId   - The task UUID
+   * @returns The parent story, or null if the task or story is not found
+   */
+  const getParentStory = async (
+    tenantId: string,
+    taskId: string,
+  ): Promise<InferSelectModel<typeof userStoriesTable> | null> => {
+    const result = await base.findById(tenantId, taskId);
+    if (!result) {
+      return null;
+    }
+
+    const task = result as Task;
+
+    const stories = await typedDb
+      .select()
+      .from(userStoriesTable)
+      .where(
+        and(
+          eq(userStoriesTable.id, task.userStoryId),
+          eq(userStoriesTable.tenantId, tenantId),
+          isNull(userStoriesTable.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    const story = stories[0];
+    if (!story) {
+      return null;
+    }
+    return story as InferSelectModel<typeof userStoriesTable>;
+  };
+
+  /**
+   * Returns the project ID for a given story by joining through epics.
+   * Used for cross-project dependency validation.
+   *
+   * @param tenantId - The tenant UUID for isolation
+   * @param storyId  - The story UUID
+   * @returns The project ID, or null if the story is not found
+   */
+  const getProjectIdForStory = async (
+    tenantId: string,
+    storyId: string,
+  ): Promise<string | null> => {
+    const result = await typedDb
+      .select({ projectId: epicsTable.projectId })
+      .from(userStoriesTable)
+      .innerJoin(epicsTable, eq(userStoriesTable.epicId, epicsTable.id))
+      .where(
+        and(
+          eq(userStoriesTable.id, storyId),
+          eq(userStoriesTable.tenantId, tenantId),
+          isNull(userStoriesTable.deletedAt),
+          isNull(epicsTable.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    const row = result[0];
+    if (!row) {
+      return null;
+    }
+    return row.projectId;
+  };
+
+  /**
+   * Returns the project ID for a given task by joining through stories and epics.
+   * Used for cross-project dependency validation.
+   *
+   * @param tenantId - The tenant UUID for isolation
+   * @param taskId   - The task UUID
+   * @returns The project ID, or null if the task is not found
+   */
+  const getProjectIdForTask = async (tenantId: string, taskId: string): Promise<string | null> => {
+    const result = await typedDb
+      .select({ projectId: epicsTable.projectId })
+      .from(tasksTable)
+      .innerJoin(userStoriesTable, eq(tasksTable.userStoryId, userStoriesTable.id))
+      .innerJoin(epicsTable, eq(userStoriesTable.epicId, epicsTable.id))
+      .where(
+        and(
+          eq(tasksTable.id, taskId),
+          eq(tasksTable.tenantId, tenantId),
+          isNull(tasksTable.deletedAt),
+          isNull(userStoriesTable.deletedAt),
+          isNull(epicsTable.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    const row = result[0];
+    if (!row) {
+      return null;
+    }
+    return row.projectId;
+  };
+
+  // -------------------------------------------------------------------------
+  // Transaction support
+  // -------------------------------------------------------------------------
+
+  /**
+   * Executes a callback within a database transaction.
+   *
+   * The callback receives a `DrizzleDb` transaction handle that has the
+   * same query builder API as the main database client. All queries issued
+   * through `tx` are part of the transaction and will be rolled back on error.
+   *
+   * @param fn - Async callback receiving the transaction handle
+   * @returns The return value of the callback
+   */
+  const withTransaction = <T>(fn: (tx: DrizzleDb) => Promise<T>): Promise<T> => {
+    return typedDb.transaction(async (tx: DrizzleDb) => fn(tx));
+  };
+
+  /**
+   * Creates a new task within a transaction.
+   *
+   * Same logic as `create` but uses the provided transaction handle
+   * so the task insert can be part of a larger atomic operation.
+   *
+   * @param tenantId    - The tenant UUID for isolation
+   * @param userStoryId - The parent user story UUID
+   * @param data        - Task fields (title, description, etc.)
+   * @param tx          - The database transaction handle
+   * @returns The newly created task record
+   */
+  const createInTx = async (
+    tenantId: string,
+    userStoryId: string,
+    data: CreateTaskData,
+    tx: DrizzleDb,
+  ): Promise<Task> => {
+    const results = await tx
+      .insert(tasksTable)
+      .values({
+        tenantId,
+        userStoryId,
+        title: data.title,
+        description: data.description ?? null,
+        acceptanceCriteria: data.acceptanceCriteria ?? [],
+        technicalNotes: data.technicalNotes ?? null,
+        personaId: data.personaId ?? null,
+        workStatus: 'pending',
+        references: data.references ?? [],
+      })
+      .returning();
+
+    return results[0] as Task;
+  };
+
+  /**
+   * Updates task fields with optimistic locking within a transaction.
+   *
+   * Same logic as `update` but uses the provided transaction handle
+   * so the task update can be part of a larger atomic operation.
+   *
+   * @param tenantId        - The tenant UUID for isolation
+   * @param id              - The task UUID to update
+   * @param data            - Partial task fields to update
+   * @param expectedVersion - The version the caller expects (for optimistic locking)
+   * @param tx              - The database transaction handle
+   * @returns The updated task record
+   * @throws {ConflictError} If the version does not match
+   */
+  const updateInTx = async (
+    tenantId: string,
+    id: string,
+    data: UpdateTaskData,
+    expectedVersion: number,
+    tx: DrizzleDb,
+  ): Promise<Task> => {
+    const results = await tx
+      .update(tasksTable)
+      .set({
+        ...data,
+        version: sql`${tasksTable.version} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(tasksTable.id, id),
+          eq(tasksTable.tenantId, tenantId),
+          eq(tasksTable.version, expectedVersion),
+          isNull(tasksTable.deletedAt),
+        ),
+      )
+      .returning();
+
+    if (results.length === 0) {
+      throw new ConflictError(base.entityName, id, expectedVersion);
+    }
+
+    return results[0] as Task;
+  };
+
+  /**
+   * Returns all dependency edges for a project within a transaction.
+   *
+   * Loads the full set of edges needed for DAG cycle detection.
+   * Must be called within a transaction to prevent TOCTOU races.
+   *
+   * @param tenantId  - The tenant UUID for isolation
+   * @param projectId - The project UUID to scope the graph to
+   * @param tx        - The database transaction handle
+   * @returns All dependency edges for the project
+   */
+  const getProjectEdgesInTx = async (
+    tenantId: string,
+    projectId: string,
+    tx: DrizzleDb,
+  ): Promise<TaskDependencyEdge[]> => {
+    // Get all task IDs for the project
+    const tasks = await tx
+      .select({ id: tasksTable.id })
+      .from(tasksTable)
+      .innerJoin(userStoriesTable, eq(tasksTable.userStoryId, userStoriesTable.id))
+      .innerJoin(epicsTable, eq(userStoriesTable.epicId, epicsTable.id))
+      .where(
+        and(
+          eq(tasksTable.tenantId, tenantId),
+          isNull(tasksTable.deletedAt),
+          eq(epicsTable.projectId, projectId),
+          isNull(userStoriesTable.deletedAt),
+          isNull(epicsTable.deletedAt),
+        ),
+      );
+
+    const taskIds = tasks.map((t: { id: string }) => t.id);
+
+    if (taskIds.length === 0) {
+      return [];
+    }
+
+    const edges = await tx
+      .select()
+      .from(taskDependencyEdgesTable)
+      .where(
+        and(
+          eq(taskDependencyEdgesTable.tenantId, tenantId),
+          inArray(taskDependencyEdgesTable.dependentTaskId, taskIds),
+          inArray(taskDependencyEdgesTable.prerequisiteTaskId, taskIds),
+        ),
+      );
+
+    return edges as TaskDependencyEdge[];
+  };
+
+  /**
+   * Atomically replaces all dependency edges for a task within a transaction.
+   *
+   * Same logic as `replaceDependencies` but operates on a transaction handle
+   * to ensure TOCTOU safety when combined with cycle detection.
+   *
+   * @param tenantId          - The tenant UUID for isolation
+   * @param dependentTaskId   - The task whose dependencies are being replaced
+   * @param prerequisiteIds   - Array of prerequisite task UUIDs
+   * @param tx                - The database transaction handle
+   */
+  const replaceDependenciesInTx = async (
+    tenantId: string,
+    dependentTaskId: string,
+    prerequisiteIds: string[],
+    tx: DrizzleDb,
+  ): Promise<void> => {
+    // Delete all existing outgoing dependency edges for this task
+    await tx
+      .delete(taskDependencyEdgesTable)
+      .where(
+        and(
+          eq(taskDependencyEdgesTable.tenantId, tenantId),
+          eq(taskDependencyEdgesTable.dependentTaskId, dependentTaskId),
+        ),
+      );
+
+    // Insert new edges (if any)
+    if (prerequisiteIds.length > 0) {
+      const edgeValues = prerequisiteIds.map((prerequisiteTaskId) => ({
+        tenantId,
+        dependentTaskId,
+        prerequisiteTaskId,
+      }));
+
+      await tx.insert(taskDependencyEdgesTable).values(edgeValues);
+    }
+  };
+
+  /**
+   * Finds tasks that depend on a given task (i.e., the task is their prerequisite).
+   * Returns only the task IDs, not full records.
+   *
+   * Used during soft-delete cleanup to identify tasks that may need
+   * status re-evaluation after their prerequisite is removed.
+   *
+   * @param tenantId - The tenant UUID for isolation
+   * @param taskId   - The task UUID whose dependents to find
+   * @param tx       - The database transaction handle
+   * @returns Array of dependent task IDs
+   */
+  const getDependentIdsInTx = async (
+    tenantId: string,
+    taskId: string,
+    tx: DrizzleDb,
+  ): Promise<string[]> => {
+    const edges = await tx
+      .select({ dependentTaskId: taskDependencyEdgesTable.dependentTaskId })
+      .from(taskDependencyEdgesTable)
+      .where(
+        and(
+          eq(taskDependencyEdgesTable.tenantId, tenantId),
+          eq(taskDependencyEdgesTable.prerequisiteTaskId, taskId),
+        ),
+      );
+
+    return edges.map((e: { dependentTaskId: string }) => e.dependentTaskId);
+  };
+
+  /**
+   * Removes all dependency edges referencing a task within a transaction.
+   *
+   * Used during soft-delete to atomically clean up all edges where the
+   * deleted task is either a dependent or a prerequisite.
+   *
+   * @param tenantId - The tenant UUID for isolation
+   * @param taskId   - The task UUID whose edges should be removed
+   * @param tx       - The database transaction handle
+   */
+  const removeAllEdgesInTx = async (
+    tenantId: string,
+    taskId: string,
+    tx: DrizzleDb,
+  ): Promise<void> => {
+    await tx
+      .delete(taskDependencyEdgesTable)
+      .where(
+        and(
+          eq(taskDependencyEdgesTable.tenantId, tenantId),
+          or(
+            eq(taskDependencyEdgesTable.dependentTaskId, taskId),
+            eq(taskDependencyEdgesTable.prerequisiteTaskId, taskId),
+          ),
+        ),
+      );
+  };
+
+  /**
+   * Soft-deletes a task within a transaction.
+   *
+   * Sets the `deleted_at` timestamp, increments version, and updates
+   * `updated_at`. Used in conjunction with `removeAllEdgesInTx` to
+   * atomically clean up edges and soft-delete the task.
+   *
+   * @param tenantId - The tenant UUID for isolation
+   * @param taskId   - The task UUID to soft-delete
+   * @param tx       - The database transaction handle
+   * @returns The soft-deleted task record, or null if not found
+   */
+  const softDeleteInTx = async (
+    tenantId: string,
+    taskId: string,
+    tx: DrizzleDb,
+  ): Promise<Task | null> => {
+    const results = await tx
+      .update(tasksTable)
+      .set({
+        deletedAt: new Date(),
+        version: sql`${tasksTable.version} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(tasksTable.id, taskId),
+          eq(tasksTable.tenantId, tenantId),
+          isNull(tasksTable.deletedAt),
+        ),
+      )
+      .returning();
+
+    return (results[0] as Task | undefined) ?? null;
+  };
+
   return {
     // Base repository methods (passthrough)
     ...base,
@@ -556,13 +1280,29 @@ export const createTaskRepository = (db: Database | PoolDatabase) => {
     create,
     update,
     findByStory,
+    findWithFilters,
+    findDetailById,
     addDependency,
     removeDependency,
+    replaceDependencies,
+    removeAllEdges,
     getDependencies,
     getDependents,
     getTaskGraph,
     bulkUpdateStatus,
     findBlockedTasks,
+    getParentStory,
+    getProjectIdForStory,
+    getProjectIdForTask,
+    // Transaction-aware methods
+    withTransaction,
+    createInTx,
+    updateInTx,
+    getProjectEdgesInTx,
+    replaceDependenciesInTx,
+    getDependentIdsInTx,
+    removeAllEdgesInTx,
+    softDeleteInTx,
   };
 };
 
