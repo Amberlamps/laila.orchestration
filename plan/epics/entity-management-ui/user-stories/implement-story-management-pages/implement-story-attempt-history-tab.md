@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Story Attempt History Tab
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement User Story Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -20,6 +20,7 @@ A vertical timeline list where each entry represents a worker assignment attempt
 ### Timeline Entry Structure
 
 Each entry displays:
+
 - **Worker Name:** Linked to `/workers/{workerId}`, in Body typography (14px, semibold)
 - **Assigned Timestamp:** Caption (12px, zinc-500), formatted as "Jan 15, 2026 at 2:30 PM"
 - **Unassigned Timestamp:** Caption, same format, or "Currently assigned" in blue-500 if still active
@@ -48,20 +49,18 @@ Timeline dot ────────────── Worker Name
 // apps/web/src/components/stories/story-attempt-history-tab.tsx
 // Attempt History timeline showing worker assignment/unassignment events.
 // Each entry shows worker, timestamps, duration, and reason for unassignment.
-import {
-  Clock, UserMinus, XCircle, CheckCircle2, Loader2,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
-import { useStoryAttemptHistory } from "@/hooks/use-stories";
+import { Clock, UserMinus, XCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { useStoryAttemptHistory } from '@/hooks/use-stories';
 
 interface AttemptEntry {
   id: string;
   workerId: string;
   workerName: string;
-  assignedAt: string;        // ISO timestamp
+  assignedAt: string; // ISO timestamp
   unassignedAt: string | null; // null if currently assigned
-  reason: "timeout" | "manual" | "failure" | "complete" | null;
+  reason: 'timeout' | 'manual' | 'failure' | 'complete' | null;
   durationSeconds: number | null;
 }
 
@@ -69,23 +68,23 @@ interface AttemptEntry {
 const REASON_CONFIG = {
   timeout: {
     icon: Clock,
-    label: "Timed out",
-    className: "bg-amber-50 text-amber-700 border-amber-200",
+    label: 'Timed out',
+    className: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   manual: {
     icon: UserMinus,
-    label: "Manually unassigned",
-    className: "bg-zinc-100 text-zinc-600 border-zinc-200",
+    label: 'Manually unassigned',
+    className: 'bg-zinc-100 text-zinc-600 border-zinc-200',
   },
   failure: {
     icon: XCircle,
-    label: "Failed",
-    className: "bg-red-50 text-red-700 border-red-200",
+    label: 'Failed',
+    className: 'bg-red-50 text-red-700 border-red-200',
   },
   complete: {
     icon: CheckCircle2,
-    label: "Completed",
-    className: "bg-green-50 text-green-700 border-green-200",
+    label: 'Completed',
+    className: 'bg-green-50 text-green-700 border-green-200',
   },
 };
 ```

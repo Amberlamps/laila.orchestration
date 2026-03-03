@@ -21,6 +21,7 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { DeleteProjectButton, DeleteProjectFlow } from '@/components/projects/delete-project-flow';
 import { ProjectSettingsTab } from '@/components/projects/project-settings-tab';
 import { PublishProjectFlow } from '@/components/projects/publish-project-flow';
+import { CreateEditStoryModal } from '@/components/stories/create-edit-story-modal';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -567,6 +568,53 @@ function PlaceholderTabContent({ tabLabel }: { tabLabel: string }) {
   );
 }
 
+/**
+ * Stories tab content for the project detail page.
+ * Shows a create button and explains stories are organized by epic.
+ */
+function StoriesTabContent({
+  projectId,
+  onCreateStory,
+}: {
+  projectId: string;
+  onCreateStory: () => void;
+}) {
+  return (
+    <div className="mt-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-zinc-900">Stories</h2>
+        <Button onClick={onCreateStory}>+ Create Story</Button>
+      </div>
+      <EmptyState
+        icon={(props: { className?: string }) => (
+          <svg
+            {...props}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
+            />
+          </svg>
+        )}
+        title="Stories are organized by epic"
+        description={`Navigate to an epic to view its stories, or create a new story using the button above.`}
+        actionLabel="View Epics"
+        onAction={() => {
+          // Switch to the epics tab — use the parent's tab handler via query param
+          const url = `/projects/${projectId}?tab=epics`;
+          window.location.href = url;
+        }}
+      />
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
@@ -576,6 +624,7 @@ const ProjectDetailPage: NextPageWithLayout = () => {
   const projectId = router.query.projectId as string;
   const tabParam = router.query.tab;
   const activeTab = typeof tabParam === 'string' ? tabParam : 'overview';
+  const [createStoryModalOpen, setCreateStoryModalOpen] = useState(false);
 
   const { data, isLoading, isError } = useProject(projectId);
   const project = data?.data;
@@ -657,7 +706,12 @@ const ProjectDetailPage: NextPageWithLayout = () => {
         </TabsContent>
 
         <TabsContent value="stories">
-          <PlaceholderTabContent tabLabel="Stories" />
+          <StoriesTabContent
+            projectId={project.id}
+            onCreateStory={() => {
+              setCreateStoryModalOpen(true);
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="tasks">
@@ -691,6 +745,13 @@ const ProjectDetailPage: NextPageWithLayout = () => {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Create story modal (no pre-selected epic at project level) */}
+      <CreateEditStoryModal
+        open={createStoryModalOpen}
+        onOpenChange={setCreateStoryModalOpen}
+        projectId={project.id}
+      />
     </div>
   );
 };

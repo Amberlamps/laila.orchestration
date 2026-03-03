@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Create Edit Story Modal
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement User Story Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -47,15 +47,19 @@ Build a combined create/edit modal for user stories. The modal includes title, M
 // apps/web/src/components/stories/create-edit-story-modal.tsx
 // Combined create/edit modal for user stories.
 // Includes priority selection and epic assignment.
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useCreateStory, useUpdateStory } from "@/hooks/use-stories";
-import { useProjectEpics } from "@/hooks/use-epics";
-import { MarkdownEditor } from "@/components/ui/markdown-editor";
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useCreateStory, useUpdateStory } from '@/hooks/use-stories';
+import { useProjectEpics } from '@/hooks/use-epics';
+import { MarkdownEditor } from '@/components/ui/markdown-editor';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // Zod schema for story creation/editing.
 // Priority is required and must be one of the three valid values.
@@ -63,13 +67,13 @@ import {
 const storyFormSchema = z.object({
   title: z
     .string()
-    .min(1, "Story title is required")
-    .max(200, "Title must be 200 characters or fewer"),
+    .min(1, 'Story title is required')
+    .max(200, 'Title must be 200 characters or fewer'),
   description: z.string().optional(),
-  priority: z.enum(["high", "medium", "low"], {
-    required_error: "Priority is required",
+  priority: z.enum(['high', 'medium', 'low'], {
+    required_error: 'Priority is required',
   }),
-  epicId: z.string().min(1, "Epic selection is required"),
+  epicId: z.string().min(1, 'Epic selection is required'),
 });
 
 type StoryFormData = z.infer<typeof storyFormSchema>;

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Story Action Flows
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement User Story Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -16,6 +16,7 @@ Implement the four lifecycle action flows for user stories: Publish (with valida
 ### 1. Publish Flow
 
 Transitions a story from Draft to Ready (published). Before publishing, validates:
+
 - All tasks have personas assigned
 - All tasks have acceptance criteria defined
 - No circular dependencies exist in the task graph
@@ -61,18 +62,22 @@ Permanently removes a story and cascades to all child tasks.
 // apps/web/src/components/stories/story-action-flows.tsx
 // Lifecycle action flows for stories: publish, reset, unassign, delete.
 // Each flow uses a dialog/confirmation pattern with appropriate guards.
-import { useState } from "react";
-import { useRouter } from "next/router";
+import { useState } from 'react';
+import { useRouter } from 'next/router';
 import {
-  usePublishStory, useResetStory, useUnassignStory, useDeleteStory,
-} from "@/hooks/use-stories";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { toast } from "@/components/ui/toast";
+  usePublishStory,
+  useResetStory,
+  useUnassignStory,
+  useDeleteStory,
+} from '@/hooks/use-stories';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from '@/components/ui/toast';
 ```
 
 ## Acceptance Criteria
 
 ### Publish Flow
+
 - [ ] Publish button triggers validation API call
 - [ ] If valid: story transitions to Ready, success toast
 - [ ] If invalid: dialog lists tasks with missing personas or acceptance criteria
@@ -80,6 +85,7 @@ import { toast } from "@/components/ui/toast";
 - [ ] Publish button only visible when story is in Draft status
 
 ### Reset Flow
+
 - [ ] Reset button visible only when story status is "failed"
 - [ ] Confirmation dialog explains the reset action and its effect
 - [ ] On confirm: story status changes from Failed to system-determined status
@@ -87,6 +93,7 @@ import { toast } from "@/components/ui/toast";
 - [ ] Success toast confirms the reset
 
 ### Unassign Flow
+
 - [ ] Unassign button visible when story has an assigned worker
 - [ ] ConfirmDialog shows worker name and story title
 - [ ] On confirm: worker is removed, story status updates accordingly
@@ -94,6 +101,7 @@ import { toast } from "@/components/ui/toast";
 - [ ] Success toast confirms the unassignment
 
 ### Delete Flow
+
 - [ ] Delete blocked (disabled + tooltip) when story is in_progress
 - [ ] ConfirmDialog shows story title and child task count
 - [ ] Confirm button text is "Delete Story"
@@ -101,6 +109,7 @@ import { toast } from "@/components/ui/toast";
 - [ ] Cascade soft-delete includes all child tasks
 
 ### General
+
 - [ ] All flows prevent double-submission
 - [ ] All flows handle API errors with user-friendly messages
 - [ ] All flows use proper ARIA attributes on dialogs

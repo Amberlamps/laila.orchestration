@@ -4,20 +4,20 @@
 
 - **Title:** Implement User Story Management Pages
 - **Description:** Build the user story detail page with tabbed interface (Overview, Tasks, Attempt History), create/edit modal with priority and epic selection, and action flows (publish with validation, reset failed stories, unassign workers, delete with guards).
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
 - **Total Tasks:** 5
 - **Dependencies:** Implement Epic Management Pages
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Story Detail Page](./implement-story-detail-page.md) | Build story detail page with header, status badges, action buttons, and tabbed Overview section | Not Started | frontend-developer | None |
-| [Implement Story Tasks Tab](./implement-story-tasks-tab.md) | Build Tasks sub-tab with task table, execution order visual, and read-only banner | Not Started | frontend-developer | Implement Story Detail Page |
-| [Implement Story Attempt History Tab](./implement-story-attempt-history-tab.md) | Build Attempt History tab with timeline of worker assignment/unassignment events | Not Started | frontend-developer | Implement Story Detail Page |
-| [Implement Create Edit Story Modal](./implement-create-edit-story-modal.md) | Build create/edit modal with title, description, priority, and epic selection | Not Started | fullstack-developer | None |
-| [Implement Story Action Flows](./implement-story-action-flows.md) | Build publish, reset, unassign, and delete action flows with validation and guards | Not Started | fullstack-developer | Implement Story Detail Page, Implement Story Tasks Tab |
+| Task                                                                            | Description                                                                                     | Status   | Assigned Agent      | Dependencies                                           |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------- | ------------------- | ------------------------------------------------------ |
+| [Implement Story Detail Page](./implement-story-detail-page.md)                 | Build story detail page with header, status badges, action buttons, and tabbed Overview section | Complete | frontend-developer  | None                                                   |
+| [Implement Story Tasks Tab](./implement-story-tasks-tab.md)                     | Build Tasks sub-tab with task table, execution order visual, and read-only banner               | Complete | frontend-developer  | Implement Story Detail Page                            |
+| [Implement Story Attempt History Tab](./implement-story-attempt-history-tab.md) | Build Attempt History tab with timeline of worker assignment/unassignment events                | Complete | frontend-developer  | Implement Story Detail Page                            |
+| [Implement Create Edit Story Modal](./implement-create-edit-story-modal.md)     | Build create/edit modal with title, description, priority, and epic selection                   | Complete | fullstack-developer | None                                                   |
+| [Implement Story Action Flows](./implement-story-action-flows.md)               | Build publish, reset, unassign, and delete action flows with validation and guards              | Complete | fullstack-developer | Implement Story Detail Page, Implement Story Tasks Tab |
 
 ## Dependency Graph
 
