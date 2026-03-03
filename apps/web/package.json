@@ -12,6 +12,7 @@
     "@laila/domain": "workspace:*",
     "@laila/shared": "workspace:*",
     "better-auth": "^1.5.1",
+    "zod": "^3.25.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",

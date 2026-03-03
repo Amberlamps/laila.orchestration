@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Global Error Handler
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Error Handling Framework](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -21,9 +21,9 @@ Implement a global error handler middleware for Next.js Pages Router API routes.
 // Wraps an API route handler and catches all errors, mapping them
 // to the standardized JSON error envelope format.
 
-import type { NextApiRequest, NextApiResponse } from "next";
-import { AppError, DomainErrorCode } from "@laila/shared";
-import { randomUUID } from "crypto";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { AppError, DomainErrorCode } from '@laila/shared';
+import { randomUUID } from 'crypto';
 
 /**
  * Standardized error response envelope.
@@ -46,10 +46,7 @@ interface ErrorResponse {
 /**
  * Type for a Next.js API route handler function.
  */
-type ApiHandler = (
-  req: NextApiRequest,
-  res: NextApiResponse
-) => Promise<void>;
+type ApiHandler = (req: NextApiRequest, res: NextApiResponse) => Promise<void>;
 
 /**
  * Wraps an API route handler with global error handling.
@@ -84,17 +81,17 @@ export function withErrorHandler(handler: ApiHandler): ApiHandler {
         };
 
         // Set Retry-After header for rate limit errors.
-        if (error.statusCode === 429 && "retryAfterSeconds" in error) {
+        if (error.statusCode === 429 && 'retryAfterSeconds' in error) {
           res.setHeader(
-            "Retry-After",
-            String((error as { retryAfterSeconds: number }).retryAfterSeconds)
+            'Retry-After',
+            String((error as { retryAfterSeconds: number }).retryAfterSeconds),
           );
         }
 
         res.status(error.statusCode).json(response);
       } else {
         // Unknown error — log full details server-side, return generic 500.
-        console.error("[API Error]", {
+        console.error('[API Error]', {
           requestId,
           method: req.method,
           url: req.url,
@@ -105,11 +102,11 @@ export function withErrorHandler(handler: ApiHandler): ApiHandler {
           error: {
             code: DomainErrorCode.INTERNAL_ERROR,
             message:
-              process.env.NODE_ENV === "production"
-                ? "An internal server error occurred"
+              process.env.NODE_ENV === 'production'
+                ? 'An internal server error occurred'
                 : error instanceof Error
                   ? error.message
-                  : "An internal server error occurred",
+                  : 'An internal server error occurred',
             requestId,
           },
         };

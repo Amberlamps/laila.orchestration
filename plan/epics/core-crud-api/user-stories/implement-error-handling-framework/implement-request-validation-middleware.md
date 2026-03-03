@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Request Validation Middleware
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Error Handling Framework](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -21,9 +21,9 @@ Create a `withValidation` middleware HOF that takes Zod schemas for request body
 // Validates body, query, and params before passing to the handler.
 // Returns 400 with field-level errors on validation failure.
 
-import type { NextApiRequest, NextApiResponse } from "next";
-import { z, ZodError, type ZodSchema } from "zod";
-import { ValidationError, DomainErrorCode } from "@laila/shared";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { z, ZodError, type ZodSchema } from 'zod';
+import { ValidationError, DomainErrorCode } from '@laila/shared';
 
 /**
  * Schema configuration for request validation.
@@ -45,11 +45,7 @@ interface ValidationSchemas {
  * The generic types correspond to the Zod schemas provided.
  * Handlers receive this instead of raw req.body/req.query.
  */
-interface ValidatedData<
-  TBody = unknown,
-  TQuery = unknown,
-  TParams = unknown,
-> {
+interface ValidatedData<TBody = unknown, TQuery = unknown, TParams = unknown> {
   body: TBody;
   query: TQuery;
   params: TParams;
@@ -61,7 +57,7 @@ interface ValidatedData<
 type ValidatedHandler<TBody, TQuery, TParams> = (
   req: NextApiRequest,
   res: NextApiResponse,
-  data: ValidatedData<TBody, TQuery, TParams>
+  data: ValidatedData<TBody, TQuery, TParams>,
 ) => Promise<void>;
 
 /**
@@ -90,11 +86,9 @@ type ValidatedHandler<TBody, TQuery, TParams> = (
  *     }
  *   }
  */
-export function withValidation<
-  TBody = unknown,
-  TQuery = unknown,
-  TParams = unknown,
->(schemas: ValidationSchemas) {
+export function withValidation<TBody = unknown, TQuery = unknown, TParams = unknown>(
+  schemas: ValidationSchemas,
+) {
   return (handler: ValidatedHandler<TBody, TQuery, TParams>) => {
     return async (req: NextApiRequest, res: NextApiResponse) => {
       const errors: Record<string, string[]> = {};
@@ -104,7 +98,7 @@ export function withValidation<
       if (schemas.body) {
         const result = schemas.body.safeParse(req.body);
         if (!result.success) {
-          mergeFieldErrors(errors, "body", result.error);
+          mergeFieldErrors(errors, 'body', result.error);
         } else {
           parsedBody = result.data as TBody;
         }
@@ -115,7 +109,7 @@ export function withValidation<
       if (schemas.query) {
         const result = schemas.query.safeParse(req.query);
         if (!result.success) {
-          mergeFieldErrors(errors, "query", result.error);
+          mergeFieldErrors(errors, 'query', result.error);
         } else {
           parsedQuery = result.data as TQuery;
         }
@@ -127,7 +121,7 @@ export function withValidation<
       if (schemas.params) {
         const result = schemas.params.safeParse(req.query);
         if (!result.success) {
-          mergeFieldErrors(errors, "params", result.error);
+          mergeFieldErrors(errors, 'params', result.error);
         } else {
           parsedParams = result.data as TParams;
         }
@@ -135,11 +129,9 @@ export function withValidation<
 
       // If any validation errors, throw ValidationError with field details
       if (Object.keys(errors).length > 0) {
-        throw new ValidationError(
-          DomainErrorCode.VALIDATION_FAILED,
-          "Request validation failed",
-          { fieldErrors: errors }
-        );
+        throw new ValidationError(DomainErrorCode.VALIDATION_FAILED, 'Request validation failed', {
+          fieldErrors: errors,
+        });
       }
 
       // All schemas passed — call handler with validated data
@@ -159,12 +151,10 @@ export function withValidation<
 function mergeFieldErrors(
   target: Record<string, string[]>,
   prefix: string,
-  zodError: ZodError
+  zodError: ZodError,
 ): void {
   for (const issue of zodError.issues) {
-    const path = issue.path.length > 0
-      ? `${prefix}.${issue.path.join(".")}`
-      : prefix;
+    const path = issue.path.length > 0 ? `${prefix}.${issue.path.join('.')}` : prefix;
     if (!target[path]) {
       target[path] = [];
     }
@@ -180,13 +170,13 @@ function mergeFieldErrors(
 // Reusable pagination schema for list endpoints.
 // All GET list endpoints accept these query parameters.
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   sort_by: z.string().optional(),
-  sort_order: z.enum(["asc", "desc"]).default("asc"),
+  sort_order: z.enum(['asc', 'desc']).default('asc'),
 });
 
 export type PaginationParams = z.infer<typeof paginationSchema>;

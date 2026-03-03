@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Custom Error Classes
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Error Handling Framework](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -28,43 +28,43 @@ Create a typed error class hierarchy for the API. Each error class maps to a spe
  */
 export enum DomainErrorCode {
   // Validation errors (400)
-  VALIDATION_FAILED = "VALIDATION_FAILED",
-  INVALID_STATUS_TRANSITION = "INVALID_STATUS_TRANSITION",
-  DAG_CYCLE_DETECTED = "DAG_CYCLE_DETECTED",
-  INVALID_DEPENDENCY = "INVALID_DEPENDENCY",
-  COST_VALIDATION_FAILED = "COST_VALIDATION_FAILED",
+  VALIDATION_FAILED = 'VALIDATION_FAILED',
+  INVALID_STATUS_TRANSITION = 'INVALID_STATUS_TRANSITION',
+  DAG_CYCLE_DETECTED = 'DAG_CYCLE_DETECTED',
+  INVALID_DEPENDENCY = 'INVALID_DEPENDENCY',
+  COST_VALIDATION_FAILED = 'COST_VALIDATION_FAILED',
 
   // Authentication errors (401)
-  AUTH_FAILURE = "AUTH_FAILURE",
-  INVALID_API_KEY = "INVALID_API_KEY",
-  SESSION_EXPIRED = "SESSION_EXPIRED",
+  AUTH_FAILURE = 'AUTH_FAILURE',
+  INVALID_API_KEY = 'INVALID_API_KEY',
+  SESSION_EXPIRED = 'SESSION_EXPIRED',
 
   // Authorization errors (403)
-  INSUFFICIENT_PERMISSIONS = "INSUFFICIENT_PERMISSIONS",
-  PROJECT_ACCESS_DENIED = "PROJECT_ACCESS_DENIED",
-  WORKER_NOT_ASSIGNED = "WORKER_NOT_ASSIGNED",
+  INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
+  PROJECT_ACCESS_DENIED = 'PROJECT_ACCESS_DENIED',
+  WORKER_NOT_ASSIGNED = 'WORKER_NOT_ASSIGNED',
 
   // Not found errors (404)
-  RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND",
-  PROJECT_NOT_FOUND = "PROJECT_NOT_FOUND",
-  EPIC_NOT_FOUND = "EPIC_NOT_FOUND",
-  STORY_NOT_FOUND = "STORY_NOT_FOUND",
-  TASK_NOT_FOUND = "TASK_NOT_FOUND",
-  WORKER_NOT_FOUND = "WORKER_NOT_FOUND",
-  PERSONA_NOT_FOUND = "PERSONA_NOT_FOUND",
+  RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
+  PROJECT_NOT_FOUND = 'PROJECT_NOT_FOUND',
+  EPIC_NOT_FOUND = 'EPIC_NOT_FOUND',
+  STORY_NOT_FOUND = 'STORY_NOT_FOUND',
+  TASK_NOT_FOUND = 'TASK_NOT_FOUND',
+  WORKER_NOT_FOUND = 'WORKER_NOT_FOUND',
+  PERSONA_NOT_FOUND = 'PERSONA_NOT_FOUND',
 
   // Conflict errors (409)
-  ASSIGNMENT_CONFLICT = "ASSIGNMENT_CONFLICT",
-  OPTIMISTIC_LOCK_CONFLICT = "OPTIMISTIC_LOCK_CONFLICT",
-  STORY_IN_PROGRESS = "STORY_IN_PROGRESS",
-  READ_ONLY_VIOLATION = "READ_ONLY_VIOLATION",
-  DELETION_BLOCKED = "DELETION_BLOCKED",
+  ASSIGNMENT_CONFLICT = 'ASSIGNMENT_CONFLICT',
+  OPTIMISTIC_LOCK_CONFLICT = 'OPTIMISTIC_LOCK_CONFLICT',
+  STORY_IN_PROGRESS = 'STORY_IN_PROGRESS',
+  READ_ONLY_VIOLATION = 'READ_ONLY_VIOLATION',
+  DELETION_BLOCKED = 'DELETION_BLOCKED',
 
   // Rate limit errors (429)
-  RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED",
+  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
 
   // Internal errors (500)
-  INTERNAL_ERROR = "INTERNAL_ERROR",
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
 }
 
 /**
@@ -95,14 +95,14 @@ export abstract class AppError extends Error {
 // Each class sets the appropriate status code and accepts
 // a domain error code for machine-readable identification.
 
-import { AppError, DomainErrorCode } from "./base-error";
+import { AppError, DomainErrorCode } from './base-error';
 
 export class ValidationError extends AppError {
   readonly statusCode = 400;
   constructor(
     public readonly code: DomainErrorCode = DomainErrorCode.VALIDATION_FAILED,
     message: string,
-    details?: Record<string, unknown>
+    details?: Record<string, unknown>,
   ) {
     super(message, details);
   }
@@ -113,7 +113,7 @@ export class AuthenticationError extends AppError {
   constructor(
     public readonly code: DomainErrorCode = DomainErrorCode.AUTH_FAILURE,
     message: string,
-    details?: Record<string, unknown>
+    details?: Record<string, unknown>,
   ) {
     super(message, details);
   }
@@ -124,7 +124,7 @@ export class AuthorizationError extends AppError {
   constructor(
     public readonly code: DomainErrorCode = DomainErrorCode.INSUFFICIENT_PERMISSIONS,
     message: string,
-    details?: Record<string, unknown>
+    details?: Record<string, unknown>,
   ) {
     super(message, details);
   }
@@ -135,7 +135,7 @@ export class NotFoundError extends AppError {
   constructor(
     public readonly code: DomainErrorCode = DomainErrorCode.RESOURCE_NOT_FOUND,
     message: string,
-    details?: Record<string, unknown>
+    details?: Record<string, unknown>,
   ) {
     super(message, details);
   }
@@ -146,7 +146,7 @@ export class ConflictError extends AppError {
   constructor(
     public readonly code: DomainErrorCode = DomainErrorCode.ASSIGNMENT_CONFLICT,
     message: string,
-    details?: Record<string, unknown>
+    details?: Record<string, unknown>,
   ) {
     super(message, details);
   }
@@ -168,7 +168,7 @@ export class RateLimitError extends AppError {
 ```typescript
 // packages/shared/src/errors/index.ts
 // Barrel export for all error classes and the domain error code enum.
-export { AppError, DomainErrorCode } from "./base-error";
+export { AppError, DomainErrorCode } from './base-error';
 export {
   ValidationError,
   AuthenticationError,
@@ -176,7 +176,7 @@ export {
   NotFoundError,
   ConflictError,
   RateLimitError,
-} from "./http-errors";
+} from './http-errors';
 ```
 
 ## Acceptance Criteria
