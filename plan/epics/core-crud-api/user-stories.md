@@ -19,7 +19,7 @@
 | [Implement Task API Endpoints](./user-stories/implement-task-api-endpoints/tasks.md)             | CRUD, DAG validation, status updates, and cascading re-evaluation for tasks              | In Progress (laila-agent-2) | 4 tasks | Implement Error Handling Framework, Implement User Story API Endpoints |
 | [Implement Worker API Endpoints](./user-stories/implement-worker-api-endpoints/tasks.md)         | CRUD for workers with API key generation and project access management                   | Not Started                 | 3 tasks | Implement Error Handling Framework                                     |
 | [Implement Persona API Endpoints](./user-stories/implement-persona-api-endpoints/tasks.md)       | CRUD for personas with deletion guards                                                   | Complete                    | 2 tasks | Implement Error Handling Framework                                     |
-| [Implement Health Check Endpoints](./user-stories/implement-health-check-endpoints/tasks.md)     | Shallow health and deep readiness check endpoints                                        | Not Started                 | 2 tasks | None                                                                   |
+| [Implement Health Check Endpoints](./user-stories/implement-health-check-endpoints/tasks.md)     | Shallow health and deep readiness check endpoints                                        | In Progress (laila-agent-3) | 2 tasks | None                                                                   |
 
 ## Dependency Graph
 
