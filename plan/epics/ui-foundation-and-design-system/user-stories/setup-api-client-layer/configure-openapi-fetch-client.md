@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure openapi-fetch Client
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Set Up API Client Layer](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -19,17 +19,17 @@ Configure the `openapi-fetch` client to provide type-safe API communication betw
 // apps/web/src/lib/api-client.ts
 // Type-safe API client using openapi-fetch with generated types from @laila/api-spec.
 // Automatically includes auth credentials and handles common error responses.
-import createClient from "openapi-fetch";
-import type { paths } from "@laila/api-spec";
+import createClient from 'openapi-fetch';
+import type { paths } from '@laila/api-spec';
 
 // Create the openapi-fetch client with the API base URL.
 // The base URL points to the Next.js API routes in development,
 // or the deployed API in production.
 export const apiClient = createClient<paths>({
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api",
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api',
   // Include session cookies with every request.
   // Better Auth sets an HttpOnly cookie that the browser sends automatically.
-  credentials: "include",
+  credentials: 'include',
 });
 
 // Add a middleware to handle common error responses globally.
@@ -75,24 +75,24 @@ function handleUnauthorized() {
 // Responses are also fully typed based on the OpenAPI spec.
 
 // GET /api/projects — returns typed project list
-const { data, error } = await apiClient.GET("/api/projects", {
+const { data, error } = await apiClient.GET('/api/projects', {
   params: {
-    query: { status: "in_progress", page: 1, pageSize: 20 },
+    query: { status: 'in_progress', page: 1, pageSize: 20 },
   },
 });
 
 // POST /api/projects — creates a new project with typed body
-const { data, error } = await apiClient.POST("/api/projects", {
+const { data, error } = await apiClient.POST('/api/projects', {
   body: {
-    name: "My Project",
-    description: "Project description",
+    name: 'My Project',
+    description: 'Project description',
     workerInactivityTimeoutMinutes: 30,
   },
 });
 
 // DELETE /api/projects/{projectId} — typed path parameter
-const { data, error } = await apiClient.DELETE("/api/projects/{projectId}", {
-  params: { path: { projectId: "abc123" } },
+const { data, error } = await apiClient.DELETE('/api/projects/{projectId}', {
+  params: { path: { projectId: 'abc123' } },
 });
 ```
 
