@@ -7,6 +7,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./seed/testing": {
+      "types": "./src/seed/testing.ts",
+      "default": "./src/seed/testing.ts"
     }
   },
   "scripts": {
@@ -16,6 +20,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:drop": "drizzle-kit drop",
+    "db:seed:dev": "tsx src/seed/development.ts",
+    "db:seed:test": "tsx src/seed/testing.ts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -28,6 +34,7 @@
   "devDependencies": {
     "@types/node": "^25.3.3",
     "drizzle-kit": "^0.31.9",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }
