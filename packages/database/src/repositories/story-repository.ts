@@ -300,6 +300,37 @@ export const createStoryRepository = (db: DatabaseClient) => {
   };
 
   // -------------------------------------------------------------------------
+  // findAllByEpic (non-paginated, for validation)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns all non-deleted user stories for an epic without pagination.
+   *
+   * Intended for validation scenarios (e.g., epic publish checks) where all
+   * stories must be examined. Returns the full story record so callers can
+   * inspect `workStatus`, `title`, `id`, etc.
+   *
+   * @param tenantId - The tenant UUID for data isolation
+   * @param epicId   - The parent epic UUID to list stories for
+   * @returns Array of all non-deleted user story records for the epic
+   */
+  const findAllByEpic = async (tenantId: string, epicId: string): Promise<UserStory[]> => {
+    const results = await typedDb
+      .select()
+      .from(userStoriesTable)
+      .where(
+        and(
+          eq(userStoriesTable.tenantId, tenantId),
+          eq(userStoriesTable.epicId, epicId),
+          isNull(userStoriesTable.deletedAt),
+        ),
+      )
+      .orderBy(asc(userStoriesTable.createdAt));
+
+    return results as UserStory[];
+  };
+
+  // -------------------------------------------------------------------------
   // findReadyForAssignment
   // -------------------------------------------------------------------------
 
@@ -731,6 +762,7 @@ export const createStoryRepository = (db: DatabaseClient) => {
 
     // Story-specific query methods
     findByEpic,
+    findAllByEpic,
     findReadyForAssignment,
     findActiveByProject,
 

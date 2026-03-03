@@ -16,6 +16,7 @@ export type {
   TaskStatus,
   UserStoryStatus,
   EpicStatus,
+  EpicLifecycleStatus,
   ProjectStatus,
   TransitionMap,
   TransitionValidationResult,
@@ -24,6 +25,7 @@ export type {
 export {
   TASK_TRANSITIONS,
   USER_STORY_TRANSITIONS,
+  EPIC_LIFECYCLE_TRANSITIONS,
   PROJECT_TRANSITIONS,
   validateTransition,
   getAllowedTransitions,
