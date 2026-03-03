@@ -24,6 +24,16 @@ export type UserStoryStatus =
 export type EpicStatus = 'not-started' | 'in-progress' | 'complete' | 'failed' | 'blocked';
 
 /**
+ * Epic lifecycle statuses. Epics use the `workStatus` column to represent
+ * their editorial lifecycle: 'pending' is Draft and 'ready' is Ready.
+ *
+ * Once an epic is in 'ready' status, its derived work status computation
+ * governs subsequent transitions. The publish transition is the only
+ * editorial lifecycle change: pending -> ready.
+ */
+export type EpicLifecycleStatus = 'pending' | 'ready';
+
+/**
  * Project statuses. Projects are the top-level container.
  */
 export type ProjectStatus = 'draft' | 'ready' | 'in-progress' | 'complete';
@@ -73,6 +83,19 @@ export const USER_STORY_TRANSITIONS: TransitionMap<UserStoryStatus> = {
   complete: [],
   failed: ['not-started', 'blocked'],
   blocked: ['not-started'],
+} as const;
+
+/**
+ * Valid epic lifecycle transitions.
+ * Epics use the workStatus column for editorial lifecycle:
+ *
+ * - `pending` -> `ready` (epic published — all stories must be Ready)
+ * - `ready` is terminal for the editorial lifecycle; subsequent work status
+ *   changes are derived from child story statuses.
+ */
+export const EPIC_LIFECYCLE_TRANSITIONS: TransitionMap<EpicLifecycleStatus> = {
+  pending: ['ready'],
+  ready: [],
 } as const;
 
 /**

@@ -15,8 +15,20 @@
  * adds epic-specific domain operations.
  */
 
-import { eq, and, isNull, sql, count, asc, type SQL, type InferSelectModel } from 'drizzle-orm';
+import {
+  eq,
+  and,
+  isNull,
+  sql,
+  count,
+  asc,
+  or,
+  inArray,
+  type SQL,
+  type InferSelectModel,
+} from 'drizzle-orm';
 
+import { taskDependencyEdgesTable } from '../schema/dependency-edges';
 import { epicsTable } from '../schema/epics';
 import { tasksTable } from '../schema/tasks';
 import { userStoriesTable } from '../schema/user-stories';
@@ -98,9 +110,11 @@ const deriveEpicStatus = (statusCounts: Array<{ status: string; count: number }>
   const doneCount = statusMap.get('done') ?? 0;
   const blockedCount = statusMap.get('blocked') ?? 0;
   const inProgressCount = statusMap.get('in_progress') ?? 0;
+  const readyCount = statusMap.get('ready') ?? 0;
 
   // All stories share a single status
   if (pendingCount === totalStories) return 'pending';
+  if (readyCount === totalStories) return 'ready';
   if (doneCount === totalStories) return 'done';
   if (blockedCount === totalStories) return 'blocked';
 
@@ -163,27 +177,32 @@ export const createEpicRepository = (db: DatabaseClient) => {
   const create = async (
     tenantId: string,
     projectId: string,
-    data: { name: string; description?: string | null },
+    data: { name: string; description?: string | null; sortOrder?: number },
   ): Promise<EpicRecord> => {
     if (!data.name || data.name.trim().length === 0) {
       throw new ValidationError('name', 'Epic name must not be empty');
     }
 
-    // Compute the next sort_order for this project
-    const maxResult = await typedDb
-      .select({
-        maxSort: sql<number>`coalesce(max(${epicsTable.sortOrder}), -1)`,
-      })
-      .from(epicsTable)
-      .where(
-        and(
-          eq(epicsTable.tenantId, tenantId),
-          eq(epicsTable.projectId, projectId),
-          isNull(epicsTable.deletedAt),
-        ),
-      );
+    // Use provided sortOrder or auto-compute the next one for this project
+    let sortOrder: number;
+    if (data.sortOrder !== undefined) {
+      sortOrder = data.sortOrder;
+    } else {
+      const maxResult = await typedDb
+        .select({
+          maxSort: sql<number>`coalesce(max(${epicsTable.sortOrder}), -1)`,
+        })
+        .from(epicsTable)
+        .where(
+          and(
+            eq(epicsTable.tenantId, tenantId),
+            eq(epicsTable.projectId, projectId),
+            isNull(epicsTable.deletedAt),
+          ),
+        );
 
-    const nextSortOrder = (maxResult[0]?.maxSort ?? -1) + 1;
+      sortOrder = (maxResult[0]?.maxSort ?? -1) + 1;
+    }
 
     const results = await typedDb
       .insert(epicsTable)
@@ -193,7 +212,7 @@ export const createEpicRepository = (db: DatabaseClient) => {
         name: data.name.trim(),
         description: data.description ?? null,
         workStatus: 'pending',
-        sortOrder: nextSortOrder,
+        sortOrder,
       })
       .returning();
 
@@ -255,7 +274,42 @@ export const createEpicRepository = (db: DatabaseClient) => {
     const total = countResult[0]?.total ?? 0;
     const pagination = base.computePaginationMeta(total, page, limit);
 
-    return { data: data as EpicRecord[], pagination };
+    // Compute derived workStatus for each epic from child story statuses
+    const epicRecords = data as EpicRecord[];
+    if (epicRecords.length > 0) {
+      const epicIds = epicRecords.map((e) => e.id);
+      const storyStatusCounts = await typedDb
+        .select({
+          epicId: userStoriesTable.epicId,
+          status: userStoriesTable.workStatus,
+          count: sql<number>`count(*)`,
+        })
+        .from(userStoriesTable)
+        .where(
+          and(
+            inArray(userStoriesTable.epicId, epicIds),
+            eq(userStoriesTable.tenantId, tenantId),
+            isNull(userStoriesTable.deletedAt),
+          ),
+        )
+        .groupBy(userStoriesTable.epicId, userStoriesTable.workStatus);
+
+      // Group counts by epicId
+      const countsByEpicId = new Map<string, Array<{ status: string; count: number }>>();
+      for (const row of storyStatusCounts) {
+        const existing = countsByEpicId.get(row.epicId) ?? [];
+        existing.push({ status: row.status, count: row.count });
+        countsByEpicId.set(row.epicId, existing);
+      }
+
+      // Override workStatus with derived value
+      for (const epic of epicRecords) {
+        const counts = countsByEpicId.get(epic.id) ?? [];
+        (epic as Record<string, unknown>).workStatus = deriveEpicStatus(counts);
+      }
+    }
+
+    return { data: epicRecords, pagination };
   };
 
   // -------------------------------------------------------------------------
@@ -279,7 +333,7 @@ export const createEpicRepository = (db: DatabaseClient) => {
   const update = async (
     tenantId: string,
     id: string,
-    data: Partial<{ name: string; description: string | null }>,
+    data: Partial<{ name: string; description: string | null; sortOrder: number }>,
     expectedVersion: number,
   ): Promise<EpicRecord> => {
     if (data.name !== undefined && data.name.trim().length === 0) {
@@ -289,6 +343,7 @@ export const createEpicRepository = (db: DatabaseClient) => {
     const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) updateData.name = data.name.trim();
     if (data.description !== undefined) updateData.description = data.description;
+    if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
 
     return base.update(tenantId, id, updateData, expectedVersion);
   };
@@ -477,10 +532,40 @@ export const createEpicRepository = (db: DatabaseClient) => {
           ),
         );
 
-      // 2. Soft-delete tasks belonging to those stories
+      // 2. Collect task IDs, clean up dependency edges, then soft-delete tasks
       if (stories.length > 0) {
         const storyIds = stories.map((s: { id: string }) => s.id);
 
+        // Collect all task IDs belonging to these stories
+        const tasks = await tx
+          .select({ id: tasksTable.id })
+          .from(tasksTable)
+          .where(
+            and(
+              inArray(tasksTable.userStoryId, storyIds),
+              eq(tasksTable.tenantId, tenantId),
+              isNull(tasksTable.deletedAt),
+            ),
+          );
+
+        // Delete dependency edges referencing any of these tasks
+        if (tasks.length > 0) {
+          const taskIds = tasks.map((t: { id: string }) => t.id);
+
+          await tx
+            .delete(taskDependencyEdgesTable)
+            .where(
+              and(
+                eq(taskDependencyEdgesTable.tenantId, tenantId),
+                or(
+                  inArray(taskDependencyEdgesTable.dependentTaskId, taskIds),
+                  inArray(taskDependencyEdgesTable.prerequisiteTaskId, taskIds),
+                ),
+              ),
+            );
+        }
+
+        // Soft-delete all tasks belonging to these stories
         for (const storyId of storyIds) {
           await tx
             .update(tasksTable)
@@ -588,7 +673,10 @@ export const createEpicRepository = (db: DatabaseClient) => {
       storyCounts[row.status] = row.count;
     }
 
-    return { ...epic, storyCounts } as EpicWithStoryCounts;
+    // Compute derived workStatus from child story statuses
+    const derivedWorkStatus = deriveEpicStatus(statusCounts);
+
+    return { ...epic, storyCounts, workStatus: derivedWorkStatus } as EpicWithStoryCounts;
   };
 
   // -------------------------------------------------------------------------

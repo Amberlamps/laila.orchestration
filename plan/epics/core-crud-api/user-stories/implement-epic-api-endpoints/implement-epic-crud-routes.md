@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Epic CRUD Routes
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Epic API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -70,7 +70,7 @@ Implement CRUD API routes for the Epic entity under `pages/api/v1/projects/[proj
 // packages/shared/src/schemas/epic.ts
 // Zod schemas for epic API request validation.
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const createEpicSchema = z.object({
   name: z.string().min(1).max(255),

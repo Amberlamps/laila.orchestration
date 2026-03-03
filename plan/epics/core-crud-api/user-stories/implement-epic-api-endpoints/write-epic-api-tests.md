@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Epic API Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Epic API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -19,55 +19,51 @@ Write comprehensive integration tests for all epic API endpoints using Vitest. T
 // apps/web/src/__tests__/api/v1/epics/epics.integration.test.ts
 // Integration tests for epic CRUD and lifecycle endpoints.
 
-import { describe, it, expect, beforeAll, beforeEach } from "vitest";
-import { createTestClient } from "@/__tests__/helpers/test-client";
-import {
-  seedTestProject,
-  seedTestEpic,
-  seedTestStory,
-} from "@/__tests__/helpers/seed";
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { createTestClient } from '@/__tests__/helpers/test-client';
+import { seedTestProject, seedTestEpic, seedTestStory } from '@/__tests__/helpers/seed';
 
-describe("Epic API", () => {
-  describe("POST /api/v1/projects/:projectId/epics", () => {
-    it("creates an epic in Draft status under the project", async () => {
+describe('Epic API', () => {
+  describe('POST /api/v1/projects/:projectId/epics', () => {
+    it('creates an epic in Draft status under the project', async () => {
       // ...
     });
 
-    it("returns 404 when project does not exist", async () => {
+    it('returns 404 when project does not exist', async () => {
       // ...
     });
 
-    it("validates required fields", async () => {
+    it('validates required fields', async () => {
       // ...
     });
   });
 
-  describe("GET /api/v1/projects/:projectId/epics", () => {
-    it("returns only non-deleted epics", async () => {
+  describe('GET /api/v1/projects/:projectId/epics', () => {
+    it('returns only non-deleted epics', async () => {
       // Seed an epic, soft-delete it, verify it is excluded
     });
 
-    it("includes derived work status for each epic", async () => {
+    it('includes derived work status for each epic', async () => {
       // Seed stories with various statuses, verify epic work status
     });
   });
 
-  describe("DELETE /api/v1/projects/:projectId/epics/:id", () => {
-    it("soft-deletes epic and cascades to stories and tasks", async () => {
+  describe('DELETE /api/v1/projects/:projectId/epics/:id', () => {
+    it('soft-deletes epic and cascades to stories and tasks', async () => {
       // Verify deleted_at is set on epic, stories, and tasks
     });
 
-    it("cleans up dependency edges for deleted tasks", async () => {
+    it('cleans up dependency edges for deleted tasks', async () => {
       // Create cross-epic dependency, delete one epic, verify edge removed
     });
   });
 
-  describe("POST /api/v1/projects/:projectId/epics/:id/publish", () => {
-    it("publishes when all stories are Ready", async () => {
+  describe('POST /api/v1/projects/:projectId/epics/:id/publish', () => {
+    it('publishes when all stories are Ready', async () => {
       // ...
     });
 
-    it("fails when stories are not Ready", async () => {
+    it('fails when stories are not Ready', async () => {
       // ...
     });
   });

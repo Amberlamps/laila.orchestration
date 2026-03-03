@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Epic Lifecycle Transitions
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Epic API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -20,15 +20,11 @@ Implement the publish lifecycle transition for epics. An epic transitions from D
 // Transitions an epic from Draft to Ready status.
 // Validates all child user stories are in Ready status before allowing transition.
 
-import type { NextApiRequest, NextApiResponse } from "next";
-import { withErrorHandler } from "@/lib/api/error-handler";
-import { withAuth } from "@/lib/api/auth";
-import {
-  ValidationError,
-  DomainErrorCode,
-  ConflictError,
-} from "@laila/shared";
-import { epicRepository, storyRepository } from "@laila/database";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { withErrorHandler } from '@/lib/api/error-handler';
+import { withAuth } from '@/lib/api/auth';
+import { ValidationError, DomainErrorCode, ConflictError } from '@laila/shared';
+import { epicRepository, storyRepository } from '@laila/database';
 
 /**
  * POST /api/v1/projects/:projectId/epics/:id/publish
