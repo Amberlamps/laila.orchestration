@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Project API Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Project API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -21,12 +21,12 @@ Write comprehensive integration tests for all project API endpoints using Vitest
 // Uses Vitest with a real database connection for true integration testing.
 // Each test runs in an isolated transaction that is rolled back after the test.
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
-import { createTestClient } from "@/__tests__/helpers/test-client";
-import { seedTestUser, seedTestProject } from "@/__tests__/helpers/seed";
-import type { Project } from "@laila/shared";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { createTestClient } from '@/__tests__/helpers/test-client';
+import { seedTestUser, seedTestProject } from '@/__tests__/helpers/seed';
+import type { Project } from '@laila/shared';
 
-describe("Project API", () => {
+describe('Project API', () => {
   // Test authenticated client that simulates a logged-in user session.
   let client: ReturnType<typeof createTestClient>;
 
@@ -34,68 +34,68 @@ describe("Project API", () => {
     client = await createTestClient();
   });
 
-  describe("POST /api/v1/projects", () => {
-    it("creates a project in Draft status", async () => {
+  describe('POST /api/v1/projects', () => {
+    it('creates a project in Draft status', async () => {
       // ...
     });
 
-    it("returns 400 for missing required fields", async () => {
+    it('returns 400 for missing required fields', async () => {
       // Verify field-level error details in response
     });
 
-    it("returns 400 for invalid timeout_duration_minutes", async () => {
+    it('returns 400 for invalid timeout_duration_minutes', async () => {
       // ...
     });
 
-    it("returns 401 for unauthenticated requests", async () => {
+    it('returns 401 for unauthenticated requests', async () => {
       // ...
     });
   });
 
-  describe("GET /api/v1/projects", () => {
-    it("returns paginated projects", async () => {
+  describe('GET /api/v1/projects', () => {
+    it('returns paginated projects', async () => {
       // Verify pagination metadata
     });
 
-    it("filters by status", async () => {
+    it('filters by status', async () => {
       // ...
     });
 
-    it("sorts by created_at desc by default", async () => {
+    it('sorts by created_at desc by default', async () => {
       // ...
     });
   });
 
-  describe("POST /api/v1/projects/:id/publish", () => {
-    it("transitions Draft to Ready when all epics are Ready", async () => {
+  describe('POST /api/v1/projects/:id/publish', () => {
+    it('transitions Draft to Ready when all epics are Ready', async () => {
       // ...
     });
 
-    it("returns 400 when epics are not Ready", async () => {
+    it('returns 400 when epics are not Ready', async () => {
       // Verify non-ready epic list in error details
     });
 
-    it("returns 409 when project is not in Draft", async () => {
+    it('returns 409 when project is not in Draft', async () => {
       // ...
     });
   });
 
-  describe("POST /api/v1/projects/:id/revert", () => {
-    it("transitions Ready to Draft when no work started", async () => {
+  describe('POST /api/v1/projects/:id/revert', () => {
+    it('transitions Ready to Draft when no work started', async () => {
       // ...
     });
 
-    it("returns 409 when stories are in progress", async () => {
+    it('returns 409 when stories are in progress', async () => {
       // ...
     });
   });
 
-  describe("DELETE /api/v1/projects/:id", () => {
-    it("hard-deletes project and all children", async () => {
+  describe('DELETE /api/v1/projects/:id', () => {
+    it('hard-deletes project and all children', async () => {
       // Verify cascade: epics, stories, tasks, edges all deleted
     });
 
-    it("returns 404 for non-existent project", async () => {
+    it('returns 404 for non-existent project', async () => {
       // ...
     });
   });

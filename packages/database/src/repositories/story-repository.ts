@@ -24,6 +24,7 @@ import {
   eq,
   and,
   isNull,
+  inArray,
   sql,
   asc,
   type SQL,
@@ -661,6 +662,62 @@ export const createStoryRepository = (db: DatabaseClient) => {
   };
 
   // -------------------------------------------------------------------------
+  // findActiveByProject (for revert validation)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Finds user stories within a project that have started or completed work.
+   *
+   * Returns stories with `work_status` in `['in_progress', 'done', 'failed']`.
+   * These are the statuses that block a project revert from Ready to Draft,
+   * because reverting would invalidate in-flight or completed work.
+   *
+   * The query joins through the epics table to scope stories to a specific
+   * project, and excludes soft-deleted records from both tables.
+   *
+   * @param tenantId  - The tenant UUID for data isolation
+   * @param projectId - The project UUID to scope the search to
+   * @returns Array of stories with active/terminal work statuses
+   */
+  const findActiveByProject = async (tenantId: string, projectId: string): Promise<UserStory[]> => {
+    const activeStatuses = ['in_progress', 'done', 'failed'];
+
+    const results = await typedDb
+      .select({
+        id: userStoriesTable.id,
+        tenantId: userStoriesTable.tenantId,
+        epicId: userStoriesTable.epicId,
+        title: userStoriesTable.title,
+        description: userStoriesTable.description,
+        priority: userStoriesTable.priority,
+        workStatus: userStoriesTable.workStatus,
+        costEstimate: userStoriesTable.costEstimate,
+        actualCost: userStoriesTable.actualCost,
+        assignedWorkerId: userStoriesTable.assignedWorkerId,
+        assignedAt: userStoriesTable.assignedAt,
+        attempts: userStoriesTable.attempts,
+        maxAttempts: userStoriesTable.maxAttempts,
+        version: userStoriesTable.version,
+        createdAt: userStoriesTable.createdAt,
+        updatedAt: userStoriesTable.updatedAt,
+        deletedAt: userStoriesTable.deletedAt,
+      })
+      .from(userStoriesTable)
+      .innerJoin(epicsTable, eq(userStoriesTable.epicId, epicsTable.id))
+      .where(
+        and(
+          eq(userStoriesTable.tenantId, tenantId),
+          eq(epicsTable.projectId, projectId),
+          inArray(userStoriesTable.workStatus, activeStatuses),
+          isNull(userStoriesTable.deletedAt),
+          isNull(epicsTable.deletedAt),
+        ),
+      );
+
+    return results as UserStory[];
+  };
+
+  // -------------------------------------------------------------------------
   // Public API
   // -------------------------------------------------------------------------
 
@@ -675,6 +732,7 @@ export const createStoryRepository = (db: DatabaseClient) => {
     // Story-specific query methods
     findByEpic,
     findReadyForAssignment,
+    findActiveByProject,
 
     // Assignment lifecycle methods (require pool mode for transactions)
     assignToWorker,

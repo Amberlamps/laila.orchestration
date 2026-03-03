@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Project CRUD Routes
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Project API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -21,15 +21,12 @@ Implement the standard CRUD API routes for the Project entity under `pages/api/v
 // Requires human auth (Google OAuth session via Better Auth).
 // Uses withErrorHandler, withAuth, and withValidation composition.
 
-import type { NextApiRequest, NextApiResponse } from "next";
-import { withErrorHandler } from "@/lib/api/error-handler";
-import { withAuth } from "@/lib/api/auth";
-import { withValidation } from "@/lib/api/validation";
-import {
-  createProjectSchema,
-  projectListQuerySchema,
-} from "@laila/shared";
-import { projectRepository } from "@laila/database";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { withErrorHandler } from '@/lib/api/error-handler';
+import { withAuth } from '@/lib/api/auth';
+import { withValidation } from '@/lib/api/validation';
+import { createProjectSchema, projectListQuerySchema } from '@laila/shared';
+import { projectRepository } from '@laila/database';
 
 /**
  * POST /api/v1/projects
@@ -98,7 +95,7 @@ interface PaginatedResponse<T> {
 // packages/shared/src/schemas/project.ts
 // Zod schemas for project API request validation.
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const createProjectSchema = z.object({
   name: z.string().min(1).max(255),
@@ -115,9 +112,9 @@ export const updateProjectSchema = z.object({
 export const projectListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
-  status: z.enum(["draft", "ready", "in_progress", "completed"]).optional(),
-  sort_by: z.enum(["name", "created_at", "updated_at"]).default("created_at"),
-  sort_order: z.enum(["asc", "desc"]).default("desc"),
+  status: z.enum(['draft', 'ready', 'in_progress', 'completed']).optional(),
+  sort_by: z.enum(['name', 'created_at', 'updated_at']).default('created_at'),
+  sort_order: z.enum(['asc', 'desc']).default('desc'),
 });
 ```
 

@@ -38,7 +38,9 @@ export {
   type UpdateProjectData,
   type FindProjectsOptions,
   type EpicStatusCount,
+  type StoryStatusCount,
   type ProjectWithEpicCounts,
+  type ProjectWithStats,
 } from './project-repository';
 
 export {
