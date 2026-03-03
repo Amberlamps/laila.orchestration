@@ -3,12 +3,178 @@
 
 @config "../../tailwind.config.ts";
 
-@custom-variant dark (&:is(.dark *));
-
 /*
- * shadcn/ui design tokens
- * Colors use oklch color space for Tailwind CSS v4
+ * =============================================================================
+ * Design Token System — laila.works
+ * =============================================================================
+ * All design tokens are defined within @theme blocks so Tailwind CSS v4
+ * generates both utility classes (e.g. bg-primary-500) and CSS custom
+ * properties (e.g. var(--color-primary-500)) automatically.
+ *
+ * Light mode only — no dark mode configuration.
+ * =============================================================================
  */
+
+/* ---------------------------------------------------------------------------
+ * Core Design Tokens
+ * Defined with explicit values so they are available everywhere as CSS vars.
+ * The `static` modifier ensures all tokens are always emitted as CSS custom
+ * properties, even when not referenced by Tailwind utility classes in templates.
+ * This is essential for non-Tailwind contexts (ReactFlow, Recharts).
+ * --------------------------------------------------------------------------- */
+@theme static {
+  /* -------------------------------------------------------------------------
+   * Primary Color Scale — Indigo
+   * Brand color for interactive elements, buttons, links, focus rings.
+   * ------------------------------------------------------------------------- */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+  --color-primary-950: #1e1b4b;
+
+  /* -------------------------------------------------------------------------
+   * Zinc Neutrals Color Scale
+   * Used for backgrounds, text, borders, and general UI chrome.
+   * ------------------------------------------------------------------------- */
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #52525b;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-800: #27272a;
+  --color-zinc-900: #18181b;
+  --color-zinc-950: #09090b;
+
+  /* -------------------------------------------------------------------------
+   * Semantic Colors
+   * Convey meaning: success, error/destructive, warning, info.
+   * Each includes a range for hover/active/disabled states.
+   * ------------------------------------------------------------------------- */
+
+  /* Success — Green */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+  --color-success-950: #052e16;
+
+  /* Error / Destructive — Red */
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-200: #fecaca;
+  --color-error-300: #fca5a5;
+  --color-error-400: #f87171;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+  --color-error-800: #991b1b;
+  --color-error-900: #7f1d1d;
+  --color-error-950: #450a0a;
+
+  /* Warning — Amber */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+  --color-warning-950: #451a03;
+
+  /* Info — Blue */
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93c5fd;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+  --color-info-900: #1e3a8a;
+  --color-info-950: #172554;
+
+  /* -------------------------------------------------------------------------
+   * Work Status Colors
+   * Each workflow status has a dedicated semantic color token.
+   * ------------------------------------------------------------------------- */
+  --color-status-draft: #a1a1aa;       /* zinc-400 */
+  --color-status-not-started: #9ca3af; /* gray-400 */
+  --color-status-ready: #14b8a6;       /* teal-500 */
+  --color-status-blocked: #f59e0b;     /* amber-500 */
+  --color-status-in-progress: #3b82f6; /* blue-500 */
+  --color-status-complete: #22c55e;    /* green-500 */
+  --color-status-failed: #ef4444;      /* red-500 */
+
+  /* -------------------------------------------------------------------------
+   * Priority Colors
+   * Visual encoding for task/item priority levels.
+   * ------------------------------------------------------------------------- */
+  --color-priority-high: #ef4444;    /* red-500 */
+  --color-priority-medium: #f59e0b;  /* amber-500 */
+  --color-priority-low: #22c55e;     /* green-500 */
+
+  /* -------------------------------------------------------------------------
+   * Spacing
+   * 4px base unit — all spacing utilities are multiples of this value.
+   * e.g. p-1 = 4px, p-2 = 8px, p-4 = 16px, p-8 = 32px
+   * ------------------------------------------------------------------------- */
+  --spacing: 4px;
+
+  /* -------------------------------------------------------------------------
+   * Shadows — Four elevation levels for depth hierarchy
+   * ------------------------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* -------------------------------------------------------------------------
+   * Border Radii
+   * Consistent radius tokens for rounded corners.
+   * ------------------------------------------------------------------------- */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* -------------------------------------------------------------------------
+   * Font Families
+   * CSS variable fonts loaded via next/font/google are referenced here so
+   * Tailwind's font-sans and font-mono utilities resolve to Inter and
+   * JetBrains Mono respectively. Fallback stacks ensure readable text
+   * before web fonts load (display: swap) and in edge cases.
+   * ------------------------------------------------------------------------- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+/* ---------------------------------------------------------------------------
+ * shadcn/ui Theme Tokens
+ * These use `@theme inline` so Tailwind inlines the var() references,
+ * allowing the :root CSS variables below to control their resolved values.
+ * --------------------------------------------------------------------------- */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -42,33 +208,33 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ---------------------------------------------------------------------------
+ * :root — Light mode values for shadcn/ui component tokens
+ * These CSS variables are consumed by the @theme inline block above.
+ * Light mode only — no .dark override.
+ * --------------------------------------------------------------------------- */
 :root {
-  --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #6366f1;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -76,47 +242,12 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
 }
 
 @layer base {
@@ -126,5 +257,116 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Type Scale Utilities
+ * Each class encapsulates font-size, font-weight, line-height, letter-spacing,
+ * and font-family to enforce typographic consistency across the application.
+ *
+ * Usage: apply directly as Tailwind classes, e.g. <h1 className="text-h1">
+ * These live in @layer utilities so they can be overridden by other Tailwind
+ * utilities when needed (e.g. adding font-bold on top of text-body).
+ * --------------------------------------------------------------------------- */
+@layer utilities {
+  /* Display — Page titles, hero headings */
+  .text-display {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 36px;
+    letter-spacing: -0.5px;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* H1 — Section headings */
+  .text-h1 {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 32px;
+    letter-spacing: -0.25px;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* H2 — Sub-section headings */
+  .text-h2 {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+    letter-spacing: 0;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* H3 — Card titles, dialog titles */
+  .text-h3 {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: 0;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Body Large — Primary content text */
+  .text-body-lg {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: 0;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Body — Default body text (14px) */
+  .text-body {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    letter-spacing: 0;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Body Small — Secondary text, descriptions */
+  .text-body-sm {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 18px;
+    letter-spacing: 0;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Caption — Labels, metadata, timestamps */
+  .text-caption {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    letter-spacing: 0;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Overline — Table headers, section labels */
+  .text-overline {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Mono — Entity IDs, code blocks */
+  .text-mono {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 18px;
+    letter-spacing: 0;
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  }
+
+  /* Mono Small — Inline code, cost figures */
+  .text-mono-sm {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 0;
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   }
 }

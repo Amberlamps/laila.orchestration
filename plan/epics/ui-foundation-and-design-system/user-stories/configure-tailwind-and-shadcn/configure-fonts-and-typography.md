@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Fonts and Typography
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Configure Tailwind CSS & shadcn/ui](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -21,22 +21,22 @@ Use Next.js `next/font/google` for automatic font optimization (self-hosting, ze
 // apps/web/src/lib/fonts.ts
 // Font configuration using next/font/google for optimized loading.
 // Inter is the primary UI font; JetBrains Mono is used for code and IDs.
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from 'next/font/google';
 
 // Inter — primary UI font for all body text, headings, and labels.
 // Load variable font with latin subset for optimal performance.
 export const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
 });
 
 // JetBrains Mono — monospace font for code blocks, IDs, and technical values.
 // Used in MarkdownRenderer code blocks, entity IDs, API keys, and cost figures.
 export const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-  display: "swap",
+  subsets: ['latin'],
+  variable: '--font-jetbrains-mono',
+  display: 'swap',
 });
 ```
 
@@ -44,19 +44,19 @@ export const jetbrainsMono = JetBrains_Mono({
 
 Define the following type scale as Tailwind utilities or custom classes:
 
-| Style | Size | Weight | Line Height | Letter Spacing | Font | Usage |
-|---|---|---|---|---|---|---|
-| Display | 30px | 700 (Bold) | 36px | -0.5px | Inter | Page titles, hero headings |
-| H1 | 24px | 600 (Semibold) | 32px | -0.25px | Inter | Section headings |
-| H2 | 20px | 600 (Semibold) | 28px | 0 | Inter | Sub-section headings |
-| H3 | 16px | 600 (Semibold) | 24px | 0 | Inter | Card titles, dialog titles |
-| Body Large | 16px | 400 (Regular) | 24px | 0 | Inter | Primary content text |
-| Body | 14px | 400 (Regular) | 20px | 0 | Inter | Default body text |
-| Body Small | 13px | 400 (Regular) | 18px | 0 | Inter | Secondary text, descriptions |
-| Caption | 12px | 500 (Medium) | 16px | 0 | Inter | Labels, metadata, timestamps |
-| Overline | 11px | 600 (Semibold) | 16px | 0.5px | Inter | Table headers, section labels |
-| Mono | 13px | 400 (Regular) | 18px | 0 | JetBrains Mono | Entity IDs, code |
-| Mono Small | 12px | 400 (Regular) | 16px | 0 | JetBrains Mono | Inline code, costs |
+| Style      | Size | Weight         | Line Height | Letter Spacing | Font           | Usage                         |
+| ---------- | ---- | -------------- | ----------- | -------------- | -------------- | ----------------------------- |
+| Display    | 30px | 700 (Bold)     | 36px        | -0.5px         | Inter          | Page titles, hero headings    |
+| H1         | 24px | 600 (Semibold) | 32px        | -0.25px        | Inter          | Section headings              |
+| H2         | 20px | 600 (Semibold) | 28px        | 0              | Inter          | Sub-section headings          |
+| H3         | 16px | 600 (Semibold) | 24px        | 0              | Inter          | Card titles, dialog titles    |
+| Body Large | 16px | 400 (Regular)  | 24px        | 0              | Inter          | Primary content text          |
+| Body       | 14px | 400 (Regular)  | 20px        | 0              | Inter          | Default body text             |
+| Body Small | 13px | 400 (Regular)  | 18px        | 0              | Inter          | Secondary text, descriptions  |
+| Caption    | 12px | 500 (Medium)   | 16px        | 0              | Inter          | Labels, metadata, timestamps  |
+| Overline   | 11px | 600 (Semibold) | 16px        | 0.5px          | Inter          | Table headers, section labels |
+| Mono       | 13px | 400 (Regular)  | 18px        | 0              | JetBrains Mono | Entity IDs, code              |
+| Mono Small | 12px | 400 (Regular)  | 16px        | 0              | JetBrains Mono | Inline code, costs            |
 
 ```css
 /* apps/web/src/app/globals.css */
@@ -103,7 +103,7 @@ Apply the font CSS variables to the root HTML element in `_app.tsx` or `_documen
 // apps/web/src/pages/_app.tsx
 // Apply font CSS variables to the root element so Tailwind and
 // CSS custom properties can reference them globally.
-import { inter, jetbrainsMono } from "@/lib/fonts";
+import { inter, jetbrainsMono } from '@/lib/fonts';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (

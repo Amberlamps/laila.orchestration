@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Set Up TanStack Query Provider
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Configure Tailwind CSS & shadcn/ui](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -19,7 +19,7 @@ The orchestration dashboard needs to poll for work status updates, so the defaul
 // apps/web/src/lib/query-client.ts
 // Singleton QueryClient with default options for the orchestration dashboard.
 // Polling interval of 15s keeps work status reasonably fresh without overloading the API.
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient } from '@tanstack/react-query';
 
 export function createQueryClient(): QueryClient {
   return new QueryClient({
@@ -55,10 +55,10 @@ export function createQueryClient(): QueryClient {
 // Wrap the application in QueryClientProvider to enable TanStack Query hooks
 // in all pages and components. Use useState to ensure the QueryClient is
 // created once per app instance (not shared across SSR requests).
-import { useState } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { createQueryClient } from "@/lib/query-client";
+import { useState } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { createQueryClient } from '@/lib/query-client';
 
 export default function App({ Component, pageProps }: AppProps) {
   // Create QueryClient once per app lifecycle.

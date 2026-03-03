@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Tailwind Design Tokens
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Configure Tailwind CSS & shadcn/ui](./tasks.md)
 - **Parent Epic:** [UI Foundation & Design System](../../user-stories.md)
@@ -34,7 +34,7 @@ The Tailwind configuration must be set up in the Next.js web app at `apps/web/ta
 /* apps/web/src/app/globals.css */
 /* Tailwind CSS v4 theme configuration using CSS-based approach. */
 /* All design tokens are defined as CSS custom properties for universal access. */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Primary color scale — indigo is the brand color for interactive elements */
@@ -45,18 +45,18 @@ The Tailwind configuration must be set up in the Next.js web app at `apps/web/ta
   --color-primary-700: #4338ca;
 
   /* Work status colors — each status has a dedicated semantic color */
-  --color-status-draft: #a1a1aa;       /* zinc-400 */
+  --color-status-draft: #a1a1aa; /* zinc-400 */
   --color-status-not-started: #9ca3af; /* gray-400 */
-  --color-status-ready: #14b8a6;       /* teal-500 */
-  --color-status-blocked: #f59e0b;     /* amber-500 */
+  --color-status-ready: #14b8a6; /* teal-500 */
+  --color-status-blocked: #f59e0b; /* amber-500 */
   --color-status-in-progress: #3b82f6; /* blue-500 */
-  --color-status-complete: #22c55e;    /* green-500 */
-  --color-status-failed: #ef4444;      /* red-500 */
+  --color-status-complete: #22c55e; /* green-500 */
+  --color-status-failed: #ef4444; /* red-500 */
 
   /* Priority colors */
-  --color-priority-high: #ef4444;    /* red-500 */
-  --color-priority-medium: #f59e0b;  /* amber-500 */
-  --color-priority-low: #22c55e;     /* green-500 */
+  --color-priority-high: #ef4444; /* red-500 */
+  --color-priority-medium: #f59e0b; /* amber-500 */
+  --color-priority-low: #22c55e; /* green-500 */
 
   /* Shadows — four elevation levels for depth hierarchy */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
