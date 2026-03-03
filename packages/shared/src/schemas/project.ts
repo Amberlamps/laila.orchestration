@@ -34,6 +34,9 @@ export const projectSchema = z.object({
   /** Derived execution status computed from child epics */
   workStatus: workStatusSchema,
 
+  /** Worker inactivity timeout in minutes (5-1440, default 30) */
+  workerInactivityTimeoutMinutes: z.number().int().min(5).max(1440),
+
   /** Optimistic locking version -- incremented on each update */
   version: z.number().int().nonnegative(),
 

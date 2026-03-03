@@ -32,6 +32,9 @@ export const projectsTable = pgTable(
     description: text('description'),
     lifecycleStatus: text('lifecycle_status').notNull().default('draft'),
     workStatus: text('work_status').notNull().default('pending'),
+    workerInactivityTimeoutMinutes: integer('worker_inactivity_timeout_minutes')
+      .notNull()
+      .default(30),
     version: integer('version').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

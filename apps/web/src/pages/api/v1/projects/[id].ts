@@ -110,8 +110,15 @@ const handleUpdate = withErrorHandler(
           );
         }
 
-        // Only allow updates when project is in Draft status
-        if (existing.lifecycleStatus !== 'draft') {
+        // Only allow content edits (name, description, timeout) in Draft status.
+        // Lifecycle status transitions are always allowed (validated by the repository).
+        const isContentEdit =
+          body.name !== undefined ||
+          body.description !== undefined ||
+          body.workerInactivityTimeoutMinutes !== undefined;
+        const isLifecycleOnly = body.lifecycleStatus !== undefined && !isContentEdit;
+
+        if (!isLifecycleOnly && existing.lifecycleStatus !== 'draft') {
           throw new ConflictError(
             DomainErrorCode.READ_ONLY_VIOLATION,
             `Project cannot be modified in '${String(existing.lifecycleStatus)}' status. Only projects in 'draft' status can be updated.`,
@@ -120,13 +127,19 @@ const handleUpdate = withErrorHandler(
 
         // Build the update payload, only including fields that were provided
         const { version } = body;
-        const updateData: Record<string, string | null> = {};
+        const updateData: Record<string, string | number | null> = {};
 
         if (body.name !== undefined) {
           updateData.name = body.name;
         }
         if (body.description !== undefined) {
           updateData.description = body.description;
+        }
+        if (body.workerInactivityTimeoutMinutes !== undefined) {
+          updateData.workerInactivityTimeoutMinutes = body.workerInactivityTimeoutMinutes;
+        }
+        if (body.lifecycleStatus !== undefined) {
+          updateData.lifecycleStatus = body.lifecycleStatus;
         }
 
         try {

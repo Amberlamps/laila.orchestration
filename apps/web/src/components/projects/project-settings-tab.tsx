@@ -36,6 +36,11 @@ import type { WorkStatus } from '@/components/ui/status-badge';
 // Types
 // ---------------------------------------------------------------------------
 
+interface StatusCount {
+  status: string;
+  count: number;
+}
+
 interface ProjectData {
   id: string;
   name: string;
@@ -43,10 +48,12 @@ interface ProjectData {
   lifecycleStatus: string;
   workStatus: string;
   version: number;
-  workerInactivityTimeoutMinutes?: number;
-  totalEpics?: number;
-  totalStories?: number;
-  totalTasks?: number;
+  workerInactivityTimeoutMinutes?: number | undefined;
+  totalEpics?: number | undefined;
+  totalStories?: number | undefined;
+  totalTasks?: number | undefined;
+  storyCounts?: StatusCount[] | undefined;
+  epicCounts?: StatusCount[] | undefined;
 }
 
 interface ProjectSettingsTabProps {
@@ -101,6 +108,33 @@ function mapApiWorkStatus(apiStatus: string): WorkStatus {
     default:
       return 'draft';
   }
+}
+
+/**
+ * Derives whether the project has in-progress work from child aggregate
+ * status counts (stories/epics in progress) rather than top-level workStatus.
+ */
+function deriveHasInProgressWork(project: ProjectData): boolean {
+  const inProgressStatuses = ['in_progress', 'review'];
+
+  // Check story-level in-progress counts
+  if (project.storyCounts) {
+    const inProgressStories = project.storyCounts
+      .filter((c) => inProgressStatuses.includes(c.status))
+      .reduce((sum, c) => sum + c.count, 0);
+    if (inProgressStories > 0) return true;
+  }
+
+  // Check epic-level in-progress counts
+  if (project.epicCounts) {
+    const inProgressEpics = project.epicCounts
+      .filter((c) => inProgressStatuses.includes(c.status))
+      .reduce((sum, c) => sum + c.count, 0);
+    if (inProgressEpics > 0) return true;
+  }
+
+  // Fallback to top-level workStatus
+  return inProgressStatuses.includes(project.workStatus);
 }
 
 function getLifecycleLabel(status: string): string {
@@ -307,7 +341,7 @@ function OrchestrationSection({ project }: ProjectSettingsTabProps) {
         {
           version: project.version,
           workerInactivityTimeoutMinutes: data.workerInactivityTimeoutMinutes,
-        } as Record<string, unknown> as Parameters<typeof updateProject.mutate>[0],
+        },
         {
           onSuccess: () => {
             toast.success('Orchestration Updated', 'Worker timeout settings have been saved.');
@@ -385,7 +419,7 @@ function LifecycleSection({ project }: ProjectSettingsTabProps) {
 
   const isDraft = project.lifecycleStatus === 'draft' || project.lifecycleStatus === 'planning';
   const isReady = project.lifecycleStatus === 'ready';
-  const hasInProgressWork = project.workStatus === 'in_progress' || project.workStatus === 'review';
+  const hasInProgressWork = deriveHasInProgressWork(project);
   const canRevert = isReady && !hasInProgressWork;
   const lifecycleLabel = getLifecycleLabel(project.lifecycleStatus);
 
@@ -487,7 +521,7 @@ function LifecycleSection({ project }: ProjectSettingsTabProps) {
 function DangerZoneSection({ project }: ProjectSettingsTabProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const hasInProgressWork = project.workStatus === 'in_progress' || project.workStatus === 'review';
+  const hasInProgressWork = deriveHasInProgressWork(project);
 
   return (
     <>

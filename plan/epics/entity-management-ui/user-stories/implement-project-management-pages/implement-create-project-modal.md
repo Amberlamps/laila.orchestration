@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Create Project Modal
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Project Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -50,14 +50,18 @@ Build the Create Project modal dialog (640px max-width) that allows users to cre
 // apps/web/src/components/projects/create-project-modal.tsx
 // Create Project modal with React Hook Form + Zod validation.
 // Creates a new project in Draft status.
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useCreateProject } from "@/hooks/use-projects";
-import { MarkdownEditor } from "@/components/ui/markdown-editor";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useCreateProject } from '@/hooks/use-projects';
+import { MarkdownEditor } from '@/components/ui/markdown-editor';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 // Zod schema defining the validation rules for project creation.
 // Name is required (1-200 chars), description is optional,
@@ -65,13 +69,13 @@ import {
 const createProjectSchema = z.object({
   name: z
     .string()
-    .min(1, "Project name is required")
-    .max(200, "Project name must be 200 characters or fewer"),
+    .min(1, 'Project name is required')
+    .max(200, 'Project name must be 200 characters or fewer'),
   description: z.string().optional(),
   workerInactivityTimeoutMinutes: z
     .number()
-    .min(5, "Minimum timeout is 5 minutes")
-    .max(1440, "Maximum timeout is 1440 minutes (24 hours)")
+    .min(5, 'Minimum timeout is 5 minutes')
+    .max(1440, 'Maximum timeout is 1440 minutes (24 hours)')
     .default(30),
 });
 

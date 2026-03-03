@@ -4,20 +4,20 @@
 
 - **Title:** Implement Project Management Pages
 - **Description:** Build the complete project management UI: a filterable card grid list page, a create project modal, a tabbed detail page with KPI bar, a settings tab with lifecycle management, and publish/delete flows with validation.
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
 - **Total Tasks:** 5
 - **Dependencies:** None
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Project List Page](./implement-project-list-page.md) | Build project list page with filter chips, responsive card grid, pagination, and empty state | Not Started | frontend-developer | None |
-| [Implement Create Project Modal](./implement-create-project-modal.md) | Build create project modal with name, Markdown description, timeout input, and form validation | Not Started | fullstack-developer | Implement Project List Page |
-| [Implement Project Detail Page](./implement-project-detail-page.md) | Build project detail page with header, KPI bar, tab navigation, and action buttons | Not Started | frontend-developer | Implement Project List Page |
-| [Implement Project Settings Tab](./implement-project-settings-tab.md) | Build settings tab with general, orchestration, lifecycle, and danger zone sections | Not Started | fullstack-developer | Implement Project Detail Page |
-| [Implement Project Publish Delete Flows](./implement-project-publish-delete-flows.md) | Build publish validation and delete confirmation flows with entity counts and guards | Not Started | fullstack-developer | Implement Project Detail Page, Implement Project Settings Tab |
+| Task                                                                                  | Description                                                                                    | Status   | Assigned Agent      | Dependencies                                                  |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------- | ------------------- | ------------------------------------------------------------- |
+| [Implement Project List Page](./implement-project-list-page.md)                       | Build project list page with filter chips, responsive card grid, pagination, and empty state   | Complete | frontend-developer  | None                                                          |
+| [Implement Create Project Modal](./implement-create-project-modal.md)                 | Build create project modal with name, Markdown description, timeout input, and form validation | Complete | fullstack-developer | Implement Project List Page                                   |
+| [Implement Project Detail Page](./implement-project-detail-page.md)                   | Build project detail page with header, KPI bar, tab navigation, and action buttons             | Complete | frontend-developer  | Implement Project List Page                                   |
+| [Implement Project Settings Tab](./implement-project-settings-tab.md)                 | Build settings tab with general, orchestration, lifecycle, and danger zone sections            | Complete | fullstack-developer | Implement Project Detail Page                                 |
+| [Implement Project Publish Delete Flows](./implement-project-publish-delete-flows.md) | Build publish validation and delete confirmation flows with entity counts and guards           | Complete | fullstack-developer | Implement Project Detail Page, Implement Project Settings Tab |
 
 ## Dependency Graph
 

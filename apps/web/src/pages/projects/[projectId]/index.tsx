@@ -110,6 +110,36 @@ function deriveProgress(workStatus: string): {
 }
 
 /**
+ * Derives whether the project has in-progress work from child aggregate
+ * status counts (stories/epics in progress) rather than top-level workStatus.
+ */
+function deriveHasInProgressWork(project: Record<string, unknown>): boolean {
+  const inProgressStatuses = ['in_progress', 'review'];
+
+  // Check story-level in-progress counts
+  const storyCounts = project.storyCounts as Array<{ status: string; count: number }> | undefined;
+  if (storyCounts) {
+    const inProgressStories = storyCounts
+      .filter((c) => inProgressStatuses.includes(c.status))
+      .reduce((sum, c) => sum + c.count, 0);
+    if (inProgressStories > 0) return true;
+  }
+
+  // Check epic-level in-progress counts
+  const epicCounts = project.epicCounts as Array<{ status: string; count: number }> | undefined;
+  if (epicCounts) {
+    const inProgressEpics = epicCounts
+      .filter((c) => inProgressStatuses.includes(c.status))
+      .reduce((sum, c) => sum + c.count, 0);
+    if (inProgressEpics > 0) return true;
+  }
+
+  // Fallback to top-level workStatus
+  const workStatus = project.workStatus as string;
+  return inProgressStatuses.includes(workStatus);
+}
+
+/**
  * Derives synthetic failure/blocked counts from work status.
  * In production these would come from aggregated API data.
  */
@@ -210,6 +240,7 @@ function ProjectHeader({
   description,
   projectId,
   entityCounts,
+  hasInProgressWork,
 }: {
   name: string;
   workStatus: string;
@@ -217,6 +248,7 @@ function ProjectHeader({
   description: string | null;
   projectId: string;
   entityCounts: { epics: number; stories: number; tasks: number };
+  hasInProgressWork: boolean;
 }) {
   const router = useRouter();
   const [publishFlowOpen, setPublishFlowOpen] = useState(false);
@@ -224,7 +256,6 @@ function ProjectHeader({
 
   const badgeStatus = mapApiWorkStatus(workStatus);
   const isDraft = lifecycleStatus === 'draft' || lifecycleStatus === 'planning';
-  const hasInProgressWork = workStatus === 'in_progress' || workStatus === 'review';
 
   function handleEdit() {
     void router.push(`/projects/${projectId}/edit`);
@@ -467,18 +498,22 @@ const ProjectDetailPage: NextPageWithLayout = () => {
         description={project.description}
         projectId={project.id}
         entityCounts={{
-          epics: ((project as Record<string, unknown>).totalEpics as number) ?? 0,
-          stories: ((project as Record<string, unknown>).totalStories as number) ?? 0,
-          tasks: ((project as Record<string, unknown>).totalTasks as number) ?? 0,
+          epics: ((project as Record<string, unknown>).totalEpics as number | undefined) ?? 0,
+          stories: ((project as Record<string, unknown>).totalStories as number | undefined) ?? 0,
+          tasks: ((project as Record<string, unknown>).totalTasks as number | undefined) ?? 0,
         }}
+        hasInProgressWork={deriveHasInProgressWork(project as Record<string, unknown>)}
       />
 
       {/* Timeout reclamation banners */}
       <TimeoutBanner
         workStatus={project.workStatus}
-        workerInactivityTimeoutMinutes={
-          (project as Record<string, unknown>).workerInactivityTimeoutMinutes as number | undefined
-        }
+        {...(typeof (project as Record<string, unknown>).workerInactivityTimeoutMinutes === 'number'
+          ? {
+              workerInactivityTimeoutMinutes: (project as Record<string, unknown>)
+                .workerInactivityTimeoutMinutes as number,
+            }
+          : {})}
       />
 
       {/* KPI Bar */}
@@ -521,7 +556,22 @@ const ProjectDetailPage: NextPageWithLayout = () => {
         </TabsContent>
 
         <TabsContent value="settings">
-          <ProjectSettingsTab project={project} />
+          <ProjectSettingsTab
+            project={{
+              ...project,
+              workerInactivityTimeoutMinutes: (project as Record<string, unknown>)
+                .workerInactivityTimeoutMinutes as number | undefined,
+              totalEpics: (project as Record<string, unknown>).totalEpics as number | undefined,
+              totalStories: (project as Record<string, unknown>).totalStories as number | undefined,
+              totalTasks: (project as Record<string, unknown>).totalTasks as number | undefined,
+              storyCounts: (project as Record<string, unknown>).storyCounts as
+                | Array<{ status: string; count: number }>
+                | undefined,
+              epicCounts: (project as Record<string, unknown>).epicCounts as
+                | Array<{ status: string; count: number }>
+                | undefined,
+            }}
+          />
         </TabsContent>
       </Tabs>
     </div>

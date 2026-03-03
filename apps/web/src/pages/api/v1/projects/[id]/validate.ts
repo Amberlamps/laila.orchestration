@@ -89,7 +89,7 @@ const handleValidate = withErrorHandler(
         if (project.lifecycleStatus !== 'draft') {
           issues.push({
             entityType: 'Project',
-            entityName: project.name,
+            entityName: String(project.name),
             issue: `Project is in "${String(project.lifecycleStatus)}" status. Only Draft projects can be published.`,
           });
           // Return early — other checks are not relevant if not in draft
@@ -104,7 +104,7 @@ const handleValidate = withErrorHandler(
         if (epics.length === 0) {
           issues.push({
             entityType: 'Project',
-            entityName: project.name,
+            entityName: String(project.name),
             issue: 'No epics defined. At least one epic is required before publishing.',
           });
         }
@@ -115,7 +115,7 @@ const handleValidate = withErrorHandler(
             issues.push({
               entityType: 'Epic',
               entityName: epic.name,
-              issue: `Work status is "${String(epic.workStatus)}" (must be "ready")`,
+              issue: `Work status is "${epic.workStatus}" (must be "ready")`,
             });
           }
         }

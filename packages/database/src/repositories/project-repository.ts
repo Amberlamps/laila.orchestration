@@ -57,6 +57,7 @@ type ProjectRecord = InferSelectModel<typeof projectsTable>;
 export type CreateProjectData = {
   name: string;
   description?: string | null;
+  workerInactivityTimeoutMinutes?: number;
 };
 
 /** Data allowed when updating a project */
@@ -64,6 +65,7 @@ export type UpdateProjectData = {
   name?: string;
   description?: string | null;
   lifecycleStatus?: string;
+  workerInactivityTimeoutMinutes?: number;
 };
 
 /** Options for filtering projects in findByTenant */
@@ -185,6 +187,9 @@ export const createProjectRepository = (db: DatabaseClient) => {
       description: data.description ?? null,
       lifecycleStatus: 'draft',
       workStatus: 'pending',
+      ...(data.workerInactivityTimeoutMinutes !== undefined && {
+        workerInactivityTimeoutMinutes: data.workerInactivityTimeoutMinutes,
+      }),
     });
   };
 

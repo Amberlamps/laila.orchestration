@@ -114,7 +114,7 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
           description: data.description ?? null,
           lifecycleStatus: 'draft',
           workerInactivityTimeoutMinutes: data.workerInactivityTimeoutMinutes,
-        } as Record<string, unknown> as Parameters<typeof createProjectMutation.mutate>[0],
+        },
         {
           onSuccess: () => {
             toast.success('Project Created', 'Your new project has been created in Draft status.');

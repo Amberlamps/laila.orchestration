@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Project Settings Tab
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Project Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -16,6 +16,7 @@ Build the Settings tab content for the project detail page. The settings tab is 
 ### Section Layout
 
 Each section is a Card component with:
+
 - Section heading in H3 typography (16px, semibold)
 - Section description in Body Small (13px, zinc-500)
 - Form fields or action buttons below
@@ -44,16 +45,16 @@ Each section is a Card component with:
 // apps/web/src/components/projects/project-settings-tab.tsx
 // Settings tab for project detail page.
 // Organized into General, Orchestration, Lifecycle, and Danger Zone sections.
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useUpdateProject, useDeleteProject } from "@/hooks/use-projects";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { MarkdownEditor } from "@/components/ui/markdown-editor";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useUpdateProject, useDeleteProject } from '@/hooks/use-projects';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { MarkdownEditor } from '@/components/ui/markdown-editor';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 // Settings form schema — separate from create schema because
 // all fields are optional (partial update) and some fields are read-only.

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Project List Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Project Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -23,6 +23,7 @@ Build the project list page at `/projects` that displays all of the user's proje
 ### Project Card Specification
 
 Each card displays:
+
 - **Name:** H3 (16px, semibold), linked to `/projects/{projectId}` — clickable, indigo-600 on hover
 - **Status Badge:** StatusBadge component showing current work status
 - **Description:** Body Small (13px, zinc-500), 2-line excerpt with text ellipsis overflow
@@ -33,34 +34,34 @@ Each card displays:
 // apps/web/src/pages/projects/index.tsx
 // Project list page with status filter chips and responsive card grid.
 // Uses TanStack Query for data fetching with the useProjects hook.
-import { useState } from "react";
-import { useRouter } from "next/router";
-import { FolderKanban, Plus, Bot, DollarSign, Clock } from "lucide-react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { EmptyState } from "@/components/ui/empty-state";
-import { SkeletonCard } from "@/components/ui/skeleton";
-import { useProjects } from "@/hooks/use-projects";
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { FolderKanban, Plus, Bot, DollarSign, Clock } from 'lucide-react';
+import { AppLayout } from '@/components/layout/app-layout';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { SkeletonCard } from '@/components/ui/skeleton';
+import { useProjects } from '@/hooks/use-projects';
 
-type StatusFilter = "all" | "draft" | "ready" | "in_progress" | "complete";
+type StatusFilter = 'all' | 'draft' | 'ready' | 'in_progress' | 'complete';
 
 const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "draft", label: "Draft" },
-  { value: "ready", label: "Ready" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "complete", label: "Complete" },
+  { value: 'all', label: 'All' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'ready', label: 'Ready' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'complete', label: 'Complete' },
 ];
 
 export default function ProjectsPage() {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
   const router = useRouter();
 
   const { data, isLoading } = useProjects({
-    status: statusFilter === "all" ? undefined : statusFilter,
+    status: statusFilter === 'all' ? undefined : statusFilter,
     page,
     pageSize: 20,
   });
@@ -68,10 +69,10 @@ export default function ProjectsPage() {
   return (
     <AppLayout variant="full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-h1">Projects</h1>
-        <Button onClick={() => router.push("/projects/new")}>
-          <Plus className="w-4 h-4 mr-2" />
+        <Button onClick={() => router.push('/projects/new')}>
+          <Plus className="mr-2 h-4 w-4" />
           New Project
         </Button>
       </div>

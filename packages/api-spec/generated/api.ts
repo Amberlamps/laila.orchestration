@@ -56,6 +56,46 @@ export interface paths {
     patch: operations['updateProject'];
     trace?: never;
   };
+  '/projects/{projectId}/validate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Validate a project for publishing
+     * @description Validates all child entities of a project without changing state. Returns a list of validation issues that must be resolved before the project can be published.
+     */
+    post: operations['validateProject'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/projects/{projectId}/publish': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Publish a project
+     * @description Transitions a project from Draft to Ready status after validating all child entities are in a publishable state.
+     */
+    post: operations['publishProject'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/projects/{projectId}/epics': {
     parameters: {
       query?: never;
@@ -581,6 +621,8 @@ export interface components {
       description: string | null;
       lifecycleStatus: components['schemas']['ProjectLifecycleStatus'];
       workStatus: components['schemas']['WorkStatus'];
+      /** @description Worker inactivity timeout in minutes (default 30) */
+      workerInactivityTimeoutMinutes: number;
       /** @description Optimistic locking version */
       version: number;
       /**
@@ -606,6 +648,8 @@ export interface components {
       /** @description Detailed project description (Markdown supported) */
       description?: string | null;
       lifecycleStatus: components['schemas']['ProjectLifecycleStatus'];
+      /** @description Worker inactivity timeout in minutes (default 30) */
+      workerInactivityTimeoutMinutes?: number;
     };
     /** @description Request body for partially updating a project. All fields except version are optional. */
     UpdateProject: {
@@ -614,12 +658,30 @@ export interface components {
       /** @description Detailed project description (Markdown supported) */
       description?: string | null;
       lifecycleStatus?: components['schemas']['ProjectLifecycleStatus'];
+      /** @description Worker inactivity timeout in minutes */
+      workerInactivityTimeoutMinutes?: number;
       /** @description Current version for optimistic locking */
       version: number;
     };
     /** @description Single-item API response for a project */
     ProjectResponse: {
       data: components['schemas']['Project'];
+    };
+    /** @description A single validation issue found during project validation */
+    ProjectValidationIssue: {
+      /** @description Type of entity with the issue (e.g., Project, Epic, Story) */
+      entityType: string;
+      /** @description Name of the entity with the issue */
+      entityName: string;
+      /** @description Description of the validation issue */
+      issue: string;
+    };
+    /** @description Result of project validation for publishing */
+    ProjectValidationResult: {
+      /** @description Whether the project passed all validation checks */
+      valid: boolean;
+      /** @description List of validation issues (only present when valid is false) */
+      issues?: components['schemas']['ProjectValidationIssue'][];
     };
     /** @description Paginated list response for projects */
     ProjectListResponse: {
@@ -1424,6 +1486,62 @@ export interface operations {
     };
     responses: {
       /** @description Project updated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProjectResponse'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      409: components['responses']['Conflict'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  validateProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the project (UUID) */
+        projectId: components['parameters']['ProjectIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Validation result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProjectValidationResult'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      500: components['responses']['InternalServerError'];
+    };
+  };
+  publishProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Unique identifier of the project (UUID) */
+        projectId: components['parameters']['ProjectIdParam'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Project published successfully */
       200: {
         headers: {
           [name: string]: unknown;

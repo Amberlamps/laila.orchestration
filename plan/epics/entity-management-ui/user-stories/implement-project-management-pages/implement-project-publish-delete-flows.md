@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Project Publish Delete Flows
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Project Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -31,18 +31,22 @@ The publish flow transitions a project from Draft to Published (Ready) status. B
 // apps/web/src/components/projects/publish-project-flow.tsx
 // Publish validation flow for projects.
 // Validates all child entities before transitioning to Ready status.
-import { useState } from "react";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useState } from 'react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { usePublishProject } from "@/hooks/use-projects";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { usePublishProject } from '@/hooks/use-projects';
 
 interface ValidationIssue {
-  entityType: string;   // e.g., "epic", "story", "task"
-  entityName: string;   // e.g., "User Authentication"
-  issue: string;        // e.g., "No stories defined"
+  entityType: string; // e.g., "epic", "story", "task"
+  entityName: string; // e.g., "User Authentication"
+  issue: string; // e.g., "No stories defined"
 }
 
 interface PublishProjectFlowProps {
@@ -56,7 +60,7 @@ interface PublishProjectFlowProps {
 // 1. "validating" — checking child entities
 // 2. "errors" — validation failed, showing issues
 // 3. "confirming" — validation passed, confirming publish
-type FlowState = "validating" | "errors" | "confirming";
+type FlowState = 'validating' | 'errors' | 'confirming';
 ```
 
 ### Delete Flow
@@ -74,10 +78,10 @@ The delete flow permanently removes a project and all its child entities:
 ```tsx
 // apps/web/src/components/projects/delete-project-flow.tsx
 // Delete confirmation flow with entity count display and in-progress work guard.
-import { useRouter } from "next/router";
-import { useDeleteProject } from "@/hooks/use-projects";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { toast } from "@/components/ui/toast";
+import { useRouter } from 'next/router';
+import { useDeleteProject } from '@/hooks/use-projects';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from '@/components/ui/toast';
 
 interface EntityCounts {
   epics: number;
@@ -98,6 +102,7 @@ interface DeleteProjectFlowProps {
 ## Acceptance Criteria
 
 ### Publish Flow
+
 - [ ] Publish button triggers a validation check API call
 - [ ] Loading state shows spinner with "Validating..." message during the check
 - [ ] If validation passes: show success message and transition project to Ready status
@@ -108,6 +113,7 @@ interface DeleteProjectFlowProps {
 - [ ] After successful publish: success toast, KPI bar and status badge update
 
 ### Delete Flow
+
 - [ ] Delete button is blocked (disabled with tooltip) when project has in-progress work
 - [ ] When allowed, delete button opens ConfirmDialog
 - [ ] ConfirmDialog title includes the project name
@@ -119,6 +125,7 @@ interface DeleteProjectFlowProps {
 - [ ] ConfirmDialog uses `role="alertdialog"` for screen reader announcement
 
 ### General
+
 - [ ] Both flows handle API errors gracefully with user-friendly error messages
 - [ ] Both flows prevent double-submission during async operations
 - [ ] Both flows are accessible (keyboard navigation, screen reader announcements)

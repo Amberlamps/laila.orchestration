@@ -138,6 +138,41 @@ export const useDeleteProject = () => {
   });
 };
 
+/** Validates a project for publishing without changing state. */
+export const useValidateProject = () => {
+  return useMutation({
+    mutationFn: async (projectId: string) => {
+      const { data, error } = await apiClient.POST('/projects/{projectId}/validate', {
+        params: { path: { projectId } },
+      });
+      if (error) throwApiError(error);
+      return data as {
+        valid: boolean;
+        issues?: Array<{ entityType: string; entityName: string; issue: string }>;
+      };
+    },
+  });
+};
+
+/** Publishes a project (transitions from Draft to Ready). */
+export const usePublishProject = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (projectId: string) => {
+      const { data, error } = await apiClient.POST('/projects/{projectId}/publish', {
+        params: { path: { projectId } },
+      });
+      if (error) throwApiError(error);
+      return data;
+    },
+    onSuccess: (_data, projectId) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.lists() });
+    },
+  });
+};
+
 // ===========================================================================
 // Epics (scoped under a project)
 // ===========================================================================

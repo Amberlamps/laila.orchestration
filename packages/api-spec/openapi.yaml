@@ -210,6 +210,69 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /projects/{projectId}/validate:
+    post:
+      operationId: validateProject
+      summary: Validate a project for publishing
+      description: >
+        Validates all child entities of a project without changing state.
+        Returns a list of validation issues that must be resolved before
+        the project can be published.
+      tags:
+        - Projects
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectValidationResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{projectId}/publish:
+    post:
+      operationId: publishProject
+      summary: Publish a project
+      description: >
+        Transitions a project from Draft to Ready status after validating
+        all child entities are in a publishable state.
+      tags:
+        - Projects
+      security:
+        - sessionAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      responses:
+        '200':
+          description: Project published successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   # -------------------------------------------------------------------------
   # Epics
   # -------------------------------------------------------------------------
@@ -1659,6 +1722,7 @@ components:
         - description
         - lifecycleStatus
         - workStatus
+        - workerInactivityTimeoutMinutes
         - version
         - createdAt
         - updatedAt
@@ -1687,6 +1751,11 @@ components:
           $ref: '#/components/schemas/ProjectLifecycleStatus'
         workStatus:
           $ref: '#/components/schemas/WorkStatus'
+        workerInactivityTimeoutMinutes:
+          type: integer
+          minimum: 5
+          maximum: 1440
+          description: Worker inactivity timeout in minutes (default 30)
         version:
           type: integer
           minimum: 0
@@ -1726,6 +1795,11 @@ components:
           description: Detailed project description (Markdown supported)
         lifecycleStatus:
           $ref: '#/components/schemas/ProjectLifecycleStatus'
+        workerInactivityTimeoutMinutes:
+          type: integer
+          minimum: 5
+          maximum: 1440
+          description: Worker inactivity timeout in minutes (default 30)
 
     UpdateProject:
       type: object
@@ -1748,6 +1822,11 @@ components:
           description: Detailed project description (Markdown supported)
         lifecycleStatus:
           $ref: '#/components/schemas/ProjectLifecycleStatus'
+        workerInactivityTimeoutMinutes:
+          type: integer
+          minimum: 5
+          maximum: 1440
+          description: Worker inactivity timeout in minutes
         version:
           type: integer
           minimum: 0
@@ -1761,6 +1840,39 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/Project'
+
+    ProjectValidationIssue:
+      type: object
+      description: A single validation issue found during project validation
+      required:
+        - entityType
+        - entityName
+        - issue
+      properties:
+        entityType:
+          type: string
+          description: Type of entity with the issue (e.g., Project, Epic, Story)
+        entityName:
+          type: string
+          description: Name of the entity with the issue
+        issue:
+          type: string
+          description: Description of the validation issue
+
+    ProjectValidationResult:
+      type: object
+      description: Result of project validation for publishing
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+          description: Whether the project passed all validation checks
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectValidationIssue'
+          description: List of validation issues (only present when valid is false)
 
     ProjectListResponse:
       type: object

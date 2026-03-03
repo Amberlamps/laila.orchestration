@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Project Detail Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Project Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -38,6 +38,7 @@ Build the project detail page at `/projects/{projectId}` that serves as the hub 
 ### Tab Content (Overview Tab — default)
 
 The Overview tab shows a summary dashboard for the project:
+
 - Recent activity feed (last 5 entries)
 - Status distribution chart (pie or bar chart showing work status breakdown)
 - Key metrics summary
@@ -46,42 +47,40 @@ The Overview tab shows a summary dashboard for the project:
 // apps/web/src/pages/projects/[projectId]/index.tsx
 // Project detail page with header, KPI bar, and tabbed navigation.
 // Uses shallow routing for tab switching without full page reloads.
-import { useRouter } from "next/router";
-import { Pencil, Trash2, Send } from "lucide-react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { KPICard } from "@/components/ui/kpi-card";
-import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { useProject } from "@/hooks/use-projects";
+import { useRouter } from 'next/router';
+import { Pencil, Trash2, Send } from 'lucide-react';
+import { AppLayout } from '@/components/layout/app-layout';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { KPICard } from '@/components/ui/kpi-card';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { useProject } from '@/hooks/use-projects';
 
 const PROJECT_TABS = [
-  { value: "overview", label: "Overview" },
-  { value: "epics", label: "Epics" },
-  { value: "stories", label: "Stories" },
-  { value: "tasks", label: "Tasks" },
-  { value: "graph", label: "Graph" },
-  { value: "activity", label: "Activity" },
-  { value: "settings", label: "Settings" },
+  { value: 'overview', label: 'Overview' },
+  { value: 'epics', label: 'Epics' },
+  { value: 'stories', label: 'Stories' },
+  { value: 'tasks', label: 'Tasks' },
+  { value: 'graph', label: 'Graph' },
+  { value: 'activity', label: 'Activity' },
+  { value: 'settings', label: 'Settings' },
 ] as const;
 
 export default function ProjectDetailPage() {
   const router = useRouter();
   const projectId = router.query.projectId as string;
-  const activeTab = (router.query.tab as string) ?? "overview";
+  const activeTab = (router.query.tab as string) ?? 'overview';
 
   const { data: project, isLoading } = useProject(projectId);
 
   // Handle tab change with shallow routing to avoid full page reload.
   // URL updates to /projects/{id}?tab=epics without re-running getServerSideProps.
   function handleTabChange(tab: string) {
-    router.push(
-      { pathname: router.pathname, query: { ...router.query, tab } },
-      undefined,
-      { shallow: true }
-    );
+    router.push({ pathname: router.pathname, query: { ...router.query, tab } }, undefined, {
+      shallow: true,
+    });
   }
 
   // ...
