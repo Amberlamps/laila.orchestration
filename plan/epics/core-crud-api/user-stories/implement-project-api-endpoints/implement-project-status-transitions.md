@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Project Status Transitions
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Project API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -21,15 +21,11 @@ Implement lifecycle status transition endpoints for projects. A project follows 
 // Validates that all child epics are in Ready status before allowing the transition.
 // This is the "launch" action — once a project is Ready, workers can be assigned.
 
-import type { NextApiRequest, NextApiResponse } from "next";
-import { withErrorHandler } from "@/lib/api/error-handler";
-import { withAuth } from "@/lib/api/auth";
-import {
-  ValidationError,
-  DomainErrorCode,
-  ConflictError,
-} from "@laila/shared";
-import { projectRepository, epicRepository } from "@laila/database";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { withErrorHandler } from '@/lib/api/error-handler';
+import { withAuth } from '@/lib/api/auth';
+import { ValidationError, DomainErrorCode, ConflictError } from '@laila/shared';
+import { projectRepository, epicRepository } from '@laila/database';
 
 /**
  * POST /api/v1/projects/:id/publish

@@ -634,6 +634,37 @@ export const createEpicRepository = (db: DatabaseClient) => {
   };
 
   // -------------------------------------------------------------------------
+  // Find all epics by project (non-paginated, for validation)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns all non-deleted epics for a project without pagination.
+   *
+   * Intended for validation scenarios (e.g., publish checks) where all
+   * epics must be examined. Returns the full epic record so callers can
+   * inspect `workStatus`, `name`, `id`, etc.
+   *
+   * @param tenantId  - The tenant UUID to scope the query to
+   * @param projectId - The project UUID to list epics for
+   * @returns Array of all non-deleted epic records for the project
+   */
+  const findAllByProject = async (tenantId: string, projectId: string): Promise<EpicRecord[]> => {
+    const results = await typedDb
+      .select()
+      .from(epicsTable)
+      .where(
+        and(
+          eq(epicsTable.tenantId, tenantId),
+          eq(epicsTable.projectId, projectId),
+          isNull(epicsTable.deletedAt),
+        ),
+      )
+      .orderBy(asc(epicsTable.sortOrder));
+
+    return results as EpicRecord[];
+  };
+
+  // -------------------------------------------------------------------------
   // Public API
   // -------------------------------------------------------------------------
 
@@ -653,6 +684,7 @@ export const createEpicRepository = (db: DatabaseClient) => {
     // Epic-specific methods
     create,
     findByProject,
+    findAllByProject,
     update,
     reorder,
     computeDerivedStatus,

@@ -24,6 +24,7 @@
 
 import { eq, and, isNull, sql, count, inArray, type InferSelectModel } from 'drizzle-orm';
 
+import { taskDependencyEdgesTable } from '../schema/dependency-edges';
 import { epicsTable } from '../schema/epics';
 import { projectsTable } from '../schema/projects';
 import { tasksTable } from '../schema/tasks';
@@ -83,6 +84,21 @@ export interface ProjectWithEpicCounts extends ProjectRecord {
   epicCounts: EpicStatusCount[];
 }
 
+/** A single status count entry for story aggregation */
+export interface StoryStatusCount {
+  status: string;
+  count: number;
+}
+
+/** Project record enriched with summary statistics for the detail endpoint */
+export interface ProjectWithStats extends ProjectRecord {
+  epicCounts: EpicStatusCount[];
+  storyCounts: StoryStatusCount[];
+  totalEpics: number;
+  totalStories: number;
+  completionPercentage: number;
+}
+
 // ---------------------------------------------------------------------------
 // Lifecycle transition validation
 // ---------------------------------------------------------------------------
@@ -90,17 +106,17 @@ export interface ProjectWithEpicCounts extends ProjectRecord {
 /**
  * Valid lifecycle transitions -- defined as a map for O(1) lookup.
  *
- * Projects follow a linear lifecycle with an escape hatch to archived:
- *   draft -> planning -> ready -> active -> completed
- *   any   -> archived (terminal state)
+ * Projects follow the domain state machine:
+ *   draft -> ready (publish)
+ *   ready -> draft (revert), ready -> in-progress (first story assigned)
+ *   in-progress -> complete (all stories complete)
+ *   complete is terminal.
  */
 const VALID_LIFECYCLE_TRANSITIONS: Record<string, string[]> = {
-  draft: ['planning', 'archived'],
-  planning: ['ready', 'archived'],
-  ready: ['active', 'archived'],
-  active: ['completed', 'archived'],
-  completed: ['archived'],
-  archived: [], // Terminal state -- no further transitions
+  draft: ['ready'],
+  ready: ['draft', 'in-progress'],
+  'in-progress': ['complete'],
+  complete: [],
 };
 
 /**
@@ -428,6 +444,204 @@ export const createProjectRepository = (db: DatabaseClient) => {
   };
 
   // -------------------------------------------------------------------------
+  // Find with full stats (for detail endpoint)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns a project with summary statistics: epic counts, story counts,
+   * and overall completion percentage.
+   *
+   * The completion percentage is calculated as the ratio of stories in
+   * terminal states ('done', 'skipped') to the total number of stories.
+   * If there are no stories, the completion percentage is 0.
+   *
+   * @param tenantId - The tenant UUID to scope the query to
+   * @param id       - The project UUID to look up
+   * @returns The project with full statistics
+   * @throws {NotFoundError} If the project does not exist for this tenant
+   */
+  const findWithStats = async (tenantId: string, id: string): Promise<ProjectWithStats> => {
+    const project = await base.findById(tenantId, id);
+    if (!project) {
+      throw new NotFoundError(base.entityName, id);
+    }
+
+    // Aggregate epic counts by work status
+    const epicCountRows = await typedDb
+      .select({
+        status: epicsTable.workStatus,
+        count: count(),
+      })
+      .from(epicsTable)
+      .where(
+        and(
+          eq(epicsTable.projectId, id),
+          eq(epicsTable.tenantId, tenantId),
+          isNull(epicsTable.deletedAt),
+        ),
+      )
+      .groupBy(epicsTable.workStatus);
+
+    const epicCounts: EpicStatusCount[] = epicCountRows.map(
+      (row: { status: string; count: number }) => ({
+        status: row.status,
+        count: row.count,
+      }),
+    );
+
+    // Aggregate story counts by work status (stories belonging to epics in this project)
+    const storyCountRows = await typedDb
+      .select({
+        status: userStoriesTable.workStatus,
+        count: count(),
+      })
+      .from(userStoriesTable)
+      .innerJoin(epicsTable, eq(userStoriesTable.epicId, epicsTable.id))
+      .where(
+        and(
+          eq(epicsTable.projectId, id),
+          eq(epicsTable.tenantId, tenantId),
+          isNull(epicsTable.deletedAt),
+          isNull(userStoriesTable.deletedAt),
+        ),
+      )
+      .groupBy(userStoriesTable.workStatus);
+
+    const storyCounts: StoryStatusCount[] = storyCountRows.map(
+      (row: { status: string; count: number }) => ({
+        status: row.status,
+        count: row.count,
+      }),
+    );
+
+    const totalEpics = epicCounts.reduce((sum, entry) => sum + entry.count, 0);
+    const totalStories = storyCounts.reduce((sum, entry) => sum + entry.count, 0);
+
+    // Completion = (done + skipped) / total stories
+    const completedStories = storyCounts
+      .filter((entry) => entry.status === 'done' || entry.status === 'skipped')
+      .reduce((sum, entry) => sum + entry.count, 0);
+
+    const completionPercentage =
+      totalStories > 0 ? Math.round((completedStories / totalStories) * 10000) / 100 : 0;
+
+    return {
+      ...project,
+      epicCounts,
+      storyCounts,
+      totalEpics,
+      totalStories,
+      completionPercentage,
+    };
+  };
+
+  // -------------------------------------------------------------------------
+  // Cascade hard-delete
+  // -------------------------------------------------------------------------
+
+  /**
+   * Hard-deletes a project and cascades to all child entities in a
+   * single transaction. Physically removes rows from the database.
+   *
+   * The cascade order is:
+   * 1. Dependency edges (belonging to tasks of stories of epics in this project)
+   * 2. Tasks (belonging to stories of epics in this project)
+   * 3. User Stories (belonging to epics in this project)
+   * 4. Epics (belonging to this project)
+   * 5. The project itself
+   *
+   * @param tenantId - The tenant UUID to scope the operation to
+   * @param id       - The project UUID to hard-delete
+   * @returns The deleted project record
+   * @throws {NotFoundError} If the project does not exist for this tenant
+   */
+  const hardDeleteCascade = async (tenantId: string, id: string): Promise<ProjectRecord> => {
+    const existing = await base.findById(tenantId, id);
+    if (!existing) {
+      throw new NotFoundError(base.entityName, id);
+    }
+
+    const result = await typedDb.transaction(async (tx: DrizzleDb) => {
+      // Find epic IDs belonging to this project
+      const epicRows = await tx
+        .select({ id: epicsTable.id })
+        .from(epicsTable)
+        .where(and(eq(epicsTable.projectId, id), eq(epicsTable.tenantId, tenantId)));
+
+      const epicIds = epicRows.map((row: { id: string }) => row.id);
+
+      if (epicIds.length > 0) {
+        // Find story IDs belonging to the affected epics
+        const storyRows = await tx
+          .select({ id: userStoriesTable.id })
+          .from(userStoriesTable)
+          .where(
+            and(inArray(userStoriesTable.epicId, epicIds), eq(userStoriesTable.tenantId, tenantId)),
+          );
+
+        const storyIds = storyRows.map((row: { id: string }) => row.id);
+
+        if (storyIds.length > 0) {
+          // Find task IDs belonging to the affected stories
+          const taskRows = await tx
+            .select({ id: tasksTable.id })
+            .from(tasksTable)
+            .where(
+              and(inArray(tasksTable.userStoryId, storyIds), eq(tasksTable.tenantId, tenantId)),
+            );
+
+          const taskIds = taskRows.map((row: { id: string }) => row.id);
+
+          // Delete dependency edges for these tasks
+          if (taskIds.length > 0) {
+            await tx
+              .delete(taskDependencyEdgesTable)
+              .where(
+                and(
+                  eq(taskDependencyEdgesTable.tenantId, tenantId),
+                  sql`(${taskDependencyEdgesTable.dependentTaskId} = ANY(${taskIds}) OR ${taskDependencyEdgesTable.prerequisiteTaskId} = ANY(${taskIds}))`,
+                ),
+              );
+          }
+
+          // Delete tasks
+          await tx
+            .delete(tasksTable)
+            .where(
+              and(inArray(tasksTable.userStoryId, storyIds), eq(tasksTable.tenantId, tenantId)),
+            );
+        }
+
+        // Delete user stories
+        await tx
+          .delete(userStoriesTable)
+          .where(
+            and(inArray(userStoriesTable.epicId, epicIds), eq(userStoriesTable.tenantId, tenantId)),
+          );
+
+        // Delete epics
+        await tx
+          .delete(epicsTable)
+          .where(and(eq(epicsTable.projectId, id), eq(epicsTable.tenantId, tenantId)));
+      }
+
+      // Delete the project itself
+      const projectResults = await tx
+        .delete(projectsTable)
+        .where(and(eq(projectsTable.id, id), eq(projectsTable.tenantId, tenantId)))
+        .returning();
+
+      if (projectResults.length === 0) {
+        throw new NotFoundError(base.entityName, id);
+      }
+
+      return projectResults[0] as ProjectRecord;
+    });
+
+    return result;
+  };
+
+  // -------------------------------------------------------------------------
   // Update work status
   // -------------------------------------------------------------------------
 
@@ -480,10 +694,14 @@ export const createProjectRepository = (db: DatabaseClient) => {
     softDelete,
     /** Find a project with aggregated epic counts by status */
     findWithEpicCounts,
+    /** Find a project with full summary statistics (epic counts, story counts, completion) */
+    findWithStats,
     /** Update the derived work status */
     updateWorkStatus,
     /** Hard-delete for testing/cleanup (from base) */
     hardDelete: base.hardDelete,
+    /** Cascade hard-delete project and all children in a transaction */
+    hardDeleteCascade,
     /** The underlying database client */
     db: base.db,
     /** The Drizzle table definition */
