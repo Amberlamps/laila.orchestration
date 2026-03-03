@@ -4,9 +4,9 @@
  * Each persona describes a type of agent skill needed to execute tasks.
  * Examples: "backend-developer", "database-administrator", "qa-expert".
  *
- * Personas are tenant-scoped: each tenant (user) defines their own set of
- * personas that describe the roles in their workflow. Tasks reference personas
- * to help the orchestration system match work with appropriately skilled agents.
+ * Personas are tenant-scoped and project-scoped: each tenant (user) defines
+ * personas within specific projects. Tasks reference personas to help the
+ * orchestration system match work with appropriately skilled agents.
  *
  * IMPORTANT -- Deletion guard:
  * Personas are soft-referenced by tasks (tasks carry a persona_id FK).
@@ -21,6 +21,7 @@ import { relations } from 'drizzle-orm';
 import { pgTable, uuid, text, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
 
 import { usersTable } from './auth';
+import { projectsTable } from './projects';
 import { tasksTable } from './tasks';
 
 // ---------------------------------------------------------------------------
@@ -37,19 +38,29 @@ export const personasTable = pgTable(
       .notNull()
       .references(() => usersTable.id),
 
-    /**
-     * Human-readable role title (e.g., "Backend Developer", "QA Engineer").
-     * Must be unique within a tenant (enforced by composite unique index).
-     */
-    title: text('title').notNull(),
+    /** Project scope -- personas belong to a specific project. */
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projectsTable.id),
 
     /**
-     * Rich description of the persona's capabilities and responsibilities.
-     * Stored as Markdown -- used as context for AI agents when executing
-     * tasks assigned to this persona. Intentionally `text` (unlimited
-     * length) since Markdown persona descriptions can be detailed.
+     * Human-readable persona name (e.g., "Backend Developer", "QA Engineer").
+     * Must be unique within a project (enforced by composite unique index).
      */
-    description: text('description').notNull(),
+    name: text('name').notNull(),
+
+    /**
+     * Optional short description of the persona's capabilities and role.
+     * Up to 2,000 characters. Nullable.
+     */
+    description: text('description'),
+
+    /**
+     * System prompt instructions injected into the AI worker's context
+     * when executing tasks assigned to this persona. Supports up to
+     * 50,000 characters for detailed technical instructions.
+     */
+    systemPrompt: text('system_prompt').notNull(),
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 
@@ -57,8 +68,9 @@ export const personasTable = pgTable(
   },
   (table) => [
     index('personas_tenant_idx').on(table.tenantId),
-    // Ensure unique persona titles within a tenant
-    uniqueIndex('personas_tenant_title_unique_idx').on(table.tenantId, table.title),
+    index('personas_project_idx').on(table.projectId),
+    // Ensure unique persona names within a project
+    uniqueIndex('personas_project_name_unique_idx').on(table.projectId, table.name),
   ],
 );
 
@@ -69,6 +81,7 @@ export const personasTable = pgTable(
 /**
  * Persona relations:
  * - belongs to one tenant (user)
+ * - belongs to one project
  * - referenced by many tasks (one-to-many)
  *
  * The tasks relation is the inverse side -- tasks carry the persona_id FK.
@@ -79,6 +92,10 @@ export const personasRelations = relations(personasTable, ({ one, many }) => ({
   tenant: one(usersTable, {
     fields: [personasTable.tenantId],
     references: [usersTable.id],
+  }),
+  project: one(projectsTable, {
+    fields: [personasTable.projectId],
+    references: [projectsTable.id],
   }),
   tasks: many(tasksTable),
 }));

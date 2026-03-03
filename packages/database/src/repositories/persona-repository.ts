@@ -8,10 +8,11 @@
  *
  * - **No soft-delete** — personas use physical deletion.
  * - **No optimistic locking** — no `version` column exists on the table.
+ * - **Project-scoped** — each persona belongs to a specific project.
  * - **Deletion guard** — a persona cannot be deleted while active (non-terminal)
  *   tasks reference it. The repository checks for active tasks before deleting.
- * - **Title uniqueness** — enforced by a composite unique index
- *   `(tenant_id, title)`. The repository catches PostgreSQL unique-constraint
+ * - **Name uniqueness** — enforced by a composite unique index
+ *   `(project_id, name)`. The repository catches PostgreSQL unique-constraint
  *   violations and re-throws them as a user-friendly `ValidationError`.
  *
  * Because the personas table lacks `version` and `deletedAt` columns, this
@@ -28,6 +29,7 @@ import {
   asc,
   desc,
   notInArray,
+  inArray,
   type InferSelectModel,
   type InferInsertModel,
 } from 'drizzle-orm';
@@ -52,10 +54,15 @@ export type Persona = InferSelectModel<typeof personasTable>;
 type PersonaInsert = InferInsertModel<typeof personasTable>;
 
 /** Fields accepted when creating a new persona. */
-export type CreatePersonaData = Pick<PersonaInsert, 'title' | 'description'>;
+export type CreatePersonaData = Pick<
+  PersonaInsert,
+  'name' | 'description' | 'systemPrompt' | 'projectId'
+>;
 
 /** Fields accepted when updating an existing persona. */
-export type UpdatePersonaData = Partial<CreatePersonaData>;
+export type UpdatePersonaData = Partial<
+  Pick<PersonaInsert, 'name' | 'description' | 'systemPrompt'>
+>;
 
 /** Persona enriched with task-count breakdown. */
 export interface PersonaWithTaskCounts extends Persona {
@@ -63,6 +70,16 @@ export interface PersonaWithTaskCounts extends Persona {
     active: number;
     total: number;
   };
+}
+
+/** Persona with active task usage count for list endpoint. */
+export interface PersonaWithUsageCount extends Persona {
+  usageCount: number;
+}
+
+/** Persona list options extending FindManyOptions with project filter. */
+export interface PersonaListOptions extends FindManyOptions {
+  projectId?: string;
 }
 
 /** Database client union type. */
@@ -80,7 +97,7 @@ const TERMINAL_STATUSES = ['done', 'failed', 'skipped'] as const;
 
 /**
  * Detects whether a database error is a PostgreSQL unique-constraint violation
- * (error code 23505) on the persona title index.
+ * (error code 23505) on the persona name index.
  */
 const isUniqueViolation = (error: unknown): boolean => {
   if (error instanceof Error && 'code' in error) {
@@ -123,12 +140,13 @@ const resolveColumn = (fieldName: string): unknown => {
  * All methods require a `tenantId` parameter to enforce tenant isolation.
  * The returned object provides:
  *
- * - `create`             — insert with title-uniqueness guard
- * - `update`             — partial field update
- * - `findById`           — single lookup (or null)
- * - `findByTenant`       — paginated listing
- * - `delete`             — physical delete with active-task safety check
- * - `findWithTaskCounts` — persona + aggregated task counts
+ * - `create`                     — insert with name-uniqueness guard
+ * - `update`                     — partial field update
+ * - `findById`                   — single lookup (or null)
+ * - `findByTenant`               — paginated listing
+ * - `findByTenantWithUsageCount` — paginated listing with active task counts
+ * - `delete`                     — physical delete with active-task safety check
+ * - `findWithTaskCounts`         — persona + aggregated task counts
  *
  * @param db - A Drizzle database client (HTTP or pool mode)
  */
@@ -148,14 +166,14 @@ export const createPersonaRepository = (db: DatabaseClient) => {
   /**
    * Creates a new persona for the given tenant.
    *
-   * The `(tenant_id, title)` unique index is enforced at the database level.
-   * If a duplicate title is detected, the PostgreSQL unique-constraint error
+   * The `(project_id, name)` unique index is enforced at the database level.
+   * If a duplicate name is detected, the PostgreSQL unique-constraint error
    * is caught and re-thrown as a `ValidationError` with a clear message.
    *
    * @param tenantId - Tenant UUID
-   * @param data     - Title and description for the new persona
+   * @param data     - Name, description, systemPrompt, and projectId
    * @returns The newly created persona record
-   * @throws {ValidationError} If a persona with the same title already exists
+   * @throws {ValidationError} If a persona with the same name already exists in the project
    */
   const create = async (tenantId: string, data: CreatePersonaData): Promise<Persona> => {
     try {
@@ -168,8 +186,8 @@ export const createPersonaRepository = (db: DatabaseClient) => {
     } catch (error: unknown) {
       if (isUniqueViolation(error)) {
         throw new ValidationError(
-          'title',
-          `A persona with the title "${data.title}" already exists for this tenant.`,
+          'name',
+          `A persona with the name "${data.name}" already exists in this project.`,
         );
       }
       throw error;
@@ -181,20 +199,20 @@ export const createPersonaRepository = (db: DatabaseClient) => {
   // -----------------------------------------------------------------------
 
   /**
-   * Updates an existing persona's fields (title and/or description).
+   * Updates an existing persona's fields (name, description, systemPrompt).
    *
    * Only the provided fields are overwritten; omitted fields remain unchanged.
    * The `updatedAt` timestamp is refreshed automatically.
    *
-   * Title uniqueness is enforced at the database level. If the new title
-   * collides with an existing persona in the same tenant, a `ValidationError`
+   * Name uniqueness is enforced at the database level. If the new name
+   * collides with an existing persona in the same project, a `ValidationError`
    * is thrown.
    *
    * @param tenantId - Tenant UUID
    * @param id       - Persona UUID to update
    * @param data     - Partial fields to set
    * @returns The updated persona record, or null if not found
-   * @throws {ValidationError} If the new title duplicates an existing persona
+   * @throws {ValidationError} If the new name duplicates an existing persona
    */
   const update = async (
     tenantId: string,
@@ -215,8 +233,8 @@ export const createPersonaRepository = (db: DatabaseClient) => {
     } catch (error: unknown) {
       if (isUniqueViolation(error)) {
         throw new ValidationError(
-          'title',
-          `A persona with the title "${data.title ?? ''}" already exists for this tenant.`,
+          'name',
+          `A persona with the name "${data.name ?? ''}" already exists in this project.`,
         );
       }
       throw error;
@@ -298,6 +316,77 @@ export const createPersonaRepository = (db: DatabaseClient) => {
   };
 
   // -----------------------------------------------------------------------
+  // findByTenantWithUsageCount
+  // -----------------------------------------------------------------------
+
+  /**
+   * Returns a paginated list of personas for the given tenant, each
+   * enriched with a `usageCount` — the number of active (non-terminal,
+   * non-deleted) tasks referencing the persona.
+   *
+   * Accepts an optional `projectId` to filter personas by project.
+   *
+   * Active task counts are fetched in a single batch query (no N+1)
+   * after the paginated persona list is retrieved.
+   *
+   * @param tenantId - Tenant UUID
+   * @param options  - Pagination parameters, optional filters, and optional projectId
+   * @returns Paginated result with usage-count-enriched persona data
+   */
+  const findByTenantWithUsageCount = async (
+    tenantId: string,
+    options: PersonaListOptions = {},
+  ): Promise<PaginatedResult<PersonaWithUsageCount>> => {
+    const { projectId, ...baseOptions } = options;
+
+    // Apply project filter if provided
+    if (projectId) {
+      const projectFilter = eq(personasTable.projectId, projectId);
+      baseOptions.filters = baseOptions.filters
+        ? and(baseOptions.filters, projectFilter)
+        : projectFilter;
+    }
+
+    const result = await findByTenant(tenantId, baseOptions);
+
+    if (result.data.length === 0) {
+      return { data: [] as PersonaWithUsageCount[], pagination: result.pagination };
+    }
+
+    const personaIds = result.data.map((p) => p.id);
+
+    const usageCounts = await typedDb
+      .select({
+        personaId: tasksTable.personaId,
+        count: sql<number>`count(*)`,
+      })
+      .from(tasksTable)
+      .where(
+        and(
+          inArray(tasksTable.personaId, personaIds),
+          eq(tasksTable.tenantId, tenantId),
+          isNull(tasksTable.deletedAt),
+          notInArray(tasksTable.workStatus, [...TERMINAL_STATUSES]),
+        ),
+      )
+      .groupBy(tasksTable.personaId);
+
+    const usageMap = new Map<string, number>();
+    for (const row of usageCounts) {
+      if (row.personaId) {
+        usageMap.set(row.personaId, row.count);
+      }
+    }
+
+    const personasWithUsage: PersonaWithUsageCount[] = result.data.map((persona) => ({
+      ...persona,
+      usageCount: usageMap.get(persona.id) ?? 0,
+    }));
+
+    return { data: personasWithUsage, pagination: result.pagination };
+  };
+
+  // -----------------------------------------------------------------------
   // delete
   // -----------------------------------------------------------------------
 
@@ -351,7 +440,8 @@ export const createPersonaRepository = (db: DatabaseClient) => {
    * Returns a persona enriched with aggregated task counts (active vs total).
    *
    * Uses a LEFT JOIN with conditional aggregation so that personas with zero
-   * tasks still return counts of 0. Only non-deleted tasks are counted.
+   * tasks still return counts of 0. Only non-deleted tasks within the same
+   * tenant are counted.
    *
    * @param tenantId - Tenant UUID
    * @param id       - Persona UUID
@@ -370,7 +460,11 @@ export const createPersonaRepository = (db: DatabaseClient) => {
       .from(personasTable)
       .leftJoin(
         tasksTable,
-        and(eq(tasksTable.personaId, personasTable.id), isNull(tasksTable.deletedAt)),
+        and(
+          eq(tasksTable.personaId, personasTable.id),
+          eq(tasksTable.tenantId, tenantId),
+          isNull(tasksTable.deletedAt),
+        ),
       )
       .where(and(eq(personasTable.id, id), eq(personasTable.tenantId, tenantId)))
       .groupBy(personasTable.id);
@@ -403,6 +497,7 @@ export const createPersonaRepository = (db: DatabaseClient) => {
     update,
     findById,
     findByTenant,
+    findByTenantWithUsageCount,
     delete: deletePersona,
     findWithTaskCounts,
   };

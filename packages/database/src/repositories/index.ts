@@ -53,6 +53,8 @@ export {
   type CreatePersonaData,
   type UpdatePersonaData,
   type PersonaWithTaskCounts,
+  type PersonaWithUsageCount,
+  type PersonaListOptions,
 } from './persona-repository';
 
 export {

@@ -6,11 +6,10 @@
  *
  * Personas describe specific skill sets or roles (e.g., "backend-developer",
  * "frontend-developer", "qa-engineer") that inform which worker agent is
- * best suited to execute a given task. The description field uses Markdown
- * to provide rich role documentation.
+ * best suited to execute a given task.
  *
- * Personas are tenant-scoped global entities (not project-scoped) and do
- * not use soft-delete or optimistic locking.
+ * Personas are tenant-scoped and project-scoped. They do not use soft-delete
+ * or optimistic locking.
  *
  * This schema defines the API representation of a persona.
  * Database-level details (column types, indexes) belong in the Drizzle schema.
@@ -25,11 +24,21 @@ export const personaSchema = z.object({
   /** Tenant ID -- equals the owning user's ID for single-tenant isolation */
   tenantId: z.string().uuid(),
 
-  /** Human-readable persona title (e.g., "Backend Developer") */
-  title: z.string().min(1).max(255),
+  /** Project ID -- personas are scoped to a specific project */
+  projectId: z.string().uuid(),
 
-  /** Rich description of the persona's role and capabilities (Markdown) */
-  description: z.string().max(10000),
+  /** Human-readable persona name (e.g., "Backend Developer") */
+  name: z.string().min(1).max(255),
+
+  /** Optional short description of the persona's role (up to 2,000 chars) */
+  description: z.string().max(2000).nullable().optional(),
+
+  /**
+   * System prompt instructions injected into the AI worker's context when
+   * executing tasks. Supports up to 50,000 characters for detailed
+   * technical instructions.
+   */
+  systemPrompt: z.string().min(1).max(50000),
 
   /** Timestamp when the persona was created (ISO 8601) */
   createdAt: z.string().datetime(),

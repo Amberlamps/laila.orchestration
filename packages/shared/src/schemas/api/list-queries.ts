@@ -168,7 +168,10 @@ export const listWorkersQuerySchema = paginationQuerySchema.extend({
 export type ListWorkersQuery = z.infer<typeof listWorkersQuerySchema>;
 
 /** Query parameters for listing personas (GET /api/v1/personas). */
-export const listPersonasQuerySchema = paginationQuerySchema.extend({});
+export const listPersonasQuerySchema = paginationQuerySchema.extend({
+  /** Filter personas belonging to a specific project */
+  projectId: z.string().uuid().optional(),
+});
 
 /** Inferred TypeScript type for list personas query parameters */
 export type ListPersonasQuery = z.infer<typeof listPersonasQuerySchema>;

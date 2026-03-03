@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Persona CRUD Routes
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Persona API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -74,7 +74,7 @@ Implement CRUD API routes for the Persona entity. Personas define the role, syst
 // packages/shared/src/schemas/persona.ts
 // Zod schemas for persona API request validation.
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const createPersonaSchema = z.object({
   name: z.string().min(1).max(255),

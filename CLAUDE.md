@@ -6,3 +6,4 @@
 - [monorepo]: Root package.json scripts use `pnpm -r run <script>` for recursive workspace execution
 - [eslint]: Wrap numbers in `String()` inside template literals — `@typescript-eslint/restrict-template-expressions` forbids bare number interpolation
 - [eslint]: Avoid single-use type parameters in generics (`@typescript-eslint/no-unnecessary-type-parameters`) — use `unknown` return + cast at call site instead of `<T>() => T`
+- [eslint]: Don't use rest-destructuring to omit fields (e.g. `const { foo: _foo, ...rest } = obj`) — `@typescript-eslint/no-unused-vars` flags the discarded var. Instead, construct the desired object explicitly without the omitted field
