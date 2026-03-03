@@ -14,3 +14,5 @@
 - [testing]: When mocking `@laila/database`, include ALL imported functions (e.g. `writeAuditEvent`) — missing mocked exports become `undefined` and cause runtime TypeErrors (500s)
 - [testing]: When handler response shape changes, update test assertions to match — check `data.task.status` / `data.cascading_updates.unblocked_tasks` not legacy shapes
 - [query-hooks]: When adding new UI components that import hooks from `@/lib/query-hooks`, ensure the hooks are actually defined in that file — missing exports cause cascading `@typescript-eslint/no-unsafe-*` errors on every usage site
+- [schema]: When adding a new required field to an entity schema (e.g. `projectSchema`), update ALL test fixtures that construct instances of that entity — including `project.test.ts`, `list-responses.test.ts`, and `crud-schemas.test.ts`
+- [schema/api]: Fields with database defaults (e.g. `workerInactivityTimeoutMinutes`) should be `.optional()` in create schemas — use `schema.shape.field.optional()` to keep validation but allow omission. Use conditional spread in the handler to avoid passing `undefined` to the repo

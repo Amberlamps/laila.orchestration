@@ -11,24 +11,29 @@
  * Data: TanStack Query `useProject` hook.
  */
 import { AlertTriangle, Pencil, Send, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 import { ProtectedRoute } from '@/components/auth/protected-route';
+import { CreateEditEpicModal } from '@/components/epics/create-edit-epic-modal';
 import { AppLayout } from '@/components/layout/app-layout';
 import { DeleteProjectButton, DeleteProjectFlow } from '@/components/projects/delete-project-flow';
 import { ProjectSettingsTab } from '@/components/projects/project-settings-tab';
 import { PublishProjectFlow } from '@/components/projects/publish-project-flow';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { EntityTable } from '@/components/ui/entity-table';
 import { KPICard } from '@/components/ui/kpi-card';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import { Skeleton, SkeletonKPICard, SkeletonText } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useProject } from '@/lib/query-hooks';
+import { useEpics, useProject } from '@/lib/query-hooks';
 
 import type { NextPageWithLayout } from '../../_app';
+import type { ColumnDef } from '@/components/ui/entity-table';
 import type { WorkStatus } from '@/components/ui/status-badge';
 import type { ReactElement } from 'react';
 
@@ -439,6 +444,118 @@ function OverviewTabContent({ name }: { name: string }) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Epic row type for the Epics tab table
+// ---------------------------------------------------------------------------
+
+interface EpicRow {
+  id: string;
+  name: string;
+  workStatus: string;
+  storyCount?: number;
+}
+
+/** Epics tab content with entity table and "+ Add Epic" create modal trigger. */
+function EpicsTabContent({ projectId }: { projectId: string }) {
+  const router = useRouter();
+  const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  const queryParams: Record<string, unknown> = { page, limit: 20 };
+  if (sortBy) {
+    queryParams.sortBy = sortBy;
+    queryParams.sortOrder = sortDirection;
+  }
+
+  const { data: epicsData, isLoading } = useEpics(projectId, queryParams);
+  const epics: EpicRow[] = (epicsData?.data ?? []) as EpicRow[];
+  const totalCount = epicsData?.pagination.total ?? epics.length;
+
+  const handleSort = (key: string) => {
+    if (sortBy === key) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(key);
+      setSortDirection('asc');
+    }
+  };
+
+  const epicColumns: ColumnDef<EpicRow>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      cell: (row) => (
+        <Link
+          href={`/projects/${projectId}/epics/${row.id}`}
+          className="font-medium text-indigo-600 hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          {row.name}
+        </Link>
+      ),
+      width: '50%',
+    },
+    {
+      key: 'workStatus',
+      header: 'Status',
+      sortable: true,
+      cell: (row) => <StatusBadge status={mapApiWorkStatus(row.workStatus)} />,
+    },
+  ];
+
+  return (
+    <div className="space-y-4 py-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-zinc-900">Epics</h3>
+        <Button
+          onClick={() => {
+            setCreateModalOpen(true);
+          }}
+        >
+          + Add Epic
+        </Button>
+      </div>
+
+      <EntityTable<EpicRow>
+        columns={epicColumns}
+        data={epics}
+        getRowKey={(row) => row.id}
+        loading={isLoading}
+        page={page}
+        pageSize={20}
+        totalCount={totalCount}
+        onPageChange={setPage}
+        onSort={handleSort}
+        {...(sortBy != null ? { sortBy, sortDirection } : {})}
+        onRowClick={(row) => {
+          void router.push(`/projects/${projectId}/epics/${row.id}`);
+        }}
+        emptyState={
+          <EmptyState
+            icon={(props: { className?: string }) => <AlertTriangle {...props} />}
+            title="No Epics Yet"
+            description="This project doesn't have any epics. Create an epic to get started."
+            actionLabel="+ Add Epic"
+            onAction={() => {
+              setCreateModalOpen(true);
+            }}
+          />
+        }
+      />
+
+      <CreateEditEpicModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        projectId={projectId}
+      />
+    </div>
+  );
+}
+
 /** Placeholder content for tabs that are not yet implemented. */
 function PlaceholderTabContent({ tabLabel }: { tabLabel: string }) {
   return (
@@ -536,7 +653,7 @@ const ProjectDetailPage: NextPageWithLayout = () => {
         </TabsContent>
 
         <TabsContent value="epics">
-          <PlaceholderTabContent tabLabel="Epics" />
+          <EpicsTabContent projectId={project.id} />
         </TabsContent>
 
         <TabsContent value="stories">

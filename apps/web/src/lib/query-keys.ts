@@ -116,6 +116,8 @@ export const queryKeys = {
       [...queryKeys.epics.lists(projectId), params] as const,
     /** Matches a specific epic detail query (not parent-scoped). */
     detail: (epicId: string) => ['epics', 'detail', epicId] as const,
+    /** Matches a specific epic counts/aggregates query. */
+    counts: (epicId: string) => ['epics', 'counts', epicId] as const,
   },
 
   // ---------------------------------------------------------------------------

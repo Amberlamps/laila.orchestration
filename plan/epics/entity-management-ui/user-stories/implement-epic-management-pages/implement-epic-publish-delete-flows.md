@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Epic Publish Delete Flows
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Epic Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -35,11 +35,11 @@ Implement the publish and delete lifecycle flows for epics. These flows mirror t
 // Publish validation and delete confirmation flows for epics.
 // Publish validates child stories/tasks before transitioning.
 // Delete shows cascading entity counts and blocks if in-progress work exists.
-import { useState } from "react";
-import { useRouter } from "next/router";
-import { usePublishEpic, useDeleteEpic } from "@/hooks/use-epics";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { toast } from "@/components/ui/toast";
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { usePublishEpic, useDeleteEpic } from '@/hooks/use-epics';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from '@/components/ui/toast';
 
 interface EpicLifecycleProps {
   epic: {
@@ -59,6 +59,7 @@ interface EpicLifecycleProps {
 ## Acceptance Criteria
 
 ### Publish Flow
+
 - [ ] Publish button triggers validation API call
 - [ ] Loading state shows "Validating..." spinner
 - [ ] If valid: epic transitions to Ready, success toast appears, status badge updates
@@ -67,6 +68,7 @@ interface EpicLifecycleProps {
 - [ ] Publish button is only visible when epic is in Draft status
 
 ### Delete Flow
+
 - [ ] Delete button is disabled with tooltip when epic has in-progress stories
 - [ ] When allowed, delete opens ConfirmDialog with epic title and cascade entity counts
 - [ ] ConfirmDialog description shows accurate story and task counts
@@ -78,6 +80,7 @@ interface EpicLifecycleProps {
 - [ ] Cascade delete affects all child stories and tasks
 
 ### General
+
 - [ ] Both flows prevent double-submission
 - [ ] Both flows are keyboard accessible
 - [ ] API errors show user-friendly error messages

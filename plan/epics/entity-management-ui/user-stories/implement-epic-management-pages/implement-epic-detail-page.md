@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Epic Detail Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Epic Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -48,16 +48,16 @@ Build the epic detail page at `/projects/{projectId}/epics/{epicId}` that displa
 ```tsx
 // apps/web/src/pages/projects/[projectId]/epics/[epicId].tsx
 // Epic detail page showing metadata, progress, dependencies, and stories.
-import { useRouter } from "next/router";
-import { Pencil, Trash2, Send, Plus } from "lucide-react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { KPICard } from "@/components/ui/kpi-card";
-import { EntityTable } from "@/components/ui/entity-table";
-import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
-import { Button } from "@/components/ui/button";
-import { useEpic, useEpicStories } from "@/hooks/use-epics";
+import { useRouter } from 'next/router';
+import { Pencil, Trash2, Send, Plus } from 'lucide-react';
+import { AppLayout } from '@/components/layout/app-layout';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { KPICard } from '@/components/ui/kpi-card';
+import { EntityTable } from '@/components/ui/entity-table';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
+import { Button } from '@/components/ui/button';
+import { useEpic, useEpicStories } from '@/hooks/use-epics';
 
 export default function EpicDetailPage() {
   const router = useRouter();

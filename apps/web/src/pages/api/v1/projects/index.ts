@@ -46,7 +46,9 @@ const handleCreate = withErrorHandler(
         const project = await projectRepo.create(tenantId, {
           name: body.name,
           description: body.description,
-          workerInactivityTimeoutMinutes: body.workerInactivityTimeoutMinutes,
+          ...(body.workerInactivityTimeoutMinutes !== undefined && {
+            workerInactivityTimeoutMinutes: body.workerInactivityTimeoutMinutes,
+          }),
         });
 
         res.status(201).json({ data: project });

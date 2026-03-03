@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Create Edit Epic Modal
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Epic Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -46,16 +46,16 @@ Build a combined create/edit modal for epics. The modal supports both creating n
 // Combined create/edit modal for epics.
 // In create mode: creates a new epic in Draft status under the selected project.
 // In edit mode: updates the title and description of an existing epic.
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useCreateEpic, useUpdateEpic } from "@/hooks/use-epics";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useCreateEpic, useUpdateEpic } from '@/hooks/use-epics';
 
 const epicFormSchema = z.object({
   title: z
     .string()
-    .min(1, "Epic title is required")
-    .max(200, "Title must be 200 characters or fewer"),
+    .min(1, 'Epic title is required')
+    .max(200, 'Title must be 200 characters or fewer'),
   description: z.string().optional(),
 });
 

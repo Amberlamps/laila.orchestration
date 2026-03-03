@@ -54,6 +54,7 @@ describe('projectResponseSchema', () => {
     description: null,
     lifecycleStatus: 'draft',
     workStatus: 'pending',
+    workerInactivityTimeoutMinutes: 30,
     version: 0,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',

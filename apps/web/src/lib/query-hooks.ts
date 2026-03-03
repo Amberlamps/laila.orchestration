@@ -120,61 +120,6 @@ export const useUpdateProject = (projectId: string) => {
   });
 };
 
-// ---------------------------------------------------------------------------
-// Project Validation & Publishing (custom endpoints, not in OpenAPI spec)
-// ---------------------------------------------------------------------------
-
-interface ValidateProjectResult {
-  valid: boolean;
-  issues?: Array<{
-    entityType: string;
-    entityName: string;
-    issue: string;
-  }>;
-}
-
-/** Validates a project's structure before publishing. */
-export const useValidateProject = () => {
-  return useMutation({
-    mutationFn: async (projectId: string): Promise<ValidateProjectResult> => {
-      const response = await fetch(`/api/v1/projects/${projectId}/validate`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) {
-        const body: unknown = await response.json();
-        throw new ApiError(body);
-      }
-      return response.json() as Promise<ValidateProjectResult>;
-    },
-  });
-};
-
-/** Publishes a project (transitions from Draft to Ready status). */
-export const usePublishProject = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (projectId: string) => {
-      const response = await fetch(`/api/v1/projects/${projectId}/publish`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) {
-        const body: unknown = await response.json();
-        throw new ApiError(body);
-      }
-      return response.json() as Promise<unknown>;
-    },
-    onSuccess: (_data, projectId) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.lists() });
-    },
-  });
-};
-
 /** Deletes a project, removes its detail cache, and invalidates list caches. */
 export const useDeleteProject = () => {
   const queryClient = useQueryClient();
@@ -316,6 +261,101 @@ export const useDeleteEpic = (projectId: string) => {
     onSuccess: (_data, epicId) => {
       queryClient.removeQueries({ queryKey: queryKeys.epics.detail(epicId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.epics.lists(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+    },
+  });
+};
+
+// ---------------------------------------------------------------------------
+// Epic Counts (aggregate data for delete guard / confirmation)
+// ---------------------------------------------------------------------------
+
+interface EpicCounts {
+  totalStories: number;
+  totalTasks: number;
+  hasInProgressWork: boolean;
+}
+
+/** Fetches authoritative aggregate counts for an epic. Disabled when epicId or projectId is falsy. */
+export const useEpicCounts = (projectId: string, epicId: string) =>
+  useQuery({
+    queryKey: queryKeys.epics.counts(epicId),
+    queryFn: async (): Promise<EpicCounts> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/epics/${epicId}/counts`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      const json = (await response.json()) as { data: EpicCounts };
+      return json.data;
+    },
+    enabled: !!projectId && !!epicId,
+  });
+
+// ---------------------------------------------------------------------------
+// Epic Validation & Publishing
+// ---------------------------------------------------------------------------
+
+interface ValidateEpicResult {
+  valid: boolean;
+  issues?: Array<{
+    entityType: string;
+    entityName: string;
+    issue: string;
+  }>;
+}
+
+/** Validates an epic's structure before publishing without changing state. */
+export const useValidateEpic = () => {
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      epicId,
+    }: {
+      projectId: string;
+      epicId: string;
+    }): Promise<ValidateEpicResult> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/epics/${epicId}/validate`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<ValidateEpicResult>;
+    },
+  });
+};
+
+/** Publishes an epic (transitions from Draft to Ready status). */
+export const usePublishEpic = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ projectId, epicId }: { projectId: string; epicId: string }) => {
+      const response = await fetch(`/api/v1/projects/${projectId}/epics/${epicId}/publish`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json();
+        throw new ApiError(body);
+      }
+      return response.json() as Promise<unknown>;
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.epics.detail(variables.epicId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.epics.lists(variables.projectId),
+      });
     },
   });
 };
