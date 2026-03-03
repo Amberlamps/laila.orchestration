@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Protected Route HOC
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Create Authentication Middleware](./tasks.md)
 - **Parent Epic:** [Authentication & Authorization](../../user-stories.md)
@@ -24,12 +24,8 @@ The HOC wraps `getServerSideProps` to check the session before rendering the pag
 // Higher-order component for Next.js pages that require authentication.
 // Checks the session server-side and redirects to /sign-in if unauthenticated.
 // Preserves the return URL so the user is redirected back after sign-in.
-import type {
-  GetServerSideProps,
-  GetServerSidePropsContext,
-  GetServerSidePropsResult,
-} from "next";
-import { auth } from "@/lib/auth";
+import type { GetServerSideProps, GetServerSidePropsContext, GetServerSidePropsResult } from 'next';
+import { auth } from '@/lib/auth';
 
 // The session data injected into page props by the HOC.
 // Pages wrapped with withProtectedPage receive this in their props.
@@ -68,8 +64,8 @@ export interface ProtectedPageProps {
 export function withProtectedPage<P extends Record<string, unknown> = Record<string, never>>(
   getServerSidePropsFunc?: (
     ctx: GetServerSidePropsContext,
-    user: ProtectedPageProps["user"]
-  ) => Promise<GetServerSidePropsResult<P>>
+    user: ProtectedPageProps['user'],
+  ) => Promise<GetServerSidePropsResult<P>>,
 ): GetServerSideProps<P & ProtectedPageProps> {
   return async (ctx: GetServerSidePropsContext) => {
     // Resolve the session from the request cookies using Better Auth.
@@ -92,7 +88,7 @@ export function withProtectedPage<P extends Record<string, unknown> = Record<str
     }
 
     // Build the user prop from the session data.
-    const user: ProtectedPageProps["user"] = {
+    const user: ProtectedPageProps['user'] = {
       id: session.user.id,
       email: session.user.email,
       name: session.user.name,
@@ -105,7 +101,7 @@ export function withProtectedPage<P extends Record<string, unknown> = Record<str
 
       // If the additional logic returns a redirect or notFound,
       // pass it through without modification.
-      if ("redirect" in additionalResult || "notFound" in additionalResult) {
+      if ('redirect' in additionalResult || 'notFound' in additionalResult) {
         return additionalResult;
       }
 
@@ -134,7 +130,7 @@ The sign-in page should read the `returnUrl` query parameter and redirect to it 
 // Example: In the sign-in page's OAuth callback handler
 // After successful Google OAuth sign-in:
 const returnUrl = router.query.returnUrl as string | undefined;
-const redirectTo = returnUrl ? decodeURIComponent(returnUrl) : "/dashboard";
+const redirectTo = returnUrl ? decodeURIComponent(returnUrl) : '/dashboard';
 router.push(redirectTo);
 ```
 

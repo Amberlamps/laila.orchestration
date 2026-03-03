@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Authorization Model
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Create Authentication Middleware](./tasks.md)
 - **Parent Epic:** [Authentication & Authorization](../../user-stories.md)
@@ -26,7 +26,7 @@ Create a set of reusable authorization helper functions that API route handlers 
 // Authorization helpers that enforce access control after authentication.
 // Human users are owner-scoped (tenant_id = user_id).
 // Workers are project-access scoped (via worker_project_access table).
-import type { AuthContext, HumanAuthContext, WorkerAuthContext } from "./with-auth";
+import type { AuthContext, HumanAuthContext, WorkerAuthContext } from './with-auth';
 
 // Result of an authorization check.
 // Either authorized with the scoping context, or denied with a reason.
@@ -57,15 +57,15 @@ export interface AuthorizationScope {
 export function authorizeProjectAccess(
   authContext: AuthContext,
   projectTenantId: string,
-  projectId: string
+  projectId: string,
 ): AuthorizationResult {
-  if (authContext.type === "human") {
+  if (authContext.type === 'human') {
     // Human users can only access their own tenant's projects.
     // tenant_id = user_id in this system.
     if (projectTenantId !== authContext.tenantId) {
       return {
         authorized: false,
-        reason: "You do not have access to this project",
+        reason: 'You do not have access to this project',
       };
     }
     return {
@@ -75,12 +75,12 @@ export function authorizeProjectAccess(
   }
 
   // Worker (agent) authorization: check project-level access.
-  if (authContext.type === "agent") {
+  if (authContext.type === 'agent') {
     // The worker must belong to the same tenant as the project.
     if (projectTenantId !== authContext.tenantId) {
       return {
         authorized: false,
-        reason: "Worker does not belong to this tenant",
+        reason: 'Worker does not belong to this tenant',
       };
     }
 
@@ -88,7 +88,7 @@ export function authorizeProjectAccess(
     if (!authContext.projectAccess.includes(projectId)) {
       return {
         authorized: false,
-        reason: "Worker does not have access to this project",
+        reason: 'Worker does not have access to this project',
       };
     }
 
@@ -103,7 +103,7 @@ export function authorizeProjectAccess(
 
   // Exhaustive check — should never reach here.
   const _exhaustive: never = authContext;
-  return { authorized: false, reason: "Unknown auth type" };
+  return { authorized: false, reason: 'Unknown auth type' };
 }
 
 /**
@@ -115,12 +115,12 @@ export function authorizeProjectAccess(
  */
 export function authorizeTenantAccess(
   authContext: AuthContext,
-  resourceTenantId: string
+  resourceTenantId: string,
 ): AuthorizationResult {
   if (authContext.tenantId !== resourceTenantId) {
     return {
       authorized: false,
-      reason: "You do not have access to this resource",
+      reason: 'You do not have access to this resource',
     };
   }
 
@@ -128,7 +128,7 @@ export function authorizeTenantAccess(
     authorized: true,
     scope: {
       tenantId: authContext.tenantId,
-      projectIds: authContext.type === "agent" ? authContext.projectAccess : null,
+      projectIds: authContext.type === 'agent' ? authContext.projectAccess : null,
     },
   };
 }
@@ -147,7 +147,7 @@ export function authorizeTenantAccess(
 export function buildQueryScope(authContext: AuthContext): AuthorizationScope {
   return {
     tenantId: authContext.tenantId,
-    projectIds: authContext.type === "agent" ? authContext.projectAccess : null,
+    projectIds: authContext.type === 'agent' ? authContext.projectAccess : null,
   };
 }
 
@@ -157,11 +157,9 @@ export function buildQueryScope(authContext: AuthContext): AuthorizationScope {
  * Used in routes that should only be called by human users
  * but are wrapped with withAuth("both") for some reason.
  */
-export function assertHumanAuth(
-  authContext: AuthContext
-): asserts authContext is HumanAuthContext {
-  if (authContext.type !== "human") {
-    throw new AuthorizationError("This action requires human authentication");
+export function assertHumanAuth(authContext: AuthContext): asserts authContext is HumanAuthContext {
+  if (authContext.type !== 'human') {
+    throw new AuthorizationError('This action requires human authentication');
   }
 }
 
@@ -170,21 +168,21 @@ export function assertHumanAuth(
  * Throws a typed error if the context is a human user.
  */
 export function assertAgentAuth(
-  authContext: AuthContext
+  authContext: AuthContext,
 ): asserts authContext is WorkerAuthContext {
-  if (authContext.type !== "agent") {
-    throw new AuthorizationError("This action requires agent authentication");
+  if (authContext.type !== 'agent') {
+    throw new AuthorizationError('This action requires agent authentication');
   }
 }
 
 // Custom error class for authorization failures.
 // API error handlers can catch this and return 403.
 export class AuthorizationError extends Error {
-  readonly code = "FORBIDDEN" as const;
+  readonly code = 'FORBIDDEN' as const;
 
   constructor(message: string) {
     super(message);
-    this.name = "AuthorizationError";
+    this.name = 'AuthorizationError';
   }
 }
 ```

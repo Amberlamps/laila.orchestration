@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement withAuth Higher-Order Function
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Create Authentication Middleware](./tasks.md)
 - **Parent Epic:** [Authentication & Authorization](../../user-stories.md)
@@ -18,6 +18,7 @@ Each API route declares which authentication types it accepts: `'human'` (sessio
 ### Architecture
 
 The `withAuth` HOF wraps a standard Next.js API handler and:
+
 1. Attempts to resolve the auth context from session cookie (via Better Auth) or API key (via prefix-based validation)
 2. Rejects unauthenticated requests with 401
 3. Rejects requests with the wrong credential type with 403
@@ -28,14 +29,14 @@ The `withAuth` HOF wraps a standard Next.js API handler and:
 // Higher-order function that wraps Next.js API routes with
 // authentication enforcement. Detects auth type, resolves context,
 // and rejects unauthorized requests.
-import type { NextApiRequest, NextApiResponse } from "next";
-import { auth } from "@/lib/auth";
-import { validateApiKey, type WorkerAuthContext } from "@/lib/middleware/api-key-validator";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { auth } from '@/lib/auth';
+import { validateApiKey, type WorkerAuthContext } from '@/lib/middleware/api-key-validator';
 
 // The authenticated context for a human user session.
 // Populated from the Better Auth session data.
 export interface HumanAuthContext {
-  type: "human";
+  type: 'human';
   userId: string;
   email: string;
   name: string;
@@ -50,7 +51,7 @@ export type AuthContext = HumanAuthContext | WorkerAuthContext;
 
 // The allowed auth types that a route can declare.
 // 'human' = session cookie only, 'agent' = API key only, 'both' = either.
-export type AllowedAuthType = "human" | "agent" | "both";
+export type AllowedAuthType = 'human' | 'agent' | 'both';
 
 // Extended request type that includes the resolved auth context.
 // Handlers wrapped with withAuth receive this instead of plain NextApiRequest.
@@ -61,7 +62,7 @@ export interface AuthenticatedRequest extends NextApiRequest {
 // Type for the wrapped handler that receives the authenticated request.
 type AuthenticatedHandler = (
   req: AuthenticatedRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) => Promise<void> | void;
 
 /**
@@ -92,17 +93,14 @@ type AuthenticatedHandler = (
  *   else { /* agent logic * / }
  * });
  */
-export function withAuth(
-  allowedType: AllowedAuthType,
-  handler: AuthenticatedHandler
-) {
+export function withAuth(allowedType: AllowedAuthType, handler: AuthenticatedHandler) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     // Attempt to resolve auth context from both sources.
     // Only one should succeed for a given request.
     let authContext: AuthContext | null = null;
 
     // Try session-based auth (human users) if allowed.
-    if (allowedType === "human" || allowedType === "both") {
+    if (allowedType === 'human' || allowedType === 'both') {
       const session = await resolveSessionAuth(req);
       if (session) {
         authContext = session;
@@ -110,7 +108,7 @@ export function withAuth(
     }
 
     // Try API key auth (agents) if allowed and session auth didn't succeed.
-    if (!authContext && (allowedType === "agent" || allowedType === "both")) {
+    if (!authContext && (allowedType === 'agent' || allowedType === 'both')) {
       const workerContext = await validateApiKey(req);
       if (workerContext) {
         authContext = workerContext;
@@ -121,19 +119,19 @@ export function withAuth(
     if (!authContext) {
       return res.status(401).json({
         error: {
-          code: "UNAUTHORIZED",
-          message: "Authentication required",
+          code: 'UNAUTHORIZED',
+          message: 'Authentication required',
         },
       });
     }
 
     // Credential type doesn't match what the route expects.
     // e.g., an API key was provided to a human-only route.
-    if (allowedType !== "both" && authContext.type !== allowedType) {
+    if (allowedType !== 'both' && authContext.type !== allowedType) {
       return res.status(403).json({
         error: {
-          code: "FORBIDDEN",
-          message: "Invalid credential type for this endpoint",
+          code: 'FORBIDDEN',
+          message: 'Invalid credential type for this endpoint',
         },
       });
     }
@@ -153,9 +151,7 @@ export function withAuth(
  * Uses Better Auth's session API to validate the session cookie.
  * Returns null if no valid session exists.
  */
-async function resolveSessionAuth(
-  req: NextApiRequest
-): Promise<HumanAuthContext | null> {
+async function resolveSessionAuth(req: NextApiRequest): Promise<HumanAuthContext | null> {
   // Use Better Auth's API to get the session from the request.
   // This validates the JWT, checks expiry, and refreshes if needed.
   const session = await auth.api.getSession({
@@ -167,7 +163,7 @@ async function resolveSessionAuth(
   }
 
   return {
-    type: "human",
+    type: 'human',
     userId: session.user.id,
     email: session.user.email,
     name: session.user.name,
