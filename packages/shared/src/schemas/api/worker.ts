@@ -61,6 +61,49 @@ export const updateWorkerSchema = createWorkerSchema.partial().extend({
 export type UpdateWorker = z.infer<typeof updateWorkerSchema>;
 
 /**
+ * Request body for updating worker name and/or description only
+ * (PATCH /api/v1/workers/:id).
+ *
+ * Workers do not use integer-based optimistic locking (no `version` column),
+ * so this schema omits the `version` field. The repository uses `updatedAt`
+ * timestamp-based concurrency control instead.
+ *
+ * At least one field must be provided -- an empty object is rejected by the
+ * `.refine()` check.
+ */
+export const updateWorkerBodySchema = z
+  .object({
+    /** Updated human-readable worker name */
+    name: z.string().min(1).max(255).optional(),
+    /** Updated description of the worker's purpose or capabilities */
+    description: z.string().max(2000).nullable().optional(),
+  })
+  .refine((data) => data.name !== undefined || data.description !== undefined, {
+    message: 'At least one of name or description must be provided',
+  });
+
+/** Inferred TypeScript type for the update worker body request */
+export type UpdateWorkerBody = z.infer<typeof updateWorkerBodySchema>;
+
+/**
+ * Query parameters for the DELETE /api/v1/workers/:id endpoint.
+ *
+ * When `force` is true, the worker is deleted even if it has in-progress
+ * story assignments. All assigned stories are unassigned first.
+ */
+export const deleteWorkerQuerySchema = z.object({
+  /** Force deletion, unassigning all in-progress stories first */
+  force: z
+    .enum(['true', 'false'])
+    .transform((val) => val === 'true')
+    .optional()
+    .default('false'),
+});
+
+/** Inferred TypeScript type for the delete worker query parameters */
+export type DeleteWorkerQuery = z.infer<typeof deleteWorkerQuerySchema>;
+
+/**
  * Single-item API response wrapper for a worker entity.
  */
 export const workerResponseSchema = z.object({

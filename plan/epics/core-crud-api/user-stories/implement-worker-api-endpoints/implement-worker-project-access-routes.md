@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Worker Project Access Routes
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Worker API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)

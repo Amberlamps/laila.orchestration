@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Worker CRUD Routes
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** security-engineer
 - **Parent User Story:** [Implement Worker API Endpoints](./tasks.md)
 - **Parent Epic:** [Core CRUD API](../../user-stories.md)
@@ -87,7 +87,7 @@ Implement CRUD API routes for the Worker entity. Workers are AI agents that auth
 // Cryptographically secure API key generation and hashing.
 // Keys are generated as random hex strings, stored as SHA-256 hashes.
 
-import { randomBytes, createHash } from "crypto";
+import { randomBytes, createHash } from 'crypto';
 
 /**
  * Generate a new API key for a worker.
@@ -101,9 +101,9 @@ import { randomBytes, createHash } from "crypto";
  * The hash is SHA-256 for O(1) lookup during authentication.
  */
 export function generateApiKey(): { plainText: string; hash: string; prefix: string } {
-  const randomPart = randomBytes(24).toString("hex"); // 48 hex chars
+  const randomPart = randomBytes(24).toString('hex'); // 48 hex chars
   const plainText = `lw_${randomPart}`;
-  const hash = createHash("sha256").update(plainText).digest("hex");
+  const hash = createHash('sha256').update(plainText).digest('hex');
   const prefix = plainText.substring(0, 11); // "lw_" + first 8 hex chars
 
   return { plainText, hash, prefix };
@@ -113,7 +113,7 @@ export function generateApiKey(): { plainText: string; hash: string; prefix: str
  * Hash an API key for database lookup during authentication.
  */
 export function hashApiKey(apiKey: string): string {
-  return createHash("sha256").update(apiKey).digest("hex");
+  return createHash('sha256').update(apiKey).digest('hex');
 }
 ```
 

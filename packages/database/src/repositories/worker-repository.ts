@@ -27,9 +27,19 @@
 
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
-import { eq, and, count, asc, desc, type SQL, type InferSelectModel } from 'drizzle-orm';
+import {
+  eq,
+  and,
+  count,
+  asc,
+  desc,
+  isNull,
+  inArray,
+  type SQL,
+  type InferSelectModel,
+} from 'drizzle-orm';
 
-import { workersTable, workerProjectAccessTable } from '../schema';
+import { workersTable, workerProjectAccessTable, userStoriesTable } from '../schema';
 
 import { asDrizzle, ConflictError, NotFoundError } from './base-repository';
 
@@ -43,11 +53,11 @@ import type { PaginationQuery, PaginationMeta } from '@laila/shared';
 /** Prefix prepended to every generated API key */
 const API_KEY_PREFIX = 'lw_';
 
-/** Number of random bytes used for API key entropy (256 bits) */
-const API_KEY_RANDOM_BYTES = 32;
+/** Number of random bytes used for API key entropy (192 bits → 48 hex chars) */
+const API_KEY_RANDOM_BYTES = 24;
 
-/** Number of characters stored as the key prefix for index-based lookup */
-const PREFIX_LENGTH = 12;
+/** Number of characters stored as the key prefix for index-based lookup (lw_ + 8 hex = 11) */
+const PREFIX_LENGTH = 11;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,6 +94,32 @@ export interface PaginatedWorkers {
   pagination: PaginationMeta;
 }
 
+/** Data for updating a worker's mutable fields */
+export interface UpdateWorkerData {
+  name?: string;
+  description?: string | null;
+}
+
+/** Summary of worker activity for the detail endpoint */
+export interface WorkerActivitySummary {
+  assignedStories: number;
+  completedStories: number;
+  projectAccessCount: number;
+}
+
+/** A worker record combined with its activity summary */
+export interface WorkerWithActivity {
+  worker: Worker;
+  activity: WorkerActivitySummary;
+}
+
+/** Minimal story info for deletion guard responses */
+export interface AssignedStoryInfo {
+  id: string;
+  title: string;
+  workStatus: string;
+}
+
 /** Union of supported Drizzle client types */
 type DatabaseClient = Database | PoolDatabase;
 
@@ -95,10 +131,10 @@ type DatabaseClient = Database | PoolDatabase;
  * Generates a new API key with the `lw_` prefix.
  *
  * @returns The raw key (for the caller), its SHA-256 hex hash, and the
- *          stored prefix (first 12 characters)
+ *          stored prefix (first 11 characters: `lw_` + 8 hex)
  */
 const generateApiKey = (): { rawKey: string; hash: string; prefix: string } => {
-  const randomPart = randomBytes(API_KEY_RANDOM_BYTES).toString('base64url');
+  const randomPart = randomBytes(API_KEY_RANDOM_BYTES).toString('hex');
   const rawKey = `${API_KEY_PREFIX}${randomPart}`;
   const hash = createHash('sha256').update(rawKey).digest('hex');
   const prefix = rawKey.substring(0, PREFIX_LENGTH);
@@ -470,6 +506,231 @@ export const createWorkerRepository = (db: DatabaseClient) => {
   };
 
   // -----------------------------------------------------------------------
+  // Update
+  // -----------------------------------------------------------------------
+
+  /**
+   * Updates a worker's mutable fields (name and/or description).
+   *
+   * Uses optimistic locking via `updatedAt` timestamp to prevent
+   * concurrent modification. If the record has been modified since the
+   * caller last read it, a `ConflictError` is thrown.
+   *
+   * @param tenantId        - Tenant UUID for data isolation
+   * @param workerId        - The worker UUID to update
+   * @param data            - Fields to update (name and/or description)
+   * @param expectedVersion - The `updatedAt` value the caller expects
+   * @returns The updated worker record
+   * @throws {ConflictError} If `updatedAt` does not match (concurrent modification)
+   * @throws {NotFoundError} If the worker does not exist for this tenant
+   */
+  const update = async (
+    tenantId: string,
+    workerId: string,
+    data: UpdateWorkerData,
+    expectedVersion: Date,
+  ): Promise<Worker> => {
+    const updatePayload: Record<string, string | null | Date> = {
+      updatedAt: new Date(),
+    };
+
+    if (data.name !== undefined) {
+      updatePayload.name = data.name;
+    }
+    if (data.description !== undefined) {
+      updatePayload.description = data.description;
+    }
+
+    const results = await typedDb
+      .update(workersTable)
+      .set(updatePayload)
+      .where(
+        and(
+          eq(workersTable.id, workerId),
+          eq(workersTable.tenantId, tenantId),
+          eq(workersTable.updatedAt, expectedVersion),
+        ),
+      )
+      .returning();
+
+    if (results.length === 0) {
+      const existing = await findById(tenantId, workerId);
+      if (!existing) {
+        throw new NotFoundError('workers', workerId);
+      }
+      throw new ConflictError('workers', workerId, 0);
+    }
+
+    return results[0] as Worker;
+  };
+
+  // -----------------------------------------------------------------------
+  // Hard delete
+  // -----------------------------------------------------------------------
+
+  /**
+   * Hard-deletes a worker record from the database.
+   *
+   * This permanently removes the worker and invalidates its API key
+   * (since the key hash is stored on the worker record). The
+   * `worker_project_access` records are cascade-deleted by the FK.
+   * Stories assigned to this worker have `assigned_worker_id` set to
+   * NULL by the FK `ON DELETE SET NULL` action.
+   *
+   * @param tenantId - Tenant UUID for data isolation
+   * @param workerId - The worker UUID to delete
+   * @throws {NotFoundError} If the worker does not exist for this tenant
+   */
+  const hardDelete = async (tenantId: string, workerId: string): Promise<void> => {
+    const results = await typedDb
+      .delete(workersTable)
+      .where(and(eq(workersTable.id, workerId), eq(workersTable.tenantId, tenantId)))
+      .returning({ id: workersTable.id });
+
+    if (results.length === 0) {
+      throw new NotFoundError('workers', workerId);
+    }
+  };
+
+  // -----------------------------------------------------------------------
+  // Story assignment queries (for deletion guards)
+  // -----------------------------------------------------------------------
+
+  /**
+   * Finds all non-deleted stories currently assigned to a worker that
+   * are in the `in_progress` or `assigned` status.
+   *
+   * Used by the deletion guard to determine if a worker can be safely
+   * removed without disrupting active work.
+   *
+   * @param tenantId - Tenant UUID for data isolation
+   * @param workerId - The worker UUID to check assignments for
+   * @returns Array of minimal story info for in-progress assignments
+   */
+  const findInProgressStories = async (
+    tenantId: string,
+    workerId: string,
+  ): Promise<AssignedStoryInfo[]> => {
+    const results = await typedDb
+      .select({
+        id: userStoriesTable.id,
+        title: userStoriesTable.title,
+        workStatus: userStoriesTable.workStatus,
+      })
+      .from(userStoriesTable)
+      .where(
+        and(
+          eq(userStoriesTable.tenantId, tenantId),
+          eq(userStoriesTable.assignedWorkerId, workerId),
+          inArray(userStoriesTable.workStatus, ['in_progress', 'assigned']),
+          isNull(userStoriesTable.deletedAt),
+        ),
+      );
+
+    return results as AssignedStoryInfo[];
+  };
+
+  /**
+   * Unassigns all stories from a worker by setting `assigned_worker_id`
+   * to NULL and reverting their status to `pending`.
+   *
+   * Used during force-deletion to cleanly detach all story assignments
+   * before removing the worker record.
+   *
+   * @param tenantId - Tenant UUID for data isolation
+   * @param workerId - The worker UUID to unassign stories from
+   * @returns The number of stories that were unassigned
+   */
+  const unassignAllStories = async (tenantId: string, workerId: string): Promise<number> => {
+    const results = await typedDb
+      .update(userStoriesTable)
+      .set({
+        assignedWorkerId: null,
+        assignedAt: null,
+        workStatus: 'pending',
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(userStoriesTable.tenantId, tenantId),
+          eq(userStoriesTable.assignedWorkerId, workerId),
+          isNull(userStoriesTable.deletedAt),
+        ),
+      )
+      .returning({ id: userStoriesTable.id });
+
+    return results.length;
+  };
+
+  // -----------------------------------------------------------------------
+  // Activity summary (for detail endpoint)
+  // -----------------------------------------------------------------------
+
+  /**
+   * Returns a worker combined with its activity summary.
+   *
+   * The activity summary includes:
+   * - Number of currently assigned stories
+   * - Number of completed stories (historical)
+   * - Number of projects the worker has access to
+   *
+   * @param tenantId - Tenant UUID for data isolation
+   * @param workerId - The worker UUID to get details for
+   * @returns The worker with activity summary, or null if not found
+   */
+  const findWithActivity = async (
+    tenantId: string,
+    workerId: string,
+  ): Promise<WorkerWithActivity | null> => {
+    const worker = await findById(tenantId, workerId);
+    if (!worker) return null;
+
+    // Run all count queries in parallel for performance
+    const [assignedResult, completedResult, projectAccessResult] = await Promise.all([
+      typedDb
+        .select({ total: count() })
+        .from(userStoriesTable)
+        .where(
+          and(
+            eq(userStoriesTable.tenantId, tenantId),
+            eq(userStoriesTable.assignedWorkerId, workerId),
+            inArray(userStoriesTable.workStatus, ['in_progress', 'assigned']),
+            isNull(userStoriesTable.deletedAt),
+          ),
+        ),
+      typedDb
+        .select({ total: count() })
+        .from(userStoriesTable)
+        .where(
+          and(
+            eq(userStoriesTable.tenantId, tenantId),
+            eq(userStoriesTable.assignedWorkerId, workerId),
+            eq(userStoriesTable.workStatus, 'done'),
+            isNull(userStoriesTable.deletedAt),
+          ),
+        ),
+      typedDb
+        .select({ total: count() })
+        .from(workerProjectAccessTable)
+        .where(
+          and(
+            eq(workerProjectAccessTable.tenantId, tenantId),
+            eq(workerProjectAccessTable.workerId, workerId),
+          ),
+        ),
+    ]);
+
+    return {
+      worker,
+      activity: {
+        assignedStories: assignedResult[0]?.total ?? 0,
+        completedStories: completedResult[0]?.total ?? 0,
+        projectAccessCount: projectAccessResult[0]?.total ?? 0,
+      },
+    };
+  };
+
+  // -----------------------------------------------------------------------
   // Project access management
   // -----------------------------------------------------------------------
 
@@ -592,6 +853,11 @@ export const createWorkerRepository = (db: DatabaseClient) => {
     create,
     findById,
     findByTenant,
+    update,
+    hardDelete,
+    findInProgressStories,
+    unassignAllStories,
+    findWithActivity,
     authenticateByApiKey,
     regenerateApiKey,
     deactivate,

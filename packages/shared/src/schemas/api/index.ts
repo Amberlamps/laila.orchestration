@@ -57,6 +57,10 @@ export {
   type CreateWorker,
   updateWorkerSchema,
   type UpdateWorker,
+  updateWorkerBodySchema,
+  type UpdateWorkerBody,
+  deleteWorkerQuerySchema,
+  type DeleteWorkerQuery,
   workerResponseSchema,
   type WorkerResponse,
 } from './worker';

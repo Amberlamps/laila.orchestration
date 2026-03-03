@@ -76,7 +76,11 @@ export {
   type Worker,
   type WorkerProjectAccess,
   type CreateWorkerData,
+  type UpdateWorkerData,
   type WorkerWithApiKey,
+  type WorkerWithActivity,
+  type WorkerActivitySummary,
+  type AssignedStoryInfo,
   type FindWorkersOptions,
   type PaginatedWorkers,
 } from './worker-repository';
