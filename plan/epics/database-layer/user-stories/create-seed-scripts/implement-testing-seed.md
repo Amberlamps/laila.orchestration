@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Testing Seed
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Create Seed Scripts](./tasks.md)
 - **Parent Epic:** [Database Layer](../../user-stories.md)
@@ -14,6 +14,7 @@
 Create a testing seed script that populates the database with minimal, deterministic fixtures for integration tests. Unlike the development seed which creates a rich and realistic dataset, the testing seed creates the minimum data needed for tests to exercise the application's functionality.
 
 The testing seed must be:
+
 - **Deterministic** — Same input always produces the same output (fixed UUIDs, timestamps)
 - **Minimal** — Only creates what is needed, no excess data
 - **Idempotent** — Running it multiple times does not create duplicates (check-before-insert pattern)
@@ -45,6 +46,7 @@ The testing seed must be:
 ## Technical Notes
 
 - Testing seed structure:
+
   ```typescript
   // packages/database/src/seed/testing.ts
   // Testing seed — minimal deterministic fixtures for integration tests
@@ -71,6 +73,7 @@ The testing seed must be:
   export const TEST_WORKER_API_KEY = 'lw_test_integration_key_do_not_use_in_production';
   export const TEST_WORKER_API_KEY_PREFIX = 'lw_test_inte';
   ```
+
 - Idempotent insert pattern with Drizzle:
   ```typescript
   // Check-before-insert pattern for idempotent seeding

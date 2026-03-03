@@ -4,17 +4,17 @@
 
 - **Title:** Create Seed Scripts
 - **Description:** Create development and testing seed profiles with realistic sample data and minimal deterministic fixtures.
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [Database Layer](../../user-stories.md)
 - **Total Tasks:** 2
 - **Dependencies:** Implement Repository Layer
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Development Seed](./implement-development-seed.md) | Create development seed with realistic sample data (projects, epics, stories, tasks, workers, personas) | Not Started | backend-developer | None |
-| [Implement Testing Seed](./implement-testing-seed.md) | Create testing seed with minimal deterministic fixtures for integration tests | Not Started | qa-expert | None |
+| Task                                                          | Description                                                                                             | Status   | Assigned Agent    | Dependencies |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------- | ----------------- | ------------ |
+| [Implement Development Seed](./implement-development-seed.md) | Create development seed with realistic sample data (projects, epics, stories, tasks, workers, personas) | Complete | backend-developer | None         |
+| [Implement Testing Seed](./implement-testing-seed.md)         | Create testing seed with minimal deterministic fixtures for integration tests                           | Complete | qa-expert         | None         |
 
 ## Dependency Graph
 
