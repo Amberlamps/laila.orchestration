@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Timeout Checking Logic
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Timeout & Reclamation](./tasks.md)
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
@@ -22,9 +22,9 @@ Create a function that checks all in-progress stories across all projects and re
 // Checks all in-progress stories for timeout and reclaims stale ones.
 // Designed to be called by a scheduled function (cron, Lambda, etc.).
 
-import { storyRepository, projectRepository, taskRepository } from "@laila/database";
-import { determineStoryStatus } from "./story-status-determination";
-import { db } from "@laila/database";
+import { storyRepository, projectRepository, taskRepository } from '@laila/database';
+import { determineStoryStatus } from './story-status-determination';
+import { db } from '@laila/database';
 
 /**
  * Check all in-progress stories across all projects for timeout.
@@ -71,8 +71,7 @@ export async function checkAndReclaimTimedOutStories(): Promise<{
 
   for (const story of inProgressStories) {
     const lastActivity = story.last_activity_at ?? story.started_at;
-    const minutesSinceActivity =
-      (now.getTime() - lastActivity.getTime()) / 1000 / 60;
+    const minutesSinceActivity = (now.getTime() - lastActivity.getTime()) / 1000 / 60;
 
     if (minutesSinceActivity > story.project_timeout_minutes) {
       // This story has timed out — reclaim it
@@ -84,7 +83,7 @@ export async function checkAndReclaimTimedOutStories(): Promise<{
           // RACE CONDITION CHECK: If the story is no longer in-progress,
           // the worker completed (or failed) it between our check and now.
           // Do NOT reclaim — the worker's action takes precedence.
-          if (currentStory.status !== "in_progress") {
+          if (currentStory.status !== 'in_progress') {
             return; // Skip — story was already handled
           }
 
@@ -101,7 +100,7 @@ export async function checkAndReclaimTimedOutStories(): Promise<{
               last_activity_at: null,
               version: currentStory.version + 1,
             },
-            tx
+            tx,
           );
 
           // Reset in-progress tasks, preserve completed tasks
@@ -114,11 +113,11 @@ export async function checkAndReclaimTimedOutStories(): Promise<{
               worker_id: story.assigned_worker_id,
               started_at: story.started_at,
               ended_at: now,
-              reason: "timeout",
+              reason: 'timeout',
               error_message: `Story timed out after ${Math.round(minutesSinceActivity)} minutes (limit: ${story.project_timeout_minutes} minutes)`,
               task_statuses: await captureTaskStatusSnapshot(story.id, tx),
             },
-            tx
+            tx,
           );
 
           reclaimed.push({

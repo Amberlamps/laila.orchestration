@@ -62,6 +62,12 @@ export const userStoriesTable = pgTable(
     }),
     assignedAt: timestamp('assigned_at', { withTimezone: true }),
 
+    // Tracks the most recent worker activity on this story. Updated when:
+    // - The story is assigned to a worker (set to assignment time)
+    // - A task within the story is started or completed
+    // Used by the timeout checker to determine inactivity duration.
+    lastActivityAt: timestamp('last_activity_at', { withTimezone: true }),
+
     // Retry management: attempts increments each time a worker picks up
     // the story; once attempts >= max_attempts the story is not retried.
     attempts: integer('attempts').notNull().default(0),

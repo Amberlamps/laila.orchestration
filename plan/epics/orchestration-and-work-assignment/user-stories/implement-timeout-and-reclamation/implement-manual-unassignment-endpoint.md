@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Manual Unassignment Endpoint
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Timeout & Reclamation](./tasks.md)
 - **Parent Epic:** [Orchestration & Work Assignment API](../../user-stories.md)
@@ -75,7 +75,7 @@ Implement the manual unassignment endpoint that allows human operators to remove
 export const unassignRequestSchema = z.object({
   confirmation: z.literal(true, {
     errorMap: () => ({
-      message: "Confirmation must be explicitly set to true to unassign a worker",
+      message: 'Confirmation must be explicitly set to true to unassign a worker',
     }),
   }),
   reason: z.string().max(2000).optional(),
@@ -104,15 +104,15 @@ export const unassignRequestSchema = z.object({
 export async function processManualUnassignment(
   storyId: string,
   operatorUserId: string,
-  reason?: string
+  reason?: string,
 ): Promise<UnassignmentResult> {
   return await db.transaction(async (tx) => {
     const story = await storyRepository.findById(storyId, tx);
 
-    if (story.status !== "in_progress") {
+    if (story.status !== 'in_progress') {
       throw new ConflictError(
         DomainErrorCode.INVALID_STATUS_TRANSITION,
-        "Can only unassign workers from in-progress stories"
+        'Can only unassign workers from in-progress stories',
       );
     }
 
@@ -131,7 +131,7 @@ export async function processManualUnassignment(
         last_activity_at: null,
         version: story.version + 1,
       },
-      tx
+      tx,
     );
 
     // Reset in-progress tasks, preserve completed tasks
@@ -144,11 +144,11 @@ export async function processManualUnassignment(
         worker_id: previousWorkerId,
         started_at: story.started_at,
         ended_at: new Date(),
-        reason: "manual_unassignment",
-        error_message: reason ?? "Manually unassigned by operator",
+        reason: 'manual_unassignment',
+        error_message: reason ?? 'Manually unassigned by operator',
         task_statuses: await captureTaskStatusSnapshot(storyId, tx),
       },
-      tx
+      tx,
     );
 
     // Re-derive parent statuses
@@ -156,15 +156,15 @@ export async function processManualUnassignment(
 
     // Log audit event
     await auditLogger.log({
-      action: "story.unassigned",
-      entity_type: "story",
+      action: 'story.unassigned',
+      entity_type: 'story',
       entity_id: storyId,
       actor_id: operatorUserId,
-      actor_type: "user",
+      actor_type: 'user',
       details: {
         previous_worker_id: previousWorkerId,
         new_status: newStatus,
-        reason: reason ?? "No reason provided",
+        reason: reason ?? 'No reason provided',
       },
     });
 

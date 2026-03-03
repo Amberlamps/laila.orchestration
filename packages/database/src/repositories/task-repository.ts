@@ -485,6 +485,93 @@ export const createTaskRepository = (db: Database | PoolDatabase) => {
   };
 
   // -------------------------------------------------------------------------
+  // resetInProgressTasksByStory (transactional, for timeout reclamation)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Resets all in-progress tasks within a story to 'not_started' (DB: 'pending').
+   *
+   * Completed tasks ('done') are preserved. Only tasks with `work_status =
+   * 'in_progress'` are reset. This is used during timeout reclamation to
+   * return partially-executed story tasks to an assignable state.
+   *
+   * @param tenantId - The tenant UUID for data isolation
+   * @param storyId  - The story UUID whose in-progress tasks should be reset
+   * @param tx       - The database transaction handle
+   * @returns The number of tasks that were reset
+   */
+  const resetInProgressTasksByStory = async (
+    tenantId: string,
+    storyId: string,
+    tx: DrizzleDb,
+  ): Promise<number> => {
+    const now = new Date();
+
+    const results = await tx
+      .update(tasksTable)
+      .set({
+        workStatus: 'pending',
+        startedAt: null,
+        completedAt: null,
+        version: sql`${tasksTable.version} + 1`,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(tasksTable.tenantId, tenantId),
+          eq(tasksTable.userStoryId, storyId),
+          eq(tasksTable.workStatus, 'in_progress'),
+          isNull(tasksTable.deletedAt),
+        ),
+      )
+      .returning();
+
+    return results.length;
+  };
+
+  // -------------------------------------------------------------------------
+  // getTaskStatusSnapshot (transactional, for attempt history)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Captures a snapshot of all task statuses within a story.
+   *
+   * Returns a record mapping task IDs to their current work status.
+   * Used when creating attempt history records to preserve the state
+   * of tasks at the time of timeout or failure.
+   *
+   * @param tenantId - The tenant UUID for data isolation
+   * @param storyId  - The story UUID to capture task statuses for
+   * @param tx       - The database transaction handle
+   * @returns A record mapping task IDs to their work status strings
+   */
+  const getTaskStatusSnapshot = async (
+    tenantId: string,
+    storyId: string,
+    tx: DrizzleDb,
+  ): Promise<Record<string, string>> => {
+    const tasks = await tx
+      .select({
+        id: tasksTable.id,
+        workStatus: tasksTable.workStatus,
+      })
+      .from(tasksTable)
+      .where(
+        and(
+          eq(tasksTable.tenantId, tenantId),
+          eq(tasksTable.userStoryId, storyId),
+          isNull(tasksTable.deletedAt),
+        ),
+      );
+
+    const snapshot: Record<string, string> = {};
+    for (const task of tasks) {
+      snapshot[task.id] = task.workStatus;
+    }
+    return snapshot;
+  };
+
+  // -------------------------------------------------------------------------
   // Reconciler query
   // -------------------------------------------------------------------------
 
@@ -1303,6 +1390,8 @@ export const createTaskRepository = (db: Database | PoolDatabase) => {
     getDependentIdsInTx,
     removeAllEdgesInTx,
     softDeleteInTx,
+    resetInProgressTasksByStory,
+    getTaskStatusSnapshot,
   };
 };
 

@@ -96,6 +96,7 @@ export {
   // Types
   type UserStory,
   type UserStoryWithTaskCount,
+  type InProgressStoryWithTimeout,
   type AttemptHistory,
   type CreateStoryData,
   type UpdateStoryData,

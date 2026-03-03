@@ -10,7 +10,12 @@ import { createUserStorySchema, updateUserStorySchema } from '../user-story';
 
 // -- Project CRUD --
 describe('createProjectSchema', () => {
-  const valid = { name: 'My Project', description: null, lifecycleStatus: 'draft' } as const;
+  const valid = {
+    name: 'My Project',
+    description: null,
+    lifecycleStatus: 'draft',
+    workerInactivityTimeoutMinutes: 30,
+  } as const;
 
   it('accepts valid create payload', () => {
     expect(createProjectSchema.safeParse(valid).success).toBe(true);

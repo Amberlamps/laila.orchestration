@@ -317,6 +317,12 @@ vi.mock('@/lib/middleware/api-key-validator', () => ({
 vi.mock('@laila/database', () => ({
   getDb: vi.fn(() => ({})),
   writeAuditEvent: vi.fn(async () => undefined),
+  userStoriesTable: {
+    id: 'id',
+    tenantId: 'tenant_id',
+    version: 'version',
+    workStatus: 'work_status',
+  },
   createTaskRepository: vi.fn(() => ({
     create: mockTaskRepoCreate,
     createInTx: mockTaskRepoCreateInTx,
@@ -352,6 +358,19 @@ vi.mock('@laila/database', () => ({
     updateWorkStatus: mockProjectRepoUpdateWorkStatus,
   })),
 }));
+
+/**
+ * Mock drizzle-orm -- used by cascading-reevaluation for the lastActivityAt
+ * update (tx.update(userStoriesTable).set({}).where(and(eq(...), eq(...)))).
+ */
+vi.mock('drizzle-orm', () => {
+  const sqlFn = vi.fn((...args: unknown[]) => ({ type: 'sql', args }));
+  return {
+    eq: vi.fn((...args: unknown[]) => ({ type: 'eq', args })),
+    and: vi.fn((...args: unknown[]) => ({ type: 'and', args })),
+    sql: sqlFn,
+  };
+});
 
 /**
  * Mock @laila/domain -- DAG functions used by dag-validation.
@@ -407,8 +426,17 @@ const setWorkerAuth = (workerId: string = VALID_WORKER_UUID): void => {
 // ---------------------------------------------------------------------------
 
 const setupTransactionMock = (): void => {
+  // The tx mock must support tx.update(table).set({}).where({}) for the
+  // lastActivityAt update in cascading-reevaluation.ts.
+  const mockTx = {
+    update: vi.fn(() => ({
+      set: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([]),
+      })),
+    })),
+  };
   mockTaskRepoWithTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
-    fn({}),
+    fn(mockTx),
   );
 };
 
@@ -1598,6 +1626,7 @@ describe('Task API Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(task);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedTask);
       // Cascading re-evaluation mocks
       mockTaskRepoGetDependents.mockResolvedValue([]);
@@ -1666,6 +1695,7 @@ describe('Task API Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(task);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedTask);
       // Cascading: B depends on A (which is now done), B becomes unblocked
       mockTaskRepoGetDependents.mockResolvedValue([blockedTask]);
@@ -1746,6 +1776,7 @@ describe('Task API Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(taskA);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedA);
       // Cascading: A's dependents = [B]; B depends on A (done) -> unblocked
       // C is not a direct dependent of A, so it's not checked in this cascade
@@ -1821,6 +1852,7 @@ describe('Task API Integration Tests', () => {
 
       mockTaskRepoFindById.mockResolvedValue(taskA);
       mockTaskRepoGetParentStory.mockResolvedValue(parentStory);
+      mockStoryRepoFindById.mockResolvedValue(parentStory);
       mockTaskRepoUpdateInTx.mockResolvedValue(completedA);
       // A's dependents = [C] (C depends on both A and B)
       mockTaskRepoGetDependents.mockResolvedValue([blockedC]);

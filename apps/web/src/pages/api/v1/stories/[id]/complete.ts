@@ -50,6 +50,7 @@ import { z } from 'zod';
 import { withErrorHandler } from '@/lib/api/error-handler';
 import { withValidation } from '@/lib/api/validation';
 import { withAuth } from '@/lib/middleware/with-auth';
+import { guardWorkerStillAssigned } from '@/lib/orchestration/race-condition-guards';
 
 import type { AuthenticatedRequest } from '@/lib/middleware/with-auth';
 import type { DrizzleDb } from '@laila/database';
@@ -132,19 +133,26 @@ const handleComplete = withErrorHandler(
           throw new NotFoundError(DomainErrorCode.STORY_NOT_FOUND, `Story with id ${id} not found`);
         }
 
-        // 2. Verify the story is in 'in_progress' status
+        // 2. Verify the requesting worker is assigned to this story.
+        //    This check comes BEFORE the status check because when a story
+        //    is reclaimed (timeout or manual unassignment), both the worker
+        //    assignment AND status change. Returning WORKER_NOT_ASSIGNED
+        //    gives the worker a clear, actionable signal.
+        if (story.assignedWorkerId !== workerId) {
+          throw new AuthorizationError(
+            DomainErrorCode.WORKER_NOT_ASSIGNED,
+            `Worker ${workerId} is not assigned to this story. ` +
+              `The story may have been reclaimed due to timeout or manual unassignment. ` +
+              `Current story status: ${String(story.workStatus)}.`,
+            { storyId: story.id, currentStatus: String(story.workStatus) },
+          );
+        }
+
+        // 3. Verify the story is in 'in_progress' status
         if (story.workStatus !== 'in_progress') {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
             `Cannot complete story in "${String(story.workStatus)}" status. Story must be in "in_progress" status to complete.`,
-          );
-        }
-
-        // 3. Verify the requesting worker is assigned to this story
-        if (story.assignedWorkerId !== workerId) {
-          throw new AuthorizationError(
-            DomainErrorCode.WORKER_NOT_ASSIGNED,
-            `Worker ${workerId} is not assigned to this story. Only the assigned worker can complete the story.`,
           );
         }
 
@@ -181,9 +189,15 @@ const handleComplete = withErrorHandler(
 
         const txResult: TransactionResult = await taskRepo.withTransaction(
           async (tx: DrizzleDb) => {
+            // 6a. Race condition guard (Defense Layer 3): Re-verify story
+            //     status and worker assignment within the transaction. If the
+            //     timeout checker reclaimed the story between steps 1-3 above
+            //     and this point, the guard will throw a descriptive error.
+            await guardWorkerStillAssigned(id, workerId, tenantId, tx);
+
             const now = new Date();
 
-            // 6a. Update story: set terminal status, record cost, clear assignment
+            // 6b. Update story: set terminal status, record cost, clear assignment
             const rows = await tx
               .update(userStoriesTable)
               .set({
@@ -191,6 +205,7 @@ const handleComplete = withErrorHandler(
                 actualCost: costString,
                 assignedWorkerId: null,
                 assignedAt: null,
+                lastActivityAt: null,
                 version: sql`${userStoriesTable.version} + 1`,
                 updatedAt: now,
               })
@@ -212,7 +227,7 @@ const handleComplete = withErrorHandler(
               );
             }
 
-            // 6b. Update the corresponding attempt_history record
+            // 6c. Update the corresponding attempt_history record
             await tx
               .update(attemptHistoryTable)
               .set({
@@ -230,7 +245,7 @@ const handleComplete = withErrorHandler(
                 ),
               );
 
-            // 6c. Re-derive parent epic work status within the same transaction
+            // 6d. Re-derive parent epic work status within the same transaction
             const txAsDb = tx as unknown as Parameters<typeof createEpicRepository>[0];
             const txEpicRepo = createEpicRepository(txAsDb);
             const txProjectRepo = createProjectRepository(txAsDb);
@@ -238,7 +253,7 @@ const handleComplete = withErrorHandler(
 
             const derivedEpicStatus = await txEpicRepo.computeDerivedStatus(tenantId, story.epicId);
 
-            // 6d. Re-derive parent project work status within the same transaction
+            // 6e. Re-derive parent project work status within the same transaction
             let derivedProjectStatus = 'pending';
             const projectId = await txTaskRepo.getProjectIdForStory(tenantId, id);
             if (projectId) {

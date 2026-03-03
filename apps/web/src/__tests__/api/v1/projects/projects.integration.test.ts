@@ -58,6 +58,7 @@ interface MockProject {
   description: string | null;
   lifecycleStatus: string;
   workStatus: string;
+  workerInactivityTimeoutMinutes: number;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -115,6 +116,7 @@ const createMockProject = (overrides: Partial<MockProject> = {}): MockProject =>
   description: 'A test project description',
   lifecycleStatus: 'draft',
   workStatus: 'pending',
+  workerInactivityTimeoutMinutes: 30,
   version: 0,
   createdAt: now,
   updatedAt: now,
@@ -302,7 +304,12 @@ describe('Project API Integration Tests', () => {
       const req = createMockRequest({
         method: 'POST',
         url: '/api/v1/projects',
-        body: { name: 'New Project', description: 'Description', lifecycleStatus: 'draft' },
+        body: {
+          name: 'New Project',
+          description: 'Description',
+          lifecycleStatus: 'draft',
+          workerInactivityTimeoutMinutes: 30,
+        },
       });
       const res = createMockResponse();
 
@@ -317,6 +324,7 @@ describe('Project API Integration Tests', () => {
       expect(mockProjectRepoCreate).toHaveBeenCalledWith(TEST_TENANT_ID, {
         name: 'New Project',
         description: 'Description',
+        workerInactivityTimeoutMinutes: 30,
       });
     });
 
@@ -327,7 +335,12 @@ describe('Project API Integration Tests', () => {
       const req = createMockRequest({
         method: 'POST',
         url: '/api/v1/projects',
-        body: { name: 'Minimal Project', description: null, lifecycleStatus: 'draft' },
+        body: {
+          name: 'Minimal Project',
+          description: null,
+          lifecycleStatus: 'draft',
+          workerInactivityTimeoutMinutes: 30,
+        },
       });
       const res = createMockResponse();
 
@@ -1677,7 +1690,12 @@ describe('Project API Integration Tests', () => {
       const req = createMockRequest({
         method: 'POST',
         url: '/api/v1/projects',
-        body: { name: 'Isolation Test 1', description: null, lifecycleStatus: 'draft' },
+        body: {
+          name: 'Isolation Test 1',
+          description: null,
+          lifecycleStatus: 'draft',
+          workerInactivityTimeoutMinutes: 30,
+        },
       });
       const res = createMockResponse();
 
@@ -1694,7 +1712,12 @@ describe('Project API Integration Tests', () => {
       const req = createMockRequest({
         method: 'POST',
         url: '/api/v1/projects',
-        body: { name: 'Isolation Test 2', description: null, lifecycleStatus: 'draft' },
+        body: {
+          name: 'Isolation Test 2',
+          description: null,
+          lifecycleStatus: 'draft',
+          workerInactivityTimeoutMinutes: 30,
+        },
       });
       const res = createMockResponse();
 

@@ -26,10 +26,7 @@ import {
   projectsTable,
   type DrizzleDb,
 } from '@laila/database';
-import {
-  ConflictError,
-  DomainErrorCode,
-} from '@laila/shared';
+import { ConflictError, DomainErrorCode } from '@laila/shared';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 
 // ---------------------------------------------------------------------------
@@ -109,6 +106,7 @@ export async function atomicAssignStory(
     .set({
       assignedWorkerId: workerId,
       assignedAt: now,
+      lastActivityAt: now,
       workStatus: 'in_progress',
       attempts: sql`${userStoriesTable.attempts} + 1`,
       version: sql`${userStoriesTable.version} + 1`,
