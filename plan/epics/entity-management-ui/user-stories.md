@@ -16,7 +16,7 @@
 | [Implement Epic Management Pages](./user-stories/implement-epic-management-pages/tasks.md)        | Epic detail page, create/edit modal, and publish/delete lifecycle flows                                 | Complete                    | 3 tasks | Implement Project Management Pages    |
 | [Implement User Story Management Pages](./user-stories/implement-story-management-pages/tasks.md) | Story detail page with tabs, tasks sub-tab, attempt history, create/edit modal, and action flows        | In Progress (laila-agent-3) | 5 tasks | Implement Epic Management Pages       |
 | [Implement Task Management Pages](./user-stories/implement-task-management-pages/tasks.md)        | Task detail page, create/edit modal, and dependency picker component                                    | Not Started                 | 3 tasks | Implement User Story Management Pages |
-| [Implement Worker Management Pages](./user-stories/implement-worker-management-pages/tasks.md)    | Worker list page, detail page, two-step create modal with API key reveal, and project access management | Not Started                 | 4 tasks | None                                  |
+| [Implement Worker Management Pages](./user-stories/implement-worker-management-pages/tasks.md)    | Worker list page, detail page, two-step create modal with API key reveal, and project access management | In Progress (laila-agent-2) | 4 tasks | None                                  |
 | [Implement Persona Management Pages](./user-stories/implement-persona-management-pages/tasks.md)  | Persona list page, create/edit modal, and detail page with active task assignments                      | Not Started                 | 3 tasks | None                                  |
 
 ## Dependency Graph
