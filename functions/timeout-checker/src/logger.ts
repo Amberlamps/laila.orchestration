@@ -1,30 +1,14 @@
 /**
  * Structured logging for the timeout-checker Lambda function.
  *
- * Uses pino for JSON output to stdout, which CloudWatch Logs captures
- * automatically. Provides a factory for creating per-invocation child
- * loggers enriched with the Lambda request ID and X-Ray trace ID.
+ * Delegates to the shared @laila/logger package for consistent JSON output,
+ * X-Ray Root trace ID extraction, and sensitive-field redaction.
  */
 
-import pino, { type Logger } from 'pino';
+import { createLambdaLogger } from '@laila/logger/lambda';
 
-/**
- * Base pino logger for the timeout-checker function.
- *
- * Configured with:
- * - ISO timestamps for CloudWatch Logs Insights compatibility
- * - Standard error serializers for stack trace capture
- * - Configurable level via LOG_LEVEL environment variable
- */
-const baseLogger: Logger = pino({
-  name: 'timeout-checker',
-  level: process.env['LOG_LEVEL'] ?? 'info',
-  timestamp: pino.stdTimeFunctions.isoTime,
-  serializers: {
-    err: pino.stdSerializers.err,
-    error: pino.stdSerializers.err,
-  },
-});
+import type { Logger } from '@laila/logger';
+import type { Context } from 'aws-lambda';
 
 /**
  * Minimal logger interface for dependency injection into orchestration
@@ -42,14 +26,15 @@ export interface TimeoutLogger {
  *
  * Enriches every log entry with:
  * - `requestId` — the Lambda request ID for correlation
- * - `traceId` — the X-Ray trace ID for distributed tracing (when available)
+ * - `traceId` — the X-Ray Root trace ID for distributed tracing (when available)
  */
-export const createInvocationLogger = (requestId: string): Logger => {
-  return baseLogger.child({
-    requestId,
-    traceId: process.env['_X_AMZN_TRACE_ID'],
-  });
+export const createInvocationLogger = (requestId: string, context?: Context): Logger => {
+  if (context) {
+    return createLambdaLogger(context);
+  }
+
+  // Fallback: build a minimal Context-like object for backwards compat
+  return createLambdaLogger({ awsRequestId: requestId } as Context);
 };
 
-export { baseLogger };
 export type { Logger };

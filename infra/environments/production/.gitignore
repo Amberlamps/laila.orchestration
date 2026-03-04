@@ -1,0 +1,2 @@
+# Terraform working directory (downloaded providers and plugins)
+.terraform/

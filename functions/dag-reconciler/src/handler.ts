@@ -11,6 +11,8 @@
  * delegates to the `reconcileAllProjects` orchestration function.
  */
 
+import { recordCount, recordDuration, flushMetrics } from '@laila/metrics';
+
 import { createPoolClient } from './db';
 import { createInvocationLogger } from './logger';
 import { reconcileAllProjects } from './reconciliation';
@@ -22,6 +24,7 @@ export const handler = async (
   event: ScheduledEvent,
   context: Context,
 ): Promise<ReconciliationResult> => {
+  const startTime = performance.now();
   const log = createInvocationLogger(context.awsRequestId);
 
   log.info(
@@ -62,6 +65,13 @@ export const handler = async (
       'Inconsistencies detected and corrected -- investigate if count is high',
     );
   }
+
+  // Publish custom CloudWatch metrics
+  const durationMs = Math.round(performance.now() - startTime);
+  recordCount('ReconciliationCorrections', result.correctionsMade);
+  recordDuration('ReconciliationDuration', durationMs);
+  recordCount('ProjectsReconciled', result.projectsChecked);
+  await flushMetrics();
 
   return result;
 };

@@ -234,6 +234,12 @@ importers:
       '@aws-sdk/lib-dynamodb':
         specifier: ^3.600.0
         version: 3.1000.0(@aws-sdk/client-dynamodb@3.1000.0)
+      '@laila/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@laila/metrics':
+        specifier: workspace:*
+        version: link:../../packages/metrics
       pino:
         specifier: ^9.0.0
         version: 9.14.0
@@ -259,6 +265,12 @@ importers:
       '@laila/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@laila/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@laila/metrics':
+        specifier: workspace:*
+        version: link:../../packages/metrics
       '@laila/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -296,6 +308,9 @@ importers:
       '@laila/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@laila/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@laila/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -327,6 +342,12 @@ importers:
       '@laila/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@laila/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@laila/metrics':
+        specifier: workspace:*
+        version: link:../../packages/metrics
       '@laila/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -413,6 +434,22 @@ importers:
         specifier: ^4.5.3
         version: 4.5.3
 
+  packages/logger:
+    dependencies:
+      pino:
+        specifier: ^9.6.0
+        version: 9.14.0
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.161
+        version: 8.10.161
+
+  packages/metrics:
+    dependencies:
+      '@aws-sdk/client-cloudwatch':
+        specifier: ^3.700.0
+        version: 3.1001.0
+
   packages/shared:
     dependencies:
       zod:
@@ -463,6 +500,10 @@ packages:
 
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
+
+  '@aws-sdk/client-cloudwatch@3.1001.0':
+    resolution: {integrity: sha512-/khzEWn02tjiMES/IsZHkC4YPPKEoe05/OfgfRb/Ku11Pa8LO8vA84f/3qqpD90Clm2pgFZQvLP9UCyiy2mqFw==}
+    engines: {node: '>=20.0.0'}
 
   '@aws-sdk/client-dynamodb@3.1000.0':
     resolution: {integrity: sha512-S0M9ndVgGiupQEX9M6yLIKx2Iw1Z/lnZR1j5guuR76sqteQM6jsQseTJepq0hJ9SGGpzSwMucYJxETQDHsgFhQ==}
@@ -2477,6 +2518,10 @@ packages:
     resolution: {integrity: sha512-Op+Dh6dPLWTjWITChFayDllIaCXRofOed8ecpggTC5fkh8yXes0vAEX7gRUfjGK+TlyxoCAA05gHbZW/zB9JwQ==}
     engines: {node: '>=18.0.0'}
 
+  '@smithy/middleware-compression@4.3.36':
+    resolution: {integrity: sha512-CHhEjVGkZhe9T3mlCWoGrJZv9CRUwYtfosGMGY3T64cf4TduIxkVkcSAradQwT+3JIi6EylxFZFKrx42qbKZXg==}
+    engines: {node: '>=18.0.0'}
+
   '@smithy/middleware-content-length@4.2.10':
     resolution: {integrity: sha512-TQZ9kX5c6XbjhaEBpvhSvMEZ0klBs1CFtOdPFwATZSbC9UeQfKHPLPN9Y+I6wZGMOavlYTOlHEPDrt42PMSH9w==}
     engines: {node: '>=18.0.0'}
@@ -4246,6 +4291,9 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
+
+  fflate@0.8.1:
+    resolution: {integrity: sha512-/exOvEuc+/iaUm105QIiOt4LpBdMTWsXxqR0HDF35vx3fmaKzw7354gTilCh5rkzEt8WYyG//ku3h3nRmd7CHQ==}
 
   file-entry-cache@8.0.0:
     resolution: {integrity: sha512-XXTUwCvisa5oacNGRP9SfNtYBNAMi+RPwBFmblZEF7N7swHYQS6/Zfk7SRwx4D5j3CH211YNRco1DEMNVfZCnQ==}
@@ -6637,6 +6685,52 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
+  '@aws-sdk/client-cloudwatch@3.1001.0':
+    dependencies:
+      '@aws-crypto/sha256-browser': 5.2.0
+      '@aws-crypto/sha256-js': 5.2.0
+      '@aws-sdk/core': 3.973.16
+      '@aws-sdk/credential-provider-node': 3.972.15
+      '@aws-sdk/middleware-host-header': 3.972.6
+      '@aws-sdk/middleware-logger': 3.972.6
+      '@aws-sdk/middleware-recursion-detection': 3.972.6
+      '@aws-sdk/middleware-user-agent': 3.972.16
+      '@aws-sdk/region-config-resolver': 3.972.6
+      '@aws-sdk/types': 3.973.4
+      '@aws-sdk/util-endpoints': 3.996.3
+      '@aws-sdk/util-user-agent-browser': 3.972.6
+      '@aws-sdk/util-user-agent-node': 3.973.1
+      '@smithy/config-resolver': 4.4.9
+      '@smithy/core': 3.23.7
+      '@smithy/fetch-http-handler': 5.3.12
+      '@smithy/hash-node': 4.2.10
+      '@smithy/invalid-dependency': 4.2.10
+      '@smithy/middleware-compression': 4.3.36
+      '@smithy/middleware-content-length': 4.2.10
+      '@smithy/middleware-endpoint': 4.4.21
+      '@smithy/middleware-retry': 4.4.38
+      '@smithy/middleware-serde': 4.2.11
+      '@smithy/middleware-stack': 4.2.10
+      '@smithy/node-config-provider': 4.3.10
+      '@smithy/node-http-handler': 4.4.13
+      '@smithy/protocol-http': 5.3.10
+      '@smithy/smithy-client': 4.12.1
+      '@smithy/types': 4.13.0
+      '@smithy/url-parser': 4.2.10
+      '@smithy/util-base64': 4.3.1
+      '@smithy/util-body-length-browser': 4.2.1
+      '@smithy/util-body-length-node': 4.2.2
+      '@smithy/util-defaults-mode-browser': 4.3.37
+      '@smithy/util-defaults-mode-node': 4.2.40
+      '@smithy/util-endpoints': 3.3.1
+      '@smithy/util-middleware': 4.2.10
+      '@smithy/util-retry': 4.2.10
+      '@smithy/util-utf8': 4.2.1
+      '@smithy/util-waiter': 4.2.10
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - aws-crt
+
   '@aws-sdk/client-dynamodb@3.1000.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
@@ -8905,6 +8999,19 @@ snapshots:
       '@smithy/util-utf8': 4.2.1
       tslib: 2.8.1
 
+  '@smithy/middleware-compression@4.3.36':
+    dependencies:
+      '@smithy/core': 3.23.7
+      '@smithy/is-array-buffer': 4.2.1
+      '@smithy/node-config-provider': 4.3.10
+      '@smithy/protocol-http': 5.3.10
+      '@smithy/types': 4.13.0
+      '@smithy/util-config-provider': 4.2.1
+      '@smithy/util-middleware': 4.2.10
+      '@smithy/util-utf8': 4.2.1
+      fflate: 0.8.1
+      tslib: 2.8.1
+
   '@smithy/middleware-content-length@4.2.10':
     dependencies:
       '@smithy/protocol-http': 5.3.10
@@ -11041,6 +11148,8 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.3):
     optionalDependencies:
       picomatch: 4.0.3
+
+  fflate@0.8.1: {}
 
   file-entry-cache@8.0.0:
     dependencies:

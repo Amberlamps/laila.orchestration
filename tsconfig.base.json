@@ -36,7 +36,11 @@
       "@laila/domain": ["./packages/domain/src"],
       "@laila/domain/*": ["./packages/domain/src/*"],
       "@laila/database": ["./packages/database/src"],
-      "@laila/database/*": ["./packages/database/src/*"]
+      "@laila/database/*": ["./packages/database/src/*"],
+      "@laila/logger": ["./packages/logger/src"],
+      "@laila/logger/*": ["./packages/logger/src/*"],
+      "@laila/metrics": ["./packages/metrics/src"],
+      "@laila/metrics/*": ["./packages/metrics/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", ".next", "coverage", "build"]

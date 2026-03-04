@@ -44,6 +44,7 @@ import {
   type Database,
 } from '@laila/database';
 import { evaluateEligibility, selectStoryForAssignment } from '@laila/domain';
+import { recordCount, flushMetrics } from '@laila/metrics';
 import {
   assignRequestSchema,
   NotFoundError,
@@ -53,6 +54,7 @@ import {
 } from '@laila/shared';
 
 import { withErrorHandler } from '@/lib/api/error-handler';
+import { withLogging } from '@/lib/api/logging-middleware';
 import { withValidation } from '@/lib/api/validation';
 import { withAuth } from '@/lib/middleware/with-auth';
 import { atomicAssignStory } from '@/lib/orchestration/atomic-assignment';
@@ -387,6 +389,16 @@ const handleAssign = withErrorHandler(
         });
 
         // -----------------------------------------------------------------
+        // Publish custom metrics for the assignment outcome
+        // -----------------------------------------------------------------
+        recordCount('WorkAssignments', 1, { projectId });
+        recordCount('AssignmentType', 1, {
+          projectId,
+          type: result.response.type,
+        });
+        await flushMetrics();
+
+        // -----------------------------------------------------------------
         // Send HTTP response after transaction commits
         // -----------------------------------------------------------------
         res.setHeader('Retry-After', String(result.retryAfterSeconds));
@@ -403,8 +415,11 @@ const handleAssign = withErrorHandler(
 /**
  * Next.js Pages Router API handler that dispatches to the correct handler
  * based on the HTTP method. Only POST is allowed for this endpoint.
+ *
+ * Wrapped with withLogging to add request ID, X-Ray trace ID, and
+ * request duration logging to every invocation.
  */
-const handler = async (req: NextApiRequest, res: NextApiResponse): Promise<void> => {
+export default withLogging(async (req, res): Promise<void> => {
   switch (req.method) {
     case 'POST':
       return handleAssign(req, res);
@@ -417,6 +432,4 @@ const handler = async (req: NextApiRequest, res: NextApiResponse): Promise<void>
         },
       });
   }
-};
-
-export default handler;
+});

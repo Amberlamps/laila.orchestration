@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Setup Pino Structured Logging
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** sre-engineer
 - **Parent User Story:** [Configure Observability](./tasks.md)
 - **Parent Epic:** [AWS Infrastructure & Deployment](../../user-stories.md)
@@ -21,26 +21,26 @@ Configure pino for structured JSON logging across all server-side code: Next.js 
 // Outputs JSON to stdout, which CloudWatch Logs captures automatically.
 // Provides a factory function for creating child loggers with context.
 
-import pino, { type Logger, type LoggerOptions } from "pino";
+import pino, { type Logger, type LoggerOptions } from 'pino';
 
 /**
  * Base pino configuration shared across all server-side code.
  * JSON output format for CloudWatch Logs compatibility.
  */
 const baseConfig: LoggerOptions = {
-  level: process.env.LOG_LEVEL ?? "info",
+  level: process.env.LOG_LEVEL ?? 'info',
   // Use ISO timestamp format for CloudWatch Logs Insights queries
   timestamp: pino.stdTimeFunctions.isoTime,
   // Redact sensitive fields to prevent accidental logging of secrets
   redact: {
     paths: [
-      "req.headers.authorization",
+      'req.headers.authorization',
       "req.headers['x-api-key']",
-      "req.headers.cookie",
-      "body.password",
-      "body.secret",
+      'req.headers.cookie',
+      'body.password',
+      'body.secret',
     ],
-    censor: "[REDACTED]",
+    censor: '[REDACTED]',
   },
   // Format error objects with stack traces
   serializers: {
@@ -79,7 +79,7 @@ export function createRequestLogger(
     agentId?: string;
     path?: string;
     method?: string;
-  }
+  },
 ): Logger {
   return parent.child(context);
 }
@@ -94,16 +94,26 @@ export function logRequestComplete(
     statusCode: number;
     durationMs: number;
     responseSize?: number;
-  }
+  },
 ): void {
   const { statusCode, durationMs, responseSize } = params;
 
   if (statusCode >= 500) {
-    logger.error({ statusCode, durationMs, responseSize, msg: "Request completed with server error" });
+    logger.error({
+      statusCode,
+      durationMs,
+      responseSize,
+      msg: 'Request completed with server error',
+    });
   } else if (statusCode >= 400) {
-    logger.warn({ statusCode, durationMs, responseSize, msg: "Request completed with client error" });
+    logger.warn({
+      statusCode,
+      durationMs,
+      responseSize,
+      msg: 'Request completed with client error',
+    });
   } else {
-    logger.info({ statusCode, durationMs, responseSize, msg: "Request completed" });
+    logger.info({ statusCode, durationMs, responseSize, msg: 'Request completed' });
   }
 }
 
@@ -118,26 +128,22 @@ export const logger = createLogger();
 // Middleware for adding structured logging to Next.js API routes.
 // Wraps route handlers to add request context and log completion.
 
-import type { NextApiRequest, NextApiResponse } from "next";
-import { createRequestLogger, logRequestComplete, logger } from "@laila/logger";
-import { randomUUID } from "node:crypto";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { createRequestLogger, logRequestComplete, logger } from '@laila/logger';
+import { randomUUID } from 'node:crypto';
 
 /**
  * Wraps an API route handler with structured logging.
  * Adds request ID, timing, and completion logging.
  */
-export function withLogging(
-  handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void>
-) {
+export function withLogging(handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void>) {
   return async (req: NextApiRequest, res: NextApiResponse): Promise<void> => {
     const startTime = performance.now();
-    const requestId = (req.headers["x-request-id"] as string) ?? randomUUID();
+    const requestId = (req.headers['x-request-id'] as string) ?? randomUUID();
 
     // Extract X-Ray trace ID from the environment or header
     const traceId =
-      process.env._X_AMZN_TRACE_ID ??
-      (req.headers["x-amzn-trace-id"] as string) ??
-      undefined;
+      process.env._X_AMZN_TRACE_ID ?? (req.headers['x-amzn-trace-id'] as string) ?? undefined;
 
     const requestLogger = createRequestLogger(logger, {
       requestId,
@@ -149,7 +155,7 @@ export function withLogging(
     // Attach logger to request for use in handlers
     (req as NextApiRequest & { log: typeof requestLogger }).log = requestLogger;
 
-    requestLogger.info({ msg: "Request started" });
+    requestLogger.info({ msg: 'Request started' });
 
     try {
       await handler(req, res);
@@ -171,8 +177,8 @@ export function withLogging(
 // Utility for creating loggers in Lambda function handlers.
 // Extracts the Lambda request ID and X-Ray trace ID from the context.
 
-import type { Context } from "aws-lambda";
-import { createRequestLogger, logger } from "./index";
+import type { Context } from 'aws-lambda';
+import { createRequestLogger, logger } from './index';
 
 /**
  * Create a request logger from a Lambda invocation context.

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Custom CloudWatch Metrics
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** sre-engineer
 - **Parent User Story:** [Configure Observability](./tasks.md)
 - **Parent Epic:** [AWS Infrastructure & Deployment](../../user-stories.md)
@@ -24,10 +24,10 @@ import {
   CloudWatchClient,
   PutMetricDataCommand,
   type MetricDatum,
-} from "@aws-sdk/client-cloudwatch";
+} from '@aws-sdk/client-cloudwatch';
 
 const client = new CloudWatchClient({});
-const NAMESPACE = "laila-works";
+const NAMESPACE = 'laila-works';
 
 /**
  * Metric buffer for batching PutMetricData calls.
@@ -43,12 +43,12 @@ const metricBuffer: MetricDatum[] = [];
 export function recordCount(
   metricName: string,
   value: number,
-  dimensions?: Record<string, string>
+  dimensions?: Record<string, string>,
 ): void {
   metricBuffer.push({
     MetricName: metricName,
     Value: value,
-    Unit: "Count",
+    Unit: 'Count',
     Timestamp: new Date(),
     Dimensions: dimensions
       ? Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value }))
@@ -62,12 +62,12 @@ export function recordCount(
 export function recordDuration(
   metricName: string,
   durationMs: number,
-  dimensions?: Record<string, string>
+  dimensions?: Record<string, string>,
 ): void {
   metricBuffer.push({
     MetricName: metricName,
     Value: durationMs,
-    Unit: "Milliseconds",
+    Unit: 'Milliseconds',
     Timestamp: new Date(),
     Dimensions: dimensions
       ? Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value }))
@@ -81,12 +81,12 @@ export function recordDuration(
 export function recordBytes(
   metricName: string,
   bytes: number,
-  dimensions?: Record<string, string>
+  dimensions?: Record<string, string>,
 ): void {
   metricBuffer.push({
     MetricName: metricName,
     Value: bytes,
-    Unit: "Bytes",
+    Unit: 'Bytes',
     Timestamp: new Date(),
     Dimensions: dimensions
       ? Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value }))
@@ -114,9 +114,9 @@ export async function flushMetrics(): Promise<void> {
         new PutMetricDataCommand({
           Namespace: NAMESPACE,
           MetricData: batch,
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
   // Clear the buffer
@@ -131,30 +131,30 @@ export async function flushMetrics(): Promise<void> {
 
 // --- Timeout Checker ---
 // After checking for timeouts:
-import { recordCount, flushMetrics } from "@laila/metrics";
+import { recordCount, flushMetrics } from '@laila/metrics';
 
-recordCount("TimeoutReclamations", reclaimedCount);
-recordCount("StoriesChecked", checkedCount);
+recordCount('TimeoutReclamations', reclaimedCount);
+recordCount('StoriesChecked', checkedCount);
 await flushMetrics();
 
 // --- DAG Reconciler ---
 // After reconciliation:
-recordCount("ReconciliationCorrections", correctionsMade);
-recordDuration("ReconciliationDuration", durationMs);
-recordCount("ProjectsReconciled", projectsChecked);
+recordCount('ReconciliationCorrections', correctionsMade);
+recordDuration('ReconciliationDuration', durationMs);
+recordCount('ProjectsReconciled', projectsChecked);
 await flushMetrics();
 
 // --- Audit Archiver ---
 // After archival:
-recordCount("EventsArchived", eventsArchived);
-recordBytes("ArchiveSize", totalSizeBytes);
-recordCount("ArchivePartitions", partitions.length);
+recordCount('EventsArchived', eventsArchived);
+recordBytes('ArchiveSize', totalSizeBytes);
+recordCount('ArchivePartitions', partitions.length);
 await flushMetrics();
 
 // --- Next.js API (Work Assignment) ---
 // After assignment:
-recordCount("WorkAssignments", 1, { projectId: projectId });
-recordCount("AssignmentType", 1, { type: response.type }); // "assigned", "blocked", "all_complete"
+recordCount('WorkAssignments', 1, { projectId: projectId });
+recordCount('AssignmentType', 1, { type: response.type }); // "assigned", "blocked", "all_complete"
 await flushMetrics();
 ```
 

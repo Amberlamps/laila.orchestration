@@ -16,6 +16,8 @@
  * 5. Return summary: events archived, files written, total size
  */
 
+import { recordCount, recordBytes, flushMetrics } from '@laila/metrics';
+
 import { scanExpiredEvents } from './dynamo';
 import { createInvocationLogger } from './logger';
 import { groupByDate } from './partition';
@@ -123,6 +125,12 @@ export const handler = async (event: ScheduledEvent, context: Context): Promise<
       'Audit archiver completed',
     );
   }
+
+  // Publish custom CloudWatch metrics
+  recordCount('EventsArchived', eventsArchived);
+  recordBytes('ArchiveSize', totalSizeBytes);
+  recordCount('ArchivePartitions', partitions.length);
+  await flushMetrics();
 
   return {
     eventsArchived,

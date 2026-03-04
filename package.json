@@ -11,8 +11,8 @@
   "scripts": {
     "dev": "pnpm -r run dev",
     "build": "pnpm -r run build",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "NODE_OPTIONS='--max-old-space-size=4096' eslint .",
+    "lint:fix": "NODE_OPTIONS='--max-old-space-size=4096' eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run --config vitest.workspace.ts",
