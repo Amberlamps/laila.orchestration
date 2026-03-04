@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Minimap Component
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Graph Performance & Extras](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)

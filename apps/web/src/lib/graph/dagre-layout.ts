@@ -28,7 +28,7 @@ export interface DagreLayoutOptions {
   nodeSep?: number;
 }
 
-const DEFAULT_OPTIONS: Required<DagreLayoutOptions> = {
+export const DEFAULT_OPTIONS: Required<DagreLayoutOptions> = {
   direction: 'TB',
   nodeWidth: 180,
   nodeHeight: 60,

@@ -4,21 +4,27 @@
  * Responsibilities:
  * 1. Fetches task dependency data from GET /api/v1/projects/:id/graph
  * 2. Transforms API data into ReactFlow format via transformToGraphData
- * 3. Computes layout using Dagre (TB direction, 180px width, 60px height)
+ * 3. Computes layout using Dagre via useDagreLayout hook
+ *    - Sync for <=200 nodes, Web Worker for >200 nodes
+ *    - Shows loading overlay during Web Worker computation
  * 4. Renders ReactFlow with dots background and fitView
  *
  * Must be wrapped in ReactFlowProvider at the page level.
  */
-import { ReactFlow, Background, BackgroundVariant } from '@xyflow/react';
+import { ReactFlow, Background, BackgroundVariant, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useDagreLayout } from '@/hooks/use-dagre-layout';
 import { useEdgeHighlight } from '@/hooks/use-edge-highlight';
-import { computeDagreLayout } from '@/lib/graph/dagre-layout';
+import { useFullscreen } from '@/hooks/use-fullscreen';
 import { transformToGraphData } from '@/lib/graph/transform-graph-data';
 import { useProjectGraph } from '@/lib/query-hooks';
 
 import { GraphCanvasControls } from './graph-canvas-controls';
+import { GraphLayoutLoading } from './graph-layout-loading';
+import { GraphLegend } from './graph-legend';
+import { GraphMinimap } from './graph-minimap';
 import { NODE_TYPES } from './node-types';
 
 import type { Node, Edge, OnSelectionChangeFunc } from '@xyflow/react';
@@ -80,21 +86,25 @@ interface DependencyGraphContainerProps {
  */
 export const DependencyGraphContainer = ({ projectId }: DependencyGraphContainerProps) => {
   const { data: graphData, isLoading, isError, error } = useProjectGraph(projectId);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
+  const { fitView } = useReactFlow();
 
-  // Transform API data and compute layout — memoized to avoid recomputation
-  const { layoutNodes, layoutEdges } = useMemo(() => {
+  // Transform API data into ReactFlow format — memoized to avoid recomputation
+  const { transformedNodes, transformedEdges } = useMemo(() => {
     if (!graphData || graphData.nodes.length === 0) {
-      return { layoutNodes: [] as Node[], layoutEdges: [] as Edge[] };
+      return { transformedNodes: [] as Node[], transformedEdges: [] as Edge[] };
     }
 
-    const { nodes: transformedNodes, edges: transformedEdges } = transformToGraphData(graphData);
-    const { nodes: positioned, edges: finalEdges } = computeDagreLayout(
-      transformedNodes,
-      transformedEdges,
-    );
-
-    return { layoutNodes: positioned, layoutEdges: finalEdges };
+    const { nodes: tNodes, edges: tEdges } = transformToGraphData(graphData);
+    return { transformedNodes: tNodes, transformedEdges: tEdges };
   }, [graphData]);
+
+  // Compute layout — uses sync for <=200 nodes, Web Worker for larger graphs
+  const { layoutNodes, layoutEdges, isComputing } = useDagreLayout(
+    transformedNodes,
+    transformedEdges,
+  );
 
   // --- Edge highlight state ---
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
@@ -121,6 +131,19 @@ export const DependencyGraphContainer = ({ projectId }: DependencyGraphContainer
   // Compute highlighted edges based on hover/selection state
   const highlightedEdges = useEdgeHighlight(layoutEdges, hoveredNodeId, selectedNodeId);
 
+  // Re-fit the graph when entering or exiting fullscreen so it adjusts
+  // to the new container dimensions. The requestAnimationFrame delay
+  // ensures the browser has finished the fullscreen transition.
+  useEffect(() => {
+    const frameId = requestAnimationFrame(() => {
+      void fitView({ padding: 0.2, duration: 300 });
+    });
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, [isFullscreen, fitView]);
+
   // --- Loading state ---
   if (isLoading) {
     return <GraphLoadingState />;
@@ -138,23 +161,35 @@ export const DependencyGraphContainer = ({ projectId }: DependencyGraphContainer
   }
 
   return (
-    <div className="h-full min-h-[600px] w-full">
-      <ReactFlow
-        nodes={layoutNodes}
-        edges={highlightedEdges}
-        nodeTypes={NODE_TYPES}
-        onNodeMouseEnter={handleNodeMouseEnter}
-        onNodeMouseLeave={handleNodeMouseLeave}
-        onSelectionChange={handleSelectionChange}
-        fitView
-        fitViewOptions={FIT_VIEW_OPTIONS}
-        minZoom={0.1}
-        maxZoom={2.0}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background variant={BackgroundVariant.Dots} />
-        <GraphCanvasControls onReset={handleReset} />
-      </ReactFlow>
+    <div
+      ref={containerRef}
+      className={`graph-container flex h-full min-h-[600px] w-full flex-col ${isFullscreen ? 'bg-white' : ''}`}
+    >
+      <div className="relative flex-1">
+        <ReactFlow
+          nodes={layoutNodes}
+          edges={highlightedEdges}
+          nodeTypes={NODE_TYPES}
+          onNodeMouseEnter={handleNodeMouseEnter}
+          onNodeMouseLeave={handleNodeMouseLeave}
+          onSelectionChange={handleSelectionChange}
+          fitView
+          fitViewOptions={FIT_VIEW_OPTIONS}
+          minZoom={0.1}
+          maxZoom={2.0}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background variant={BackgroundVariant.Dots} />
+          <GraphMinimap />
+          <GraphCanvasControls
+            onReset={handleReset}
+            isFullscreen={isFullscreen}
+            onFullscreenToggle={toggleFullscreen}
+          />
+        </ReactFlow>
+        {isComputing && <GraphLayoutLoading nodeCount={transformedNodes.length} />}
+      </div>
+      <GraphLegend />
     </div>
   );
 };

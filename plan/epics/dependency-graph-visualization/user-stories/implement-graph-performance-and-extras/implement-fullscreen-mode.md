@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Fullscreen Mode
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Graph Performance & Extras](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,14 +20,10 @@ Implement a fullscreen toggle for the dependency graph that expands the graph to
 // Button that toggles fullscreen mode for the graph container.
 // Uses the browser Fullscreen API for native fullscreen behavior.
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Maximize, Minimize } from "lucide-react";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Maximize, Minimize } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 /**
  * GraphFullscreenToggle:
@@ -57,7 +53,7 @@ import {
 // Hook that manages fullscreen state for a given element ref.
 // Wraps the browser Fullscreen API with React state management.
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from 'react';
 
 /**
  * useFullscreen(elementRef: RefObject<HTMLElement>):

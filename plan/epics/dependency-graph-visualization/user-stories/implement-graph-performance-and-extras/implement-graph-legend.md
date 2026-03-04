@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Graph Legend
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Implement Graph Performance & Extras](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,7 +20,7 @@ Implement an always-visible legend for the dependency graph that displays the st
 // Always-visible legend showing status color and label pairs.
 // Positioned below or beside the graph canvas.
 
-import { statusHexColors } from "@/lib/graph/status-colors";
+import { statusHexColors } from '@/lib/graph/status-colors';
 
 /**
  * GraphLegend renders:
@@ -51,11 +51,11 @@ import { statusHexColors } from "@/lib/graph/status-colors";
  */
 
 const legendItems = [
-  { status: "not_started", label: "Not Started", color: "#a1a1aa" },
-  { status: "in_progress", label: "In Progress", color: "#3b82f6" },
-  { status: "completed", label: "Completed", color: "#10b981" },
-  { status: "blocked", label: "Blocked", color: "#f59e0b" },
-  { status: "failed", label: "Failed", color: "#ef4444" },
+  { status: 'not_started', label: 'Not Started', color: '#a1a1aa' },
+  { status: 'in_progress', label: 'In Progress', color: '#3b82f6' },
+  { status: 'completed', label: 'Completed', color: '#10b981' },
+  { status: 'blocked', label: 'Blocked', color: '#f59e0b' },
+  { status: 'failed', label: 'Failed', color: '#ef4444' },
 ];
 ```
 

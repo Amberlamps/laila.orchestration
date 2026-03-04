@@ -53,3 +53,57 @@ export interface DependencyNodeData extends Record<string, unknown> {
   entityId: string;
   parentName?: string | undefined;
 }
+
+// ---------------------------------------------------------------------------
+// Web Worker message protocol
+// ---------------------------------------------------------------------------
+
+/** Serialized node data sent to the layout Web Worker. */
+export interface WorkerNodeInput {
+  id: string;
+  width: number;
+  height: number;
+}
+
+/** Serialized edge data sent to the layout Web Worker. */
+export interface WorkerEdgeInput {
+  source: string;
+  target: string;
+}
+
+/** Layout options forwarded to the Web Worker. */
+export interface WorkerLayoutOptions {
+  direction: 'TB' | 'LR';
+  rankSep: number;
+  nodeSep: number;
+}
+
+/** Message sent from the main thread to the layout Web Worker. */
+export interface LayoutWorkerRequest {
+  type: 'compute-layout';
+  payload: {
+    nodes: WorkerNodeInput[];
+    edges: WorkerEdgeInput[];
+    options: WorkerLayoutOptions;
+  };
+}
+
+/** Successful layout result returned from the Web Worker. */
+export interface LayoutWorkerSuccessResponse {
+  type: 'layout-complete';
+  payload: {
+    positions: Record<string, { x: number; y: number }>;
+    duration: number;
+  };
+}
+
+/** Error result returned from the Web Worker. */
+export interface LayoutWorkerErrorResponse {
+  type: 'layout-error';
+  payload: {
+    message: string;
+  };
+}
+
+/** Union of all possible messages from the layout Web Worker. */
+export type LayoutWorkerResponse = LayoutWorkerSuccessResponse | LayoutWorkerErrorResponse;
