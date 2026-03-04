@@ -18,6 +18,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from './api-client';
+import { dashboardQueryOptions } from './query-config';
 import { queryKeys } from './query-keys';
 
 import type { ProjectGraphResponse } from './graph/types';
@@ -69,6 +70,7 @@ export const useProjects = (params?: Record<string, unknown>) =>
       if (error) throwApiError(error);
       return data;
     },
+    ...dashboardQueryOptions,
   });
 
 /** Fetches a single project by ID. Disabled when projectId is falsy. */
@@ -266,7 +268,7 @@ export const useProjectOverview = (projectId: string) =>
       return (await response.json()) as ProjectOverviewData;
     },
     enabled: !!projectId,
-    staleTime: 30_000, // 30 seconds
+    ...dashboardQueryOptions,
   });
 
 // ---------------------------------------------------------------------------
@@ -308,7 +310,7 @@ export const useProjectThroughput = (projectId: string) =>
       return result.data;
     },
     enabled: !!projectId,
-    staleTime: 60_000, // 1 minute — throughput data changes infrequently
+    ...dashboardQueryOptions,
   });
 
 // ---------------------------------------------------------------------------
@@ -350,6 +352,7 @@ export const useTaskCompletionRate = (projectId: string) =>
       return (await response.json()) as CompletionRateResponse;
     },
     enabled: !!projectId,
+    ...dashboardQueryOptions,
   });
 
 // ===========================================================================
@@ -1310,6 +1313,7 @@ export const useActiveWorkers = () =>
       const json = (await response.json()) as { data: ActiveWorkerSummary[] };
       return json.data;
     },
+    ...dashboardQueryOptions,
   });
 
 // ---------------------------------------------------------------------------
@@ -1348,6 +1352,7 @@ export const useProjectActiveWorkers = (projectId: string) =>
       return json.data;
     },
     enabled: !!projectId,
+    ...dashboardQueryOptions,
   });
 
 /** Deletes a worker, removes its detail cache, and invalidates list caches. */
@@ -1493,7 +1498,7 @@ export const useDashboardStats = () =>
       }
       return (await response.json()) as DashboardStats;
     },
-    staleTime: 30_000, // 30 seconds
+    ...dashboardQueryOptions,
   });
 
 // ---------------------------------------------------------------------------
@@ -1542,8 +1547,7 @@ export const useDashboardActivity = () =>
       }
       return (await response.json()) as DashboardActivityResponse;
     },
-    staleTime: 30_000, // 30 seconds
-    refetchInterval: 60_000, // Refetch every minute to keep activity fresh
+    ...dashboardQueryOptions,
   });
 
 // ---------------------------------------------------------------------------
@@ -1587,7 +1591,7 @@ export const useProjectCostTracking = (projectId: string) =>
       return (await response.json()) as CostTrackingData;
     },
     enabled: !!projectId,
-    staleTime: 60_000, // 1 minute
+    ...dashboardQueryOptions,
   });
 
 // ---------------------------------------------------------------------------
@@ -1624,6 +1628,5 @@ export const useProjectActivity = (projectId: string) =>
       return (await response.json()) as ProjectActivityResponse;
     },
     enabled: !!projectId,
-    staleTime: 30_000, // 30 seconds
-    refetchInterval: 60_000, // Refetch every minute to keep activity fresh
+    ...dashboardQueryOptions,
   });

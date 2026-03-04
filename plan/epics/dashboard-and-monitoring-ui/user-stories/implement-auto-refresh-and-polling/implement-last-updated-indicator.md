@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Last-Updated Indicator
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Auto-Refresh & Polling](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,11 +20,11 @@ Implement a "Last updated: X seconds ago" indicator in dashboard and project det
 // Displays when data was last refreshed and provides a manual refresh button.
 // Uses TanStack Query's dataUpdatedAt from query results.
 
-import { useState, useEffect, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { RefreshCw, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, Clock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /**
  * LastUpdatedIndicator renders:

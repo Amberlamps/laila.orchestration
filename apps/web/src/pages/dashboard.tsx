@@ -19,8 +19,10 @@ import { DashboardKpiSummaryRow } from '@/components/dashboard/dashboard-kpi-sum
 import { ProjectsAtAGlanceGrid } from '@/components/dashboard/projects-at-a-glance-grid';
 import { RecentActivitySnapshot } from '@/components/dashboard/recent-activity-snapshot';
 import { AppLayout } from '@/components/layout/app-layout';
+import { LastUpdatedIndicator } from '@/components/ui/last-updated-indicator';
 import { Skeleton, SkeletonKPICard, SkeletonCard, SkeletonTable } from '@/components/ui/skeleton';
-import { useProjects } from '@/lib/query-hooks';
+import { useDashboardStats, useProjects } from '@/lib/query-hooks';
+import { queryKeys } from '@/lib/query-keys';
 
 import type { NextPageWithLayout } from './_app';
 import type { ReactElement } from 'react';
@@ -88,10 +90,19 @@ function DashboardSkeleton() {
  * Each section is a standalone component with its own data fetching.
  */
 function FullDashboard() {
+  const { dataUpdatedAt, isFetching } = useDashboardStats();
+
   return (
     <div>
       {/* Page header */}
-      <h1 className="mb-6 text-2xl font-bold tracking-tight text-zinc-900">Dashboard</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Dashboard</h1>
+        <LastUpdatedIndicator
+          dataUpdatedAt={dataUpdatedAt}
+          queryKeyPrefixes={[queryKeys.dashboard.all(), queryKeys.projects.lists()]}
+          isFetching={isFetching}
+        />
+      </div>
 
       {/* KPI summary row */}
       <section className="mb-8" aria-label="Key performance indicators">

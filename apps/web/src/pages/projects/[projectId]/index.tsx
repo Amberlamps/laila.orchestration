@@ -36,11 +36,13 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { EntityTable } from '@/components/ui/entity-table';
 import { KPICard } from '@/components/ui/kpi-card';
+import { LastUpdatedIndicator } from '@/components/ui/last-updated-indicator';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import { Skeleton, SkeletonKPICard, SkeletonText } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useEpics, useProject } from '@/lib/query-hooks';
+import { useEpics, useProject, useProjectOverview } from '@/lib/query-hooks';
+import { queryKeys } from '@/lib/query-keys';
 
 import type { NextPageWithLayout } from '../../_app';
 import type { ColumnDef } from '@/components/ui/entity-table';
@@ -638,6 +640,7 @@ const ProjectDetailPage: NextPageWithLayout = () => {
 
   const { data, isLoading, isError } = useProject(projectId);
   const project = data?.data;
+  const { dataUpdatedAt, isFetching: isOverviewFetching } = useProjectOverview(projectId);
 
   /**
    * Handle tab change with shallow routing to avoid full page reload.
@@ -663,8 +666,15 @@ const ProjectDetailPage: NextPageWithLayout = () => {
 
   return (
     <div>
-      {/* Breadcrumb */}
-      <Breadcrumb items={breadcrumbItems} className="mb-4" />
+      {/* Breadcrumb + Last Updated Indicator */}
+      <div className="mb-4 flex items-center justify-between">
+        <Breadcrumb items={breadcrumbItems} />
+        <LastUpdatedIndicator
+          dataUpdatedAt={dataUpdatedAt}
+          queryKeyPrefixes={[queryKeys.projects.all()]}
+          isFetching={isOverviewFetching}
+        />
+      </div>
 
       {/* Header */}
       <ProjectHeader

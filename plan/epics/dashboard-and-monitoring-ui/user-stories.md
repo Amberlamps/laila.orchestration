@@ -4,17 +4,17 @@
 
 - **Title:** Dashboard & Monitoring UI
 - **Description:** Global dashboard with cross-project KPI summary, project overview tab with charts and activity feed, and auto-refresh polling using TanStack Query. Provides at-a-glance visibility into project health, worker activity, cost tracking, and recent audit events across the entire orchestration platform.
-- **Status:** In Progress (laila-agent-3)
+- **Status:** Complete
 - **Total User Stories:** 3
 - **Dependencies:** Epic 8 (UI Foundation & Design System), Epic 9 (Entity Management UI)
 
 ## User Stories
 
-| User Story                                                                                     | Description                                                                                                                                                      | Status                      | Tasks   | Dependencies                                               |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------- | ---------------------------------------------------------- |
-| [Implement Global Dashboard](./user-stories/implement-global-dashboard/tasks.md)               | Cross-project KPI stat cards, project card grid, recent activity snapshot, active workers table, and empty state for the main dashboard page                     | Complete                    | 5 tasks | None                                                       |
-| [Implement Project Overview Tab](./user-stories/implement-project-overview-tab/tasks.md)       | Project detail overview tab with summary stat cards, active workers card, throughput and completion charts, cost tracking, progress indicator, and activity feed | Complete                    | 7 tasks | None                                                       |
-| [Implement Auto-Refresh & Polling](./user-stories/implement-auto-refresh-and-polling/tasks.md) | TanStack Query polling configuration, last-updated indicator with manual refresh, and Page Visibility API integration for intelligent polling                    | In Progress (laila-agent-3) | 3 tasks | Implement Global Dashboard, Implement Project Overview Tab |
+| User Story                                                                                     | Description                                                                                                                                                      | Status   | Tasks   | Dependencies                                               |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- | ---------------------------------------------------------- |
+| [Implement Global Dashboard](./user-stories/implement-global-dashboard/tasks.md)               | Cross-project KPI stat cards, project card grid, recent activity snapshot, active workers table, and empty state for the main dashboard page                     | Complete | 5 tasks | None                                                       |
+| [Implement Project Overview Tab](./user-stories/implement-project-overview-tab/tasks.md)       | Project detail overview tab with summary stat cards, active workers card, throughput and completion charts, cost tracking, progress indicator, and activity feed | Complete | 7 tasks | None                                                       |
+| [Implement Auto-Refresh & Polling](./user-stories/implement-auto-refresh-and-polling/tasks.md) | TanStack Query polling configuration, last-updated indicator with manual refresh, and Page Visibility API integration for intelligent polling                    | Complete | 3 tasks | Implement Global Dashboard, Implement Project Overview Tab |
 
 ## Dependency Graph
 

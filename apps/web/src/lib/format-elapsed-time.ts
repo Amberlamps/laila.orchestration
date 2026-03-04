@@ -9,19 +9,43 @@
  */
 import { formatDistanceToNow } from 'date-fns';
 
+/** Timeout risk level used for styling elapsed time indicators. */
+export type TimeoutRisk = 'normal' | 'warning' | 'critical';
+
+/** Threshold (as a fraction of timeoutMinutes) at which risk becomes "warning". */
+const WARNING_THRESHOLD = 0.75;
+
 /**
- * Formats a timestamp into a human-readable elapsed duration string.
+ * Formats a timestamp into a human-readable elapsed duration string and
+ * computes the timeout risk level.
  *
- * @param timestamp - ISO 8601 date string or Date object representing the start time.
- * @returns A human-readable string such as "3 minutes ago" or "about 2 hours ago".
+ * @param timestamp - ISO 8601 date string representing the start time.
+ * @param timeoutMinutes - The timeout threshold in minutes used to compute risk.
+ * @returns An object with `formatted` (human-readable string) and `risk` level.
  *
  * @example
  * ```ts
- * formatElapsedTime("2026-03-04T10:00:00Z"); // "5 minutes ago"
- * formatElapsedTime(new Date(Date.now() - 3600000)); // "about 1 hour ago"
+ * formatElapsedTime("2026-03-04T10:00:00Z", 30);
+ * // { formatted: "5 minutes ago", risk: "normal" }
  * ```
  */
-export function formatElapsedTime(timestamp: string | Date): string {
+export function formatElapsedTime(
+  timestamp: string | Date,
+  timeoutMinutes: number,
+): { formatted: string; risk: TimeoutRisk } {
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
-  return formatDistanceToNow(date, { addSuffix: true });
+  const formatted = formatDistanceToNow(date, { addSuffix: true });
+
+  const elapsedMs = Date.now() - date.getTime();
+  const elapsedMinutes = elapsedMs / 60_000;
+  const ratio = elapsedMinutes / timeoutMinutes;
+
+  let risk: TimeoutRisk = 'normal';
+  if (ratio >= 1) {
+    risk = 'critical';
+  } else if (ratio >= WARNING_THRESHOLD) {
+    risk = 'warning';
+  }
+
+  return { formatted, risk };
 }

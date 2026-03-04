@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Page Visibility Integration
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Auto-Refresh & Polling](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,7 +20,7 @@ Integrate the browser's Page Visibility API with TanStack Query's polling config
 // Integrates Page Visibility API with TanStack Query's focus management.
 // Ensures polling pauses when the tab is hidden and resumes on visibility.
 
-import { focusManager } from "@tanstack/react-query";
+import { focusManager } from '@tanstack/react-query';
 
 /**
  * setupVisibilityIntegration():
@@ -53,16 +53,13 @@ export function setupVisibilityIntegration(): () => void {
 
   const callback = focusManager.setEventListener((handleFocus) => {
     const visibilityChangeHandler = () => {
-      handleFocus(document.visibilityState === "visible");
+      handleFocus(document.visibilityState === 'visible');
     };
 
-    document.addEventListener("visibilitychange", visibilityChangeHandler);
+    document.addEventListener('visibilitychange', visibilityChangeHandler);
 
     return () => {
-      document.removeEventListener(
-        "visibilitychange",
-        visibilityChangeHandler
-      );
+      document.removeEventListener('visibilitychange', visibilityChangeHandler);
     };
   });
 
@@ -77,9 +74,9 @@ export function setupVisibilityIntegration(): () => void {
 // Initialize visibility integration in the Next.js App component.
 // Must be called once at app startup.
 
-import { useEffect } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { setupVisibilityIntegration } from "@/lib/query-visibility";
+import { useEffect } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { setupVisibilityIntegration } from '@/lib/query-visibility';
 
 /**
  * In the App component:
@@ -103,7 +100,7 @@ import { setupVisibilityIntegration } from "@/lib/query-visibility";
 // Optional: integrate browser online/offline status with TanStack Query.
 // Pauses all queries when the browser goes offline.
 
-import { onlineManager } from "@tanstack/react-query";
+import { onlineManager } from '@tanstack/react-query';
 
 /**
  * setupOnlineIntegration():

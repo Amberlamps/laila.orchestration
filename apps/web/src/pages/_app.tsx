@@ -2,13 +2,14 @@ import '../styles/globals.css';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { AppLayout } from '@/components/layout/app-layout';
 import { ToastProvider } from '@/components/ui/toast';
 import { inter, jetbrainsMono, roboto } from '@/lib/fonts';
 import { createQueryClient } from '@/lib/query-client';
+import { setupVisibilityIntegration } from '@/lib/query-visibility';
 
 import type { NextPage } from 'next';
 import type { AppProps } from 'next/app';
@@ -44,6 +45,13 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   // useState ensures the same instance is reused across re-renders
   // and avoids sharing state between SSR requests.
   const [queryClient] = useState(() => createQueryClient());
+
+  // Wire up the Page Visibility API so polling pauses when the tab is hidden
+  // and an immediate refetch fires when the tab becomes visible again.
+  useEffect(() => {
+    const cleanup = setupVisibilityIntegration();
+    return cleanup;
+  }, []);
 
   const getLayout = Component.getLayout ?? defaultGetLayout;
 

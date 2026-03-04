@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Polling for Dashboard Views
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Auto-Refresh & Polling](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -50,8 +50,8 @@ export const dashboardQueryOptions = {
 // All dashboard query hooks should incorporate polling options.
 // Example pattern for updating existing hooks:
 
-import { useQuery } from "@tanstack/react-query";
-import { dashboardQueryOptions } from "@/lib/query-config";
+import { useQuery } from '@tanstack/react-query';
+import { dashboardQueryOptions } from '@/lib/query-config';
 
 // Global dashboard hooks:
 // - useDashboardSummary()        → add dashboardQueryOptions
@@ -88,27 +88,22 @@ import { dashboardQueryOptions } from "@/lib/query-config";
 // These keys enable targeted cache invalidation and polling control.
 
 export const dashboardKeys = {
-  all: ["dashboard"] as const,
-  summary: () => [...dashboardKeys.all, "summary"] as const,
-  projectsSummary: () => [...dashboardKeys.all, "projects-summary"] as const,
-  recentActivity: () => [...dashboardKeys.all, "recent-activity"] as const,
-  activeWorkers: () => [...dashboardKeys.all, "active-workers"] as const,
+  all: ['dashboard'] as const,
+  summary: () => [...dashboardKeys.all, 'summary'] as const,
+  projectsSummary: () => [...dashboardKeys.all, 'projects-summary'] as const,
+  recentActivity: () => [...dashboardKeys.all, 'recent-activity'] as const,
+  activeWorkers: () => [...dashboardKeys.all, 'active-workers'] as const,
 };
 
 export const projectKeys = {
-  all: ["projects"] as const,
+  all: ['projects'] as const,
   detail: (id: string) => [...projectKeys.all, id] as const,
-  overview: (id: string) => [...projectKeys.detail(id), "overview"] as const,
-  activeWorkers: (id: string) =>
-    [...projectKeys.detail(id), "active-workers"] as const,
-  throughput: (id: string) =>
-    [...projectKeys.detail(id), "throughput"] as const,
-  completionRate: (id: string) =>
-    [...projectKeys.detail(id), "completion-rate"] as const,
-  costTracking: (id: string) =>
-    [...projectKeys.detail(id), "cost-tracking"] as const,
-  activity: (id: string) =>
-    [...projectKeys.detail(id), "activity"] as const,
+  overview: (id: string) => [...projectKeys.detail(id), 'overview'] as const,
+  activeWorkers: (id: string) => [...projectKeys.detail(id), 'active-workers'] as const,
+  throughput: (id: string) => [...projectKeys.detail(id), 'throughput'] as const,
+  completionRate: (id: string) => [...projectKeys.detail(id), 'completion-rate'] as const,
+  costTracking: (id: string) => [...projectKeys.detail(id), 'cost-tracking'] as const,
+  activity: (id: string) => [...projectKeys.detail(id), 'activity'] as const,
 };
 ```
 
