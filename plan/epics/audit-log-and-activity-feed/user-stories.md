@@ -10,10 +10,10 @@
 
 ## User Stories
 
-| User Story                                                                             | Description                                                                                                                       | Status      | Tasks   | Dependencies                  |
-| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------- | ----------------------------- |
-| [Implement Audit Event Writing](./user-stories/implement-audit-event-writing/tasks.md) | Audit event service for writing structured events to DynamoDB, integration with API mutations, and system-initiated event logging | Complete    | 3 tasks | None                          |
-| [Implement Audit Log UI](./user-stories/implement-audit-log-ui/tasks.md)               | Cross-project audit log page, project activity tab, shared AuditEntry component, and export functionality                         | Not Started | 4 tasks | Implement Audit Event Writing |
+| User Story                                                                             | Description                                                                                                                       | Status                      | Tasks   | Dependencies                  |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------- | ----------------------------- |
+| [Implement Audit Event Writing](./user-stories/implement-audit-event-writing/tasks.md) | Audit event service for writing structured events to DynamoDB, integration with API mutations, and system-initiated event logging | Complete                    | 3 tasks | None                          |
+| [Implement Audit Log UI](./user-stories/implement-audit-log-ui/tasks.md)               | Cross-project audit log page, project activity tab, shared AuditEntry component, and export functionality                         | In Progress (laila-agent-2) | 4 tasks | Implement Audit Event Writing |
 
 ## Dependency Graph
 
