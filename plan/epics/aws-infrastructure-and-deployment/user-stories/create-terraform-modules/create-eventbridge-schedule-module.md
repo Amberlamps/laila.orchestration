@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create EventBridge Schedule Module
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** terraform-engineer
 - **Parent User Story:** [Create Terraform Modules](./tasks.md)
 - **Parent Epic:** [AWS Infrastructure & Deployment](../../user-stories.md)
