@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Projects-at-a-Glance Grid
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Global Dashboard](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,11 +20,11 @@ Implement a responsive grid of compact project summary cards on the global dashb
 // Compact card component for the projects-at-a-glance grid.
 // Displays key project metrics in a scannable format.
 
-import Link from "next/link";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Progress } from "@/components/ui/progress";
-import { Bot, AlertTriangle, ShieldAlert } from "lucide-react";
-import type { ProjectSummary } from "@laila/shared";
+import Link from 'next/link';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Progress } from '@/components/ui/progress';
+import { Bot, AlertTriangle, ShieldAlert } from 'lucide-react';
+import type { ProjectSummary } from '@laila/shared';
 
 /**
  * ProjectSummaryCard renders:
@@ -74,7 +74,7 @@ const useProjectsSummary = () => {
   return useQuery({
     queryKey: dashboardKeys.projectsSummary(),
     queryFn: () =>
-      apiClient.get("/api/v1/projects", {
+      apiClient.get('/api/v1/projects', {
         params: { limit: 12, include_summary: true },
       }),
   });

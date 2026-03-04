@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Dashboard Empty State
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Implement Global Dashboard](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,10 +20,10 @@ Implement the empty state for the global dashboard when the authenticated user h
 // Full-page empty state displayed when the user has zero projects.
 // Uses the EmptyState component from the design system with custom content.
 
-import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
-import { FolderKanban, Plus, BookOpen, Sparkles } from "lucide-react";
-import Link from "next/link";
+import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
+import { FolderKanban, Plus, BookOpen, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 
 /**
  * DashboardEmptyState renders a centered layout:

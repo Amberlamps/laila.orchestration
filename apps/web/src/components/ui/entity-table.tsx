@@ -76,6 +76,8 @@ export interface EntityTableProps<T> {
   loading?: boolean;
   /** Custom empty state component */
   emptyState?: React.ReactNode;
+  /** Table size variant — compact reduces row height for dashboard context (default: "default") */
+  size?: 'default' | 'compact';
 }
 
 /* ---------------------------------------------------------------------------
@@ -296,7 +298,9 @@ export function EntityTable<T>({
   onPageChange,
   loading = false,
   emptyState,
+  size = 'default',
 }: EntityTableProps<T>) {
+  const isCompact = size === 'compact';
   const hasActions = Boolean(actions && actions.length > 0);
   const totalColumns = columns.length + (hasActions ? 1 : 0);
 
@@ -334,7 +338,8 @@ export function EntityTable<T>({
                     role="columnheader"
                     aria-sort={ariaSort}
                     className={cn(
-                      'text-overline h-10 px-4 text-zinc-500',
+                      'text-overline px-4 text-zinc-500',
+                      isCompact ? 'h-8' : 'h-10',
                       alignmentClass[col.align ?? 'left'],
                       isSortable && 'group/sort cursor-pointer select-none',
                     )}
@@ -370,7 +375,10 @@ export function EntityTable<T>({
               {hasActions && (
                 <TableHead
                   role="columnheader"
-                  className="text-overline h-10 w-12 px-4 text-right text-zinc-500"
+                  className={cn(
+                    'text-overline w-12 px-4 text-right text-zinc-500',
+                    isCompact ? 'h-8' : 'h-10',
+                  )}
                 >
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -424,9 +432,8 @@ export function EntityTable<T>({
                   <TableRow
                     key={rowKey}
                     className={cn(
-                      'h-10 border-b border-zinc-200 bg-white transition-colors hover:bg-zinc-100 md:h-10',
-                      /* Mobile: 48px height for larger touch targets */
-                      'max-md:h-12',
+                      'border-b border-zinc-200 bg-white transition-colors hover:bg-zinc-100',
+                      isCompact ? 'h-8' : 'h-10 max-md:h-12 md:h-10',
                       isClickable && 'cursor-pointer',
                     )}
                     onClick={handleRowClick}
@@ -437,7 +444,8 @@ export function EntityTable<T>({
                       <TableCell
                         key={col.key}
                         className={cn(
-                          'text-body px-4 py-2 align-middle',
+                          'text-body align-middle',
+                          isCompact ? 'px-3 py-1' : 'px-4 py-2',
                           alignmentClass[col.align ?? 'left'],
                         )}
                         style={col.width ? { width: col.width } : undefined}
