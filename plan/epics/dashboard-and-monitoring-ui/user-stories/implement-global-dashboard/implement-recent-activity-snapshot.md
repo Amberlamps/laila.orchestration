@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Recent Activity Snapshot
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Global Dashboard](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,14 +20,14 @@ Implement a recent activity section on the global dashboard that displays the la
 // Displays the last 20 audit events across all projects.
 // Uses the cross-project audit events API endpoint.
 
-import { useQuery } from "@tanstack/react-query";
-import { dashboardKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { AuditEntryRow } from "@/components/audit/audit-entry-row";
-import { Skeleton } from "@/components/ui/skeleton";
-import Link from "next/link";
-import { Activity } from "lucide-react";
-import type { AuditEvent } from "@laila/shared";
+import { useQuery } from '@tanstack/react-query';
+import { dashboardKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { AuditEntryRow } from '@/components/audit/audit-entry-row';
+import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
+import { Activity } from 'lucide-react';
+import type { AuditEvent } from '@laila/shared';
 
 /**
  * RecentActivitySnapshot renders:
@@ -56,8 +56,8 @@ const useRecentActivity = () => {
   return useQuery({
     queryKey: dashboardKeys.recentActivity(),
     queryFn: () =>
-      apiClient.get("/api/v1/audit-events", {
-        params: { limit: 20, sort_order: "desc" },
+      apiClient.get('/api/v1/audit-events', {
+        params: { limit: 20, sort_order: 'desc' },
       }),
   });
 };

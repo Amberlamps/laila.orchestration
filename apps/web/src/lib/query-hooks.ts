@@ -1126,6 +1126,45 @@ export const useWorkerHistory = (workerId: string) =>
     enabled: !!workerId,
   });
 
+// ---------------------------------------------------------------------------
+// Active Workers (dashboard summary)
+// ---------------------------------------------------------------------------
+
+/** Shape of an active worker summary returned by the dashboard endpoint. */
+export interface ActiveWorkerSummary {
+  workerId: string;
+  workerName: string;
+  projectId: string;
+  projectName: string;
+  storyId: string;
+  storyTitle: string;
+  assignedAt: string;
+  timeoutMinutes: number;
+}
+
+/**
+ * Fetches all currently active workers across all projects.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch.
+ * Returns workers with their current assignment details for the dashboard view.
+ */
+export const useActiveWorkers = () =>
+  useQuery({
+    queryKey: queryKeys.dashboard.activeWorkers(),
+    queryFn: async (): Promise<ActiveWorkerSummary[]> => {
+      const response = await fetch('/api/v1/workers/active', {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      const json = (await response.json()) as { data: ActiveWorkerSummary[] };
+      return json.data;
+    },
+  });
+
 /** Deletes a worker, removes its detail cache, and invalidates list caches. */
 export const useDeleteWorker = () => {
   const queryClient = useQueryClient();
@@ -1228,3 +1267,96 @@ export const useDeletePersona = () => {
     },
   });
 };
+
+// ===========================================================================
+// Dashboard (aggregate stats)
+// ===========================================================================
+
+/** Aggregated cross-project KPI data returned by the dashboard stats endpoint. */
+export interface DashboardStats {
+  totalProjects: number;
+  projectsByStatus: {
+    draft: number;
+    ready: number;
+    active: number;
+    completed: number;
+  };
+  activeWorkers: number;
+  totalFailures: number;
+  totalBlocked: number;
+  aggregateCost: number;
+  totalTokens: number;
+}
+
+/**
+ * Fetches cross-project dashboard summary stats.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch.
+ * Uses `dashboard.stats()` query key for cache invalidation.
+ */
+export const useDashboardStats = () =>
+  useQuery({
+    queryKey: queryKeys.dashboard.stats(),
+    queryFn: async (): Promise<DashboardStats> => {
+      const response = await fetch('/api/v1/dashboard/stats', {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as DashboardStats;
+    },
+    staleTime: 30_000, // 30 seconds
+  });
+
+// ---------------------------------------------------------------------------
+// Dashboard Activity (recent audit events)
+// ---------------------------------------------------------------------------
+
+/** Shape of an audit event returned by the dashboard activity endpoint. */
+export interface DashboardAuditEvent {
+  eventId: string;
+  entityType: string;
+  entityId: string;
+  entityName: string;
+  action: string;
+  actorType: 'user' | 'worker' | 'system';
+  actorId: string;
+  actorName: string;
+  projectId: string;
+  projectName: string;
+  timestamp: string;
+  changes?: Record<string, { before?: unknown; after?: unknown }>;
+  metadata?: Record<string, string>;
+}
+
+/** Paginated response for the dashboard activity feed. */
+interface DashboardActivityResponse {
+  data: DashboardAuditEvent[];
+}
+
+/**
+ * Fetches the most recent audit events across all projects for the dashboard.
+ *
+ * Uses the audit events endpoint with descending sort order to get the
+ * newest 20 events. Uses `dashboard.activity()` query key for cache invalidation.
+ */
+export const useDashboardActivity = () =>
+  useQuery({
+    queryKey: queryKeys.dashboard.activity(),
+    queryFn: async (): Promise<DashboardActivityResponse> => {
+      const response = await fetch('/api/v1/audit-events?limit=20&sort_order=desc', {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as DashboardActivityResponse;
+    },
+    staleTime: 30_000, // 30 seconds
+    refetchInterval: 60_000, // Refetch every minute to keep activity fresh
+  });

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Active Workers Summary Table
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Global Dashboard](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,14 +20,14 @@ Implement a table on the global dashboard that displays all workers currently as
 // Table displaying workers currently assigned across all projects.
 // Uses the EntityTable component from the design system for consistent styling.
 
-import { useQuery } from "@tanstack/react-query";
-import { EntityTable } from "@/components/ui/entity-table";
-import { dashboardKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { formatElapsedTime } from "@/lib/format-elapsed-time";
-import Link from "next/link";
-import { Bot, Clock } from "lucide-react";
-import type { ActiveWorkerSummary } from "@laila/shared";
+import { useQuery } from '@tanstack/react-query';
+import { EntityTable } from '@/components/ui/entity-table';
+import { dashboardKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { formatElapsedTime } from '@/lib/format-elapsed-time';
+import Link from 'next/link';
+import { Bot, Clock } from 'lucide-react';
+import type { ActiveWorkerSummary } from '@laila/shared';
 
 /**
  * ActiveWorkersSummaryTable renders:
@@ -73,7 +73,7 @@ import type { ActiveWorkerSummary } from "@laila/shared";
 const useActiveWorkers = () => {
   return useQuery({
     queryKey: dashboardKeys.activeWorkers(),
-    queryFn: () => apiClient.get("/api/v1/workers/active"),
+    queryFn: () => apiClient.get('/api/v1/workers/active'),
   });
 };
 ```

@@ -259,6 +259,8 @@ export const queryKeys = {
     stats: () => [...queryKeys.dashboard.all(), 'stats'] as const,
     /** Matches the dashboard activity feed query. */
     activity: () => [...queryKeys.dashboard.all(), 'activity'] as const,
+    /** Matches the dashboard active workers summary query. */
+    activeWorkers: () => [...queryKeys.dashboard.all(), 'activeWorkers'] as const,
   },
 
   // ---------------------------------------------------------------------------

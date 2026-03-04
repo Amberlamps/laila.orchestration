@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Dashboard KPI Summary Row
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Global Dashboard](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -21,19 +21,13 @@ Implement a horizontal row of cross-project KPI stat cards at the top of the glo
 // Fetches cross-project summary data using TanStack Query.
 // Each card is interactive where applicable (clickable to filter).
 
-import { useQuery } from "@tanstack/react-query";
-import { KPICard } from "@/components/ui/kpi-card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { dashboardKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import {
-  FolderKanban,
-  Bot,
-  AlertTriangle,
-  ShieldAlert,
-  DollarSign,
-} from "lucide-react";
-import type { DashboardSummary } from "@laila/shared";
+import { useQuery } from '@tanstack/react-query';
+import { KPICard } from '@/components/ui/kpi-card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { dashboardKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { FolderKanban, Bot, AlertTriangle, ShieldAlert, DollarSign } from 'lucide-react';
+import type { DashboardSummary } from '@laila/shared';
 
 /**
  * KPI stat cards to display:
@@ -80,7 +74,7 @@ import type { DashboardSummary } from "@laila/shared";
 const useDashboardSummary = () => {
   return useQuery({
     queryKey: dashboardKeys.summary(),
-    queryFn: () => apiClient.get("/api/v1/dashboard/summary"),
+    queryFn: () => apiClient.get('/api/v1/dashboard/summary'),
     staleTime: 30_000, // 30 seconds — will be overridden by polling in auto-refresh task
   });
 };
