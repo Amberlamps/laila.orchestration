@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Overview Summary Stat Cards
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Project Overview Tab](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,12 +20,12 @@ Implement a row of 4 summary stat cards at the top of the project overview tab. 
 // Renders 4 KPICard components showing entity completion status.
 // Each card includes a mini stacked bar showing status distribution.
 
-import { useQuery } from "@tanstack/react-query";
-import { KPICard } from "@/components/ui/kpi-card";
-import { projectKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { Layers, BookOpen, ListChecks, Bot } from "lucide-react";
-import type { ProjectOverviewStats } from "@laila/shared";
+import { useQuery } from '@tanstack/react-query';
+import { KPICard } from '@/components/ui/kpi-card';
+import { projectKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { Layers, BookOpen, ListChecks, Bot } from 'lucide-react';
+import type { ProjectOverviewStats } from '@laila/shared';
 
 /**
  * Four stat cards:

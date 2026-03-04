@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Overall Progress Indicator
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Implement Project Overview Tab](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,12 +20,12 @@ Implement a large, visually prominent progress indicator on the project overview
 // Large progress indicator showing project completion percentage.
 // Can be rendered as a circular ring or a large horizontal bar.
 
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { projectKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { PieChart } from "lucide-react";
-import type { ProjectProgress } from "@laila/shared";
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { projectKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { PieChart } from 'lucide-react';
+import type { ProjectProgress } from '@laila/shared';
 
 /**
  * OverallProgressIndicator renders:

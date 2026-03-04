@@ -20,6 +20,13 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { CreateEditEpicModal } from '@/components/epics/create-edit-epic-modal';
 import { AppLayout } from '@/components/layout/app-layout';
 import { DependencyGraphContainer } from '@/components/project/graph/dependency-graph-container';
+import { ActiveWorkersCard } from '@/components/project/overview/active-workers-card';
+import { CostTrackingCard } from '@/components/project/overview/cost-tracking-card';
+import { OverallProgressIndicator } from '@/components/project/overview/overall-progress-indicator';
+import { OverviewActivityFeed } from '@/components/project/overview/overview-activity-feed';
+import { OverviewSummaryStatCards } from '@/components/project/overview/overview-summary-stat-cards';
+import { TaskCompletionRateChart } from '@/components/project/overview/task-completion-rate-chart';
+import { WorkerThroughputChart } from '@/components/project/overview/worker-throughput-chart';
 import { DeleteProjectButton, DeleteProjectFlow } from '@/components/projects/delete-project-flow';
 import { ProjectSettingsTab } from '@/components/projects/project-settings-tab';
 import { PublishProjectFlow } from '@/components/projects/publish-project-flow';
@@ -421,26 +428,27 @@ function TimeoutBanner({
   );
 }
 
-/** Overview tab content showing a summary dashboard. */
-function OverviewTabContent({ name }: { name: string }) {
+/** Overview tab content showing the project overview dashboard. */
+function OverviewTabContent({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-6 py-6">
-      <div className="rounded-lg border border-zinc-200 bg-white p-6">
-        <h3 className="text-lg font-semibold text-zinc-900">Project Summary</h3>
-        <p className="mt-2 text-sm text-zinc-600">
-          Overview dashboard for {name}. This section will display recent activity, status
-          distribution charts, and key metrics summary.
-        </p>
-      </div>
+      {/* Summary stat cards: Epics, Stories, Tasks, Active Workers */}
+      <OverviewSummaryStatCards projectId={projectId} />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-zinc-200 bg-white p-6">
-          <h4 className="text-sm font-semibold text-zinc-900">Recent Activity</h4>
-          <p className="mt-2 text-sm text-zinc-500">No recent activity to display.</p>
+      {/* Main content grid: charts on the left, sidebar on the right */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Left column — charts (2/3 width on desktop) */}
+        <div className="space-y-6 lg:col-span-2">
+          <WorkerThroughputChart projectId={projectId} />
+          <TaskCompletionRateChart projectId={projectId} />
+          <CostTrackingCard projectId={projectId} />
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-6">
-          <h4 className="text-sm font-semibold text-zinc-900">Status Distribution</h4>
-          <p className="mt-2 text-sm text-zinc-500">Status chart will be rendered here.</p>
+
+        {/* Right column — progress indicator, active workers, activity feed */}
+        <div className="space-y-6">
+          <OverallProgressIndicator projectId={projectId} />
+          <ActiveWorkersCard projectId={projectId} />
+          <OverviewActivityFeed projectId={projectId} />
         </div>
       </div>
     </div>
@@ -700,7 +708,7 @@ const ProjectDetailPage: NextPageWithLayout = () => {
         </TabsList>
 
         <TabsContent value="overview">
-          <OverviewTabContent name={project.name} />
+          <OverviewTabContent projectId={project.id} />
         </TabsContent>
 
         <TabsContent value="epics">

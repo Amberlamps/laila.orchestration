@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Cost Tracking Card
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Implement Project Overview Tab](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,7 +20,7 @@ Implement a cost tracking card on the project overview tab that displays the cum
 // Card displaying project cost metrics and a stacked area chart.
 // Shows cumulative spend, token usage, and cost breakdown.
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 import {
   AreaChart,
   Area,
@@ -30,12 +30,12 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-} from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { projectKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { DollarSign } from "lucide-react";
-import type { CostTrackingData } from "@laila/shared";
+} from 'recharts';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { projectKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { DollarSign } from 'lucide-react';
+import type { CostTrackingData } from '@laila/shared';
 
 /**
  * CostTrackingCard renders:
@@ -101,8 +101,7 @@ import type { CostTrackingData } from "@laila/shared";
 const useProjectCostTracking = (projectId: string) => {
   return useQuery({
     queryKey: projectKeys.costTracking(projectId),
-    queryFn: () =>
-      apiClient.get(`/api/v1/projects/${projectId}/metrics/cost`),
+    queryFn: () => apiClient.get(`/api/v1/projects/${projectId}/metrics/cost`),
     enabled: !!projectId,
   });
 };
