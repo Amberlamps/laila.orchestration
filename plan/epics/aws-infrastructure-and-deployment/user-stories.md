@@ -4,18 +4,18 @@
 
 - **Title:** AWS Infrastructure & Deployment
 - **Description:** Terraform modules for all AWS resources, production environment configuration, OpenNext deployment for Next.js 14, CI/CD deploy pipeline via GitHub Actions, and comprehensive observability with CloudWatch dashboards, alarms, X-Ray tracing, and custom metrics. This epic transforms the application from a locally-running development project into a production-ready, infrastructure-as-code deployed system on AWS.
-- **Status:** Not Started
+- **Status:** In Progress (laila-agent-3)
 - **Total User Stories:** 4
 - **Dependencies:** Epic 3 (Database Layer), Epic 7 (Orchestration & Work Assignment API), Epic 13 (Background Jobs & Scheduled Tasks)
 
 ## User Stories
 
-| User Story | Description | Status | Tasks | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Create Terraform Modules](./user-stories/create-terraform-modules/tasks.md) | Reusable Terraform modules for Lambda, DynamoDB, CloudFront, S3, SQS, and EventBridge | Not Started | 6 tasks | None |
-| [Configure Production Environment](./user-stories/configure-production-environment/tasks.md) | Production infrastructure using all modules: Lambda functions, DynamoDB, SQS, EventBridge, S3, domain/SSL | Not Started | 4 tasks | Create Terraform Modules |
-| [Set Up Deployment Pipeline](./user-stories/setup-deployment-pipeline/tasks.md) | OpenNext build, GitHub Actions deploy workflow, health checks, rollback documentation | Not Started | 4 tasks | Create Terraform Modules, Configure Production Environment |
-| [Configure Observability](./user-stories/configure-observability/tasks.md) | pino structured logging, CloudWatch dashboards/alarms, X-Ray tracing, custom metrics | Not Started | 4 tasks | None |
+| User Story                                                                                   | Description                                                                                               | Status                      | Tasks   | Dependencies                                               |
+| -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------- | ------- | ---------------------------------------------------------- |
+| [Create Terraform Modules](./user-stories/create-terraform-modules/tasks.md)                 | Reusable Terraform modules for Lambda, DynamoDB, CloudFront, S3, SQS, and EventBridge                     | In Progress (laila-agent-3) | 6 tasks | None                                                       |
+| [Configure Production Environment](./user-stories/configure-production-environment/tasks.md) | Production infrastructure using all modules: Lambda functions, DynamoDB, SQS, EventBridge, S3, domain/SSL | Not Started                 | 4 tasks | Create Terraform Modules                                   |
+| [Set Up Deployment Pipeline](./user-stories/setup-deployment-pipeline/tasks.md)              | OpenNext build, GitHub Actions deploy workflow, health checks, rollback documentation                     | Not Started                 | 4 tasks | Create Terraform Modules, Configure Production Environment |
+| [Configure Observability](./user-stories/configure-observability/tasks.md)                   | pino structured logging, CloudWatch dashboards/alarms, X-Ray tracing, custom metrics                      | Not Started                 | 4 tasks | None                                                       |
 
 ## Dependency Graph
 
