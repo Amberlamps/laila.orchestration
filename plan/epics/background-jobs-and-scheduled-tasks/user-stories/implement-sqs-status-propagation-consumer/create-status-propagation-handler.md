@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Status Propagation Handler
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement SQS Status Propagation Consumer](./tasks.md)
 - **Parent Epic:** [Background Jobs & Scheduled Tasks](../../user-stories.md)
@@ -21,25 +21,25 @@ Create the Lambda handler at `functions/status-propagation/src/handler.ts` that 
 // Triggered by SQS queue events containing task completion messages.
 // Evaluates dependent tasks and propagates status changes through the DAG.
 
-import type { SQSEvent, SQSBatchResponse, SQSBatchItemFailure, Context } from "aws-lambda";
-import { evaluateDependents } from "./evaluator";
-import { propagateToStory, propagateToEpic } from "./propagator";
-import { logger } from "./logger";
-import { writeAuditEvent } from "./audit";
+import type { SQSEvent, SQSBatchResponse, SQSBatchItemFailure, Context } from 'aws-lambda';
+import { evaluateDependents } from './evaluator';
+import { propagateToStory, propagateToEpic } from './propagator';
+import { logger } from './logger';
+import { writeAuditEvent } from './audit';
 
 /**
  * SQS message body for a status change event.
  * Published by the task completion endpoint when a task status changes.
  */
 interface StatusChangeEvent {
-  eventId: string;       // Idempotency key — prevents duplicate processing
-  eventType: "task.completed" | "task.failed" | "story.completed";
+  eventId: string; // Idempotency key — prevents duplicate processing
+  eventType: 'task.completed' | 'task.failed' | 'story.completed';
   projectId: string;
-  entityId: string;      // The task/story that changed status
-  entityType: "task" | "story";
+  entityId: string; // The task/story that changed status
+  entityType: 'task' | 'story';
   newStatus: string;
   previousStatus: string;
-  timestamp: string;     // ISO 8601
+  timestamp: string; // ISO 8601
 }
 
 /**
@@ -62,10 +62,7 @@ interface StatusChangeEvent {
  *    b. Re-evaluate the parent epic's status based on child story statuses
  * 5. Record the eventId as processed (for idempotency)
  */
-export const handler = async (
-  event: SQSEvent,
-  context: Context
-): Promise<SQSBatchResponse> => {
+export const handler = async (event: SQSEvent, context: Context): Promise<SQSBatchResponse> => {
   const batchItemFailures: SQSBatchItemFailure[] = [];
 
   for (const record of event.Records) {
@@ -76,13 +73,13 @@ export const handler = async (
         eventId: statusChange.eventId,
         eventType: statusChange.eventType,
         entityId: statusChange.entityId,
-        msg: "Processing status change event",
+        msg: 'Processing status change event',
       });
 
       // Check idempotency — skip if already processed
       const alreadyProcessed = await checkIdempotency(statusChange.eventId);
       if (alreadyProcessed) {
-        logger.info({ eventId: statusChange.eventId, msg: "Event already processed, skipping" });
+        logger.info({ eventId: statusChange.eventId, msg: 'Event already processed, skipping' });
         continue;
       }
 
@@ -95,7 +92,7 @@ export const handler = async (
       logger.error({
         messageId: record.messageId,
         error,
-        msg: "Failed to process status change event",
+        msg: 'Failed to process status change event',
       });
 
       // Report this message as failed for individual retry
@@ -114,7 +111,7 @@ export const handler = async (
 // Evaluates dependent tasks to determine if they should be unblocked.
 // Core logic: a blocked task becomes not_started when ALL its dependencies are complete.
 
-import { db } from "./db";
+import { db } from './db';
 
 interface DependentEvaluation {
   taskId: string;
@@ -137,7 +134,7 @@ interface DependentEvaluation {
  */
 export async function evaluateDependents(
   completedTaskId: string,
-  projectId: string
+  projectId: string,
 ): Promise<DependentEvaluation[]> {
   // 1. Query task_dependencies WHERE dependency_id = completedTaskId
   //    -> Returns: [{ task_id: "dependent-1" }, { task_id: "dependent-2" }]
@@ -172,10 +169,7 @@ export async function evaluateDependents(
  * Note: story status is only auto-updated if no worker is currently assigned.
  * A story with an assigned worker retains "in_progress" regardless of task states.
  */
-export async function propagateToStory(
-  storyId: string,
-  projectId: string
-): Promise<void> {
+export async function propagateToStory(storyId: string, projectId: string): Promise<void> {
   // Query all tasks for the story
   // Compute aggregated status
   // Update story if status should change
@@ -190,10 +184,7 @@ export async function propagateToStory(
  * - Any story "in_progress" or "not_started" -> epic remains "in_progress"
  * - All stories "blocked" -> epic is "blocked"
  */
-export async function propagateToEpic(
-  epicId: string,
-  projectId: string
-): Promise<void> {
+export async function propagateToEpic(epicId: string, projectId: string): Promise<void> {
   // Query all stories for the epic
   // Compute aggregated status
   // Update epic if status should change
@@ -209,7 +200,7 @@ export async function propagateToEpic(
 // Uses a DynamoDB table to record processed event IDs.
 // Events are recorded with a TTL so old records are automatically cleaned up.
 
-import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 
 /**
  * Check if an event has already been processed.

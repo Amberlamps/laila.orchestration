@@ -1,0 +1,30 @@
+{
+  "name": "@laila/status-propagation",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Lambda function that consumes SQS status change events and propagates cascading status updates through the DAG",
+  "main": "dist/handler.js",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0",
+    "@laila/database": "workspace:*",
+    "@laila/shared": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.161",
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^2.0.0"
+  }
+}
