@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Timeout Checker Build
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Timeout Checker Lambda](./tasks.md)
 - **Parent Epic:** [Background Jobs & Scheduled Tasks](../../user-stories.md)
@@ -55,14 +55,14 @@ Configure the tsup build for the timeout checker Lambda function. The build must
 // Produces a single ESM bundle with all dependencies inlined.
 // Target: Node.js 22.x on ARM64 (Graviton2).
 
-import { defineConfig } from "tsup";
+import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ["src/handler.ts"],
-  format: ["esm"],
-  target: "node22",
-  platform: "node",
-  outDir: "dist",
+  entry: ['src/handler.ts'],
+  format: ['esm'],
+  target: 'node22',
+  platform: 'node',
+  outDir: 'dist',
   clean: true,
   // Bundle all dependencies into a single file for Lambda deployment.
   // This eliminates the need for node_modules in the deployment package.

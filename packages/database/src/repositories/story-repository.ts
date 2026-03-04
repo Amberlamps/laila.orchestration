@@ -145,6 +145,19 @@ export interface InProgressStoryWithTimeout {
 }
 
 /**
+ * Task data relevant for story publish validation.
+ * Includes the fields checked during publish: persona reference and
+ * acceptance criteria.
+ */
+export interface StoryTaskValidationInfo {
+  id: string;
+  title: string;
+  personaId: string | null;
+  acceptanceCriteria: string[];
+  workStatus: string;
+}
+
+/**
  * Core fields that are read-only when a story is `in_progress`.
  *
  * Modifying these fields during execution could invalidate the worker's
@@ -1088,19 +1101,6 @@ export const createStoryRepository = (db: DatabaseClient) => {
   // -------------------------------------------------------------------------
   // findTasksByStory (for publish validation)
   // -------------------------------------------------------------------------
-
-  /**
-   * Task data relevant for story publish validation.
-   * Includes the fields checked during publish: persona reference and
-   * acceptance criteria.
-   */
-  interface StoryTaskValidationInfo {
-    id: string;
-    title: string;
-    personaId: string | null;
-    acceptanceCriteria: string[];
-    workStatus: string;
-  }
 
   /**
    * Returns all non-deleted tasks for a story with the fields needed

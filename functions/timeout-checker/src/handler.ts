@@ -9,51 +9,60 @@
  * delegates to the `checkAndReclaimTimedOutStories` orchestration function.
  */
 
-import { createDrizzleClient } from '@laila/database';
-
-import { checkAndReclaimTimedOutStories } from '../../../apps/web/src/lib/orchestration/timeout-checker';
+import { createPoolClient } from './db';
+import { createInvocationLogger } from './logger';
+import { checkAndReclaimTimedOutStories, type TimeoutCheckResult } from './orchestration';
 
 import type { ScheduledEvent, Context } from 'aws-lambda';
+
+/** Summary returned by the handler. */
+export interface TimeoutCheckerResult {
+  checked: number;
+  reclaimed: number;
+  errors: number;
+}
 
 export const handler = async (
   event: ScheduledEvent,
   context: Context,
-): Promise<{ statusCode: number; body: string }> => {
-  console.log('[timeout-checker] invoked', {
-    requestId: context.awsRequestId,
-    time: event.time,
-    resources: event.resources,
-  });
+): Promise<TimeoutCheckerResult> => {
+  const log = createInvocationLogger(context.awsRequestId);
+
+  log.info(
+    {
+      time: event.time,
+      resources: event.resources,
+    },
+    'Timeout checker invoked',
+  );
 
   const databaseUrl = process.env['DATABASE_URL'];
   if (!databaseUrl) {
-    console.error('[timeout-checker] DATABASE_URL is not set');
-    return { statusCode: 500, body: JSON.stringify({ error: 'DATABASE_URL is not set' }) };
+    log.error('DATABASE_URL is not set');
+    throw new Error('DATABASE_URL is not set');
   }
 
   // Pool mode is required for transaction support during reclamation
-  const db = createDrizzleClient({ mode: 'pool', url: databaseUrl });
+  const db = createPoolClient(databaseUrl);
 
-  const result = await checkAndReclaimTimedOutStories(db);
+  const result: TimeoutCheckResult = await checkAndReclaimTimedOutStories(db, log);
 
-  console.log('[timeout-checker] completed', {
-    checked: result.checked,
-    reclaimed: result.reclaimed.length,
-    errors: result.errors,
-  });
-
-  if (result.reclaimed.length > 0) {
-    console.log('[timeout-checker] reclaimed stories:', JSON.stringify(result.reclaimed));
-  }
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      ok: true,
+  log.info(
+    {
       checked: result.checked,
       reclaimed: result.reclaimed.length,
       errors: result.errors,
-      details: result.reclaimed,
-    }),
+    },
+    'Timeout checker completed',
+  );
+
+  if (result.reclaimed.length > 0) {
+    log.info({ stories: result.reclaimed }, 'Reclaimed timed-out stories');
+  }
+
+  return {
+    checked: result.checked,
+    reclaimed: result.reclaimed.length,
+    errors: result.errors,
   };
 };
