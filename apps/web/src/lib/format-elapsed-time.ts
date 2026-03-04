@@ -7,43 +7,40 @@
  * Uses `date-fns/formatDistanceToNow` under the hood for human-readable
  * durations (e.g., "3 minutes", "about 2 hours").
  */
-import { formatDistanceToNow } from 'date-fns';
+import { differenceInMinutes, formatDistanceToNow } from 'date-fns';
 
-/** Timeout risk level used for styling elapsed time indicators. */
+/** Risk level based on elapsed time relative to timeout. */
 export type TimeoutRisk = 'normal' | 'warning' | 'critical';
 
-/** Threshold (as a fraction of timeoutMinutes) at which risk becomes "warning". */
-const WARNING_THRESHOLD = 0.75;
-
 /**
- * Formats a timestamp into a human-readable elapsed duration string and
- * computes the timeout risk level.
- *
- * @param timestamp - ISO 8601 date string representing the start time.
- * @param timeoutMinutes - The timeout threshold in minutes used to compute risk.
- * @returns An object with `formatted` (human-readable string) and `risk` level.
- *
- * @example
- * ```ts
- * formatElapsedTime("2026-03-04T10:00:00Z", 30);
- * // { formatted: "5 minutes ago", risk: "normal" }
- * ```
+ * Formats a timestamp into a human-readable elapsed duration string.
+ */
+export function formatElapsedTime(timestamp: string | Date): string;
+/**
+ * Formats a timestamp with timeout-risk information.
  */
 export function formatElapsedTime(
   timestamp: string | Date,
   timeoutMinutes: number,
-): { formatted: string; risk: TimeoutRisk } {
+): { formatted: string; risk: TimeoutRisk };
+export function formatElapsedTime(
+  timestamp: string | Date,
+  timeoutMinutes?: number,
+): string | { formatted: string; risk: TimeoutRisk } {
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
   const formatted = formatDistanceToNow(date, { addSuffix: true });
 
-  const elapsedMs = Date.now() - date.getTime();
-  const elapsedMinutes = elapsedMs / 60_000;
-  const ratio = elapsedMinutes / timeoutMinutes;
+  if (timeoutMinutes === undefined) {
+    return formatted;
+  }
+
+  const elapsed = differenceInMinutes(new Date(), date);
+  const ratio = elapsed / timeoutMinutes;
 
   let risk: TimeoutRisk = 'normal';
-  if (ratio >= 1) {
+  if (ratio >= 0.9) {
     risk = 'critical';
-  } else if (ratio >= WARNING_THRESHOLD) {
+  } else if (ratio >= 0.7) {
     risk = 'warning';
   }
 

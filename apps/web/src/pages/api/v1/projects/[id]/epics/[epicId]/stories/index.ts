@@ -13,6 +13,7 @@ import {
   createProjectRepository,
   createStoryRepository,
   getDb,
+  writeAuditEventFireAndForget,
   type FindByEpicOptions,
 } from '@laila/database';
 import { NotFoundError, DomainErrorCode, workStatusSchema, prioritySchema } from '@laila/shared';
@@ -133,6 +134,22 @@ const handleCreate = withErrorHandler(
       }
 
       const story = await storyRepo.create(tenantId, epicId, createData);
+
+      const auth = (req as AuthenticatedRequest).auth;
+      writeAuditEventFireAndForget({
+        entityType: 'user_story',
+        entityId: story.id,
+        action: 'created',
+        actorType: auth.type === 'human' ? 'user' : 'worker',
+        actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+        tenantId,
+        projectId,
+        details: `Story "${body.title}" created in epic ${epicId}`,
+        changes: {
+          after: { title: body.title, description: body.description ?? null },
+        },
+        metadata: { storyTitle: body.title, epicId, projectId },
+      });
 
       res.status(201).json({ data: story });
     }),

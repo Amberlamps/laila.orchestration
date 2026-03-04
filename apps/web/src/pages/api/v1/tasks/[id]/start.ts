@@ -21,7 +21,7 @@
  * Uses the standard middleware composition: withErrorHandler > withAuth > withValidation.
  */
 
-import { createTaskRepository, getDb } from '@laila/database';
+import { createTaskRepository, getDb, writeAuditEventFireAndForget } from '@laila/database';
 import { NotFoundError, ConflictError, AuthorizationError, DomainErrorCode } from '@laila/shared';
 import { z } from 'zod';
 
@@ -148,6 +148,28 @@ const handleStart = withErrorHandler(
           { workStatus: 'in_progress', startedAt: new Date() },
           task.version,
         );
+
+        const startProjectId = await taskRepo.getProjectIdForTask(tenantId, id);
+        writeAuditEventFireAndForget({
+          entityType: 'task',
+          entityId: id,
+          action: 'status_changed',
+          actorType: 'worker',
+          actorId: workerId,
+          tenantId,
+          ...(startProjectId ? { projectId: startProjectId } : {}),
+          details: `Task "${String(task.title)}" started`,
+          changes: {
+            before: { workStatus: 'pending' },
+            after: { workStatus: 'in_progress' },
+          },
+          metadata: {
+            oldStatus: 'pending',
+            newStatus: 'in_progress',
+            taskTitle: task.title,
+            parentStoryId: parentStory.id,
+          },
+        });
 
         res.status(200).json({ data: updated });
       },

@@ -29,6 +29,7 @@ import {
   createEpicRepository,
   createStoryRepository,
   getDb,
+  writeAuditEventFireAndForget,
   type UserStory,
 } from '@laila/database';
 import {
@@ -168,6 +169,28 @@ const handlePublish = withErrorHandler(
         //    the derived workStatus will be 'ready'.
         const currentVersion = epic.version as number;
         const updated = await epicRepo.update(tenantId, epicId, {}, currentVersion);
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'epic',
+          entityId: epicId,
+          action: 'status_changed',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          projectId,
+          details: `Epic "${String(epic.name)}" published (${currentStatus} → ready)`,
+          changes: {
+            before: { workStatus: currentStatus },
+            after: { workStatus: 'ready' },
+          },
+          metadata: {
+            oldStatus: currentStatus,
+            newStatus: 'ready',
+            epicName: epic.name,
+            projectId,
+          },
+        });
 
         res.status(200).json({ data: updated });
       },

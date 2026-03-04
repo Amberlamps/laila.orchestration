@@ -39,13 +39,11 @@ import {
   createProjectRepository,
   createStoryRepository,
   createEpicRepository,
+  writeAuditEventFireAndForget,
   type DrizzleDb,
   type Database,
 } from '@laila/database';
-import {
-  evaluateEligibility,
-  selectStoryForAssignment,
-} from '@laila/domain';
+import { evaluateEligibility, selectStoryForAssignment } from '@laila/domain';
 import {
   assignRequestSchema,
   NotFoundError,
@@ -69,15 +67,8 @@ import {
 
 import type { AuthenticatedRequest } from '@/lib/middleware/with-auth';
 import type { StoryRecord } from '@/lib/orchestration/response-builder';
-import type {
-  StoryEligibilityInfo,
-  EpicInfo,
-  ProjectInfo,
-} from '@laila/domain';
-import type {
-  AssignResponse,
-  BlockingStoryInfo,
-} from '@laila/shared';
+import type { StoryEligibilityInfo, EpicInfo, ProjectInfo } from '@laila/domain';
+import type { AssignResponse, BlockingStoryInfo } from '@laila/shared';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 // ---------------------------------------------------------------------------
@@ -129,7 +120,7 @@ const handleAssign = withErrorHandler(
           );
         }
 
-        const { tenantId, workerId, projectAccess } = auth;
+        const { tenantId, workerId, workerName, projectAccess } = auth;
         const { project_id: projectId } = data.body;
 
         const db = getDb();
@@ -173,210 +164,28 @@ const handleAssign = withErrorHandler(
         // -----------------------------------------------------------------
         const typedDb = db as unknown as DrizzleDb;
 
-        const result: AssignmentFlowResult = await typedDb.transaction(
-          async (tx: DrizzleDb) => {
-            // Create repositories bound to this transaction so all queries
-            // see a consistent snapshot.
-            const txDb = tx as unknown as Database;
-            const txStoryRepo = createStoryRepository(txDb);
-            const txEpicRepo = createEpicRepository(txDb);
+        const result: AssignmentFlowResult = await typedDb.transaction(async (tx: DrizzleDb) => {
+          // Create repositories bound to this transaction so all queries
+          // see a consistent snapshot.
+          const txDb = tx as unknown as Database;
+          const txStoryRepo = createStoryRepository(txDb);
+          const txEpicRepo = createEpicRepository(txDb);
 
-            // -------------------------------------------------------------
-            // Step 4: Check if worker already has an assigned story
-            // (one-story-per-worker-per-project constraint)
-            // -------------------------------------------------------------
-            const activeStories = await txStoryRepo.findActiveByProject(tenantId, projectId);
-            const existingAssignment = activeStories.find(
-              (s) => s.assignedWorkerId === workerId && s.workStatus === 'in_progress',
-            );
+          // -------------------------------------------------------------
+          // Step 4: Check if worker already has an assigned story
+          // (one-story-per-worker-per-project constraint)
+          // -------------------------------------------------------------
+          const activeStories = await txStoryRepo.findActiveByProject(tenantId, projectId);
+          const existingAssignment = activeStories.find(
+            (s) => s.assignedWorkerId === workerId && s.workStatus === 'in_progress',
+          );
 
-            if (existingAssignment) {
-              const existingStory = existingAssignment as unknown as StoryRecord;
-              const storyDetail = await buildAssignedResponse(
-                txDb,
-                tenantId,
-                existingStory.id,
-                projectId,
-              );
-
-              return {
-                response: { type: 'assigned' as const, story: storyDetail },
-                retryAfterSeconds: MIN_POLLING_INTERVAL_SECONDS,
-              };
-            }
-
-            // -------------------------------------------------------------
-            // Step 5: Load project state for eligibility evaluation
-            // -------------------------------------------------------------
-            const epics = await txEpicRepo.findAllByProject(tenantId, projectId);
-
-            const allStories: StoryRecord[] = [];
-            for (const epic of epics) {
-              const epicStories = await txStoryRepo.findAllByEpic(tenantId, epic.id);
-              for (const storyRow of epicStories) {
-                allStories.push(storyRow as unknown as StoryRecord);
-              }
-            }
-
-            // -------------------------------------------------------------
-            // Step 6: Check cross-story dependencies for each story
-            // -------------------------------------------------------------
-            const crossStoryDepsSatisfied = new Map<string, boolean>();
-            for (const story of allStories) {
-              if (mapStoryStatusToDomain(story.workStatus) === 'not-started') {
-                const hasIncompleteDeps = await txStoryRepo.hasIncompleteUpstreamDependencies(
-                  tenantId,
-                  story.id,
-                );
-                crossStoryDepsSatisfied.set(story.id, !hasIncompleteDeps);
-              } else {
-                crossStoryDepsSatisfied.set(story.id, true);
-              }
-            }
-
-            // -------------------------------------------------------------
-            // Step 7: Build domain model inputs and evaluate eligibility
-            // -------------------------------------------------------------
-            const projectInfo: ProjectInfo = {
-              id: projectId,
-              status: projectRecord.lifecycleStatus as
-                | 'draft'
-                | 'ready'
-                | 'in-progress'
-                | 'complete',
-            };
-
-            const epicInfoMap = new Map<string, EpicInfo>();
-            for (const epic of epics) {
-              epicInfoMap.set(epic.id, {
-                id: epic.id,
-                status: mapEpicStatusToDomain(epic.workStatus),
-              });
-            }
-
-            const storyEligibilityInfos: StoryEligibilityInfo[] = allStories.map((story) => ({
-              id: story.id,
-              status: mapStoryStatusToDomain(story.workStatus),
-              epicId: story.epicId,
-              crossStoryDepsSatisfied: crossStoryDepsSatisfied.get(story.id) ?? false,
-            }));
-
-            const eligibilityResults = evaluateEligibility(
-              storyEligibilityInfos,
-              epicInfoMap,
-              projectInfo,
-            );
-
-            const eligibleResults = eligibilityResults.filter((r) => r.eligible);
-            const eligibleStoryIds = eligibleResults.map((r) => r.storyId);
-
-            // -------------------------------------------------------------
-            // Step 8: Handle no eligible stories
-            // -------------------------------------------------------------
-            if (eligibleStoryIds.length === 0) {
-              const terminalStatuses = new Set(['done', 'skipped']);
-              const completedStories = allStories.filter((s) =>
-                terminalStatuses.has(s.workStatus),
-              );
-              const totalStories = allStories.length;
-
-              // Return all_complete when every story is done (including
-              // the zero-story case: a project with no stories has nothing
-              // left to assign, so it is trivially complete).
-              if (completedStories.length === totalStories) {
-                return {
-                  response: buildAllCompleteResponse(
-                    { id: projectId, name: projectRecord.name as string },
-                    completedStories.length,
-                    totalStories,
-                  ),
-                  retryAfterSeconds: MIN_POLLING_INTERVAL_SECONDS,
-                };
-              }
-
-              // Some stories are blocked — build blocking info
-              const ineligibleResults = eligibilityResults.filter((r) => !r.eligible);
-              const blockingInfos: BlockingStoryInfo[] = ineligibleResults
-                .filter((r) => {
-                  const story = allStories.find((s) => s.id === r.storyId);
-                  return story && !terminalStatuses.has(story.workStatus);
-                })
-                .slice(0, 10)
-                .map((r) => {
-                  const story = allStories.find((s) => s.id === r.storyId);
-                  return {
-                    id: r.storyId,
-                    name: story?.title ?? 'Unknown',
-                    assigned_worker: story?.assignedWorkerId ?? null,
-                    blocking_reason: r.disqualificationReasons.join('; '),
-                  };
-                });
-
-              return {
-                response: buildBlockedResponse(blockingInfos),
-                retryAfterSeconds: DEFAULT_RETRY_AFTER_SECONDS,
-              };
-            }
-
-            // -------------------------------------------------------------
-            // Step 9: Select the best story for assignment
-            // -------------------------------------------------------------
-            const storySelectionMap = new Map<
-              string,
-              { id: string; priority: 'high' | 'medium' | 'low'; createdAt: Date }
-            >();
-            for (const story of allStories) {
-              storySelectionMap.set(story.id, {
-                id: story.id,
-                priority: story.priority as 'high' | 'medium' | 'low',
-                createdAt: story.createdAt,
-              });
-            }
-
-            const storyTopologicalOrder: string[] = [];
-
-            const selectionResult = selectStoryForAssignment(
-              eligibleStoryIds,
-              storySelectionMap,
-              storyTopologicalOrder,
-            );
-
-            if (!selectionResult.selected) {
-              return {
-                response: buildBlockedResponse([]),
-                retryAfterSeconds: DEFAULT_RETRY_AFTER_SECONDS,
-              };
-            }
-
-            const selectedStoryId = selectionResult.storyId;
-
-            // -------------------------------------------------------------
-            // Step 10: Atomically assign the story to the worker
-            // -------------------------------------------------------------
-            const selectedStory = allStories.find((s) => s.id === selectedStoryId);
-            if (!selectedStory) {
-              throw new ConflictError(
-                DomainErrorCode.ASSIGNMENT_CONFLICT,
-                `Selected story ${selectedStoryId} disappeared during assignment`,
-              );
-            }
-
-            await atomicAssignStory(
-              tx,
-              tenantId,
-              selectedStoryId,
-              workerId,
-              selectedStory.version,
-              projectId,
-            );
-
-            // -------------------------------------------------------------
-            // Step 11: Build the full assigned response (within same tx)
-            // -------------------------------------------------------------
+          if (existingAssignment) {
+            const existingStory = existingAssignment as unknown as StoryRecord;
             const storyDetail = await buildAssignedResponse(
               txDb,
               tenantId,
-              selectedStoryId,
+              existingStory.id,
               projectId,
             );
 
@@ -384,8 +193,198 @@ const handleAssign = withErrorHandler(
               response: { type: 'assigned' as const, story: storyDetail },
               retryAfterSeconds: MIN_POLLING_INTERVAL_SECONDS,
             };
-          },
-        );
+          }
+
+          // -------------------------------------------------------------
+          // Step 5: Load project state for eligibility evaluation
+          // -------------------------------------------------------------
+          const epics = await txEpicRepo.findAllByProject(tenantId, projectId);
+
+          const allStories: StoryRecord[] = [];
+          for (const epic of epics) {
+            const epicStories = await txStoryRepo.findAllByEpic(tenantId, epic.id);
+            for (const storyRow of epicStories) {
+              allStories.push(storyRow as unknown as StoryRecord);
+            }
+          }
+
+          // -------------------------------------------------------------
+          // Step 6: Check cross-story dependencies for each story
+          // -------------------------------------------------------------
+          const crossStoryDepsSatisfied = new Map<string, boolean>();
+          for (const story of allStories) {
+            if (mapStoryStatusToDomain(story.workStatus) === 'not-started') {
+              const hasIncompleteDeps = await txStoryRepo.hasIncompleteUpstreamDependencies(
+                tenantId,
+                story.id,
+              );
+              crossStoryDepsSatisfied.set(story.id, !hasIncompleteDeps);
+            } else {
+              crossStoryDepsSatisfied.set(story.id, true);
+            }
+          }
+
+          // -------------------------------------------------------------
+          // Step 7: Build domain model inputs and evaluate eligibility
+          // -------------------------------------------------------------
+          const projectInfo: ProjectInfo = {
+            id: projectId,
+            status: projectRecord.lifecycleStatus as 'draft' | 'ready' | 'in-progress' | 'complete',
+          };
+
+          const epicInfoMap = new Map<string, EpicInfo>();
+          for (const epic of epics) {
+            epicInfoMap.set(epic.id, {
+              id: epic.id,
+              status: mapEpicStatusToDomain(epic.workStatus),
+            });
+          }
+
+          const storyEligibilityInfos: StoryEligibilityInfo[] = allStories.map((story) => ({
+            id: story.id,
+            status: mapStoryStatusToDomain(story.workStatus),
+            epicId: story.epicId,
+            crossStoryDepsSatisfied: crossStoryDepsSatisfied.get(story.id) ?? false,
+          }));
+
+          const eligibilityResults = evaluateEligibility(
+            storyEligibilityInfos,
+            epicInfoMap,
+            projectInfo,
+          );
+
+          const eligibleResults = eligibilityResults.filter((r) => r.eligible);
+          const eligibleStoryIds = eligibleResults.map((r) => r.storyId);
+
+          // -------------------------------------------------------------
+          // Step 8: Handle no eligible stories
+          // -------------------------------------------------------------
+          if (eligibleStoryIds.length === 0) {
+            const terminalStatuses = new Set(['done', 'skipped']);
+            const completedStories = allStories.filter((s) => terminalStatuses.has(s.workStatus));
+            const totalStories = allStories.length;
+
+            // Return all_complete when every story is done (including
+            // the zero-story case: a project with no stories has nothing
+            // left to assign, so it is trivially complete).
+            if (completedStories.length === totalStories) {
+              return {
+                response: buildAllCompleteResponse(
+                  { id: projectId, name: projectRecord.name as string },
+                  completedStories.length,
+                  totalStories,
+                ),
+                retryAfterSeconds: MIN_POLLING_INTERVAL_SECONDS,
+              };
+            }
+
+            // Some stories are blocked — build blocking info
+            const ineligibleResults = eligibilityResults.filter((r) => !r.eligible);
+            const blockingInfos: BlockingStoryInfo[] = ineligibleResults
+              .filter((r) => {
+                const story = allStories.find((s) => s.id === r.storyId);
+                return story && !terminalStatuses.has(story.workStatus);
+              })
+              .slice(0, 10)
+              .map((r) => {
+                const story = allStories.find((s) => s.id === r.storyId);
+                return {
+                  id: r.storyId,
+                  name: story?.title ?? 'Unknown',
+                  assigned_worker: story?.assignedWorkerId ?? null,
+                  blocking_reason: r.disqualificationReasons.join('; '),
+                };
+              });
+
+            return {
+              response: buildBlockedResponse(blockingInfos),
+              retryAfterSeconds: DEFAULT_RETRY_AFTER_SECONDS,
+            };
+          }
+
+          // -------------------------------------------------------------
+          // Step 9: Select the best story for assignment
+          // -------------------------------------------------------------
+          const storySelectionMap = new Map<
+            string,
+            { id: string; priority: 'high' | 'medium' | 'low'; createdAt: Date }
+          >();
+          for (const story of allStories) {
+            storySelectionMap.set(story.id, {
+              id: story.id,
+              priority: story.priority as 'high' | 'medium' | 'low',
+              createdAt: story.createdAt,
+            });
+          }
+
+          const storyTopologicalOrder: string[] = [];
+
+          const selectionResult = selectStoryForAssignment(
+            eligibleStoryIds,
+            storySelectionMap,
+            storyTopologicalOrder,
+          );
+
+          if (!selectionResult.selected) {
+            return {
+              response: buildBlockedResponse([]),
+              retryAfterSeconds: DEFAULT_RETRY_AFTER_SECONDS,
+            };
+          }
+
+          const selectedStoryId = selectionResult.storyId;
+
+          // -------------------------------------------------------------
+          // Step 10: Atomically assign the story to the worker
+          // -------------------------------------------------------------
+          const selectedStory = allStories.find((s) => s.id === selectedStoryId);
+          if (!selectedStory) {
+            throw new ConflictError(
+              DomainErrorCode.ASSIGNMENT_CONFLICT,
+              `Selected story ${selectedStoryId} disappeared during assignment`,
+            );
+          }
+
+          await atomicAssignStory(
+            tx,
+            tenantId,
+            selectedStoryId,
+            workerId,
+            selectedStory.version,
+            projectId,
+          );
+
+          // Fire-and-forget audit event for the successful assignment
+          writeAuditEventFireAndForget({
+            entityType: 'user_story',
+            entityId: selectedStoryId,
+            action: 'assigned',
+            actorType: 'worker',
+            actorId: workerId,
+            tenantId,
+            projectId,
+            details: `Story "${selectedStory.title}" assigned to worker "${workerName}"`,
+            metadata: {
+              workerId,
+              storyTitle: selectedStory.title,
+            },
+          });
+
+          // -------------------------------------------------------------
+          // Step 11: Build the full assigned response (within same tx)
+          // -------------------------------------------------------------
+          const storyDetail = await buildAssignedResponse(
+            txDb,
+            tenantId,
+            selectedStoryId,
+            projectId,
+          );
+
+          return {
+            response: { type: 'assigned' as const, story: storyDetail },
+            retryAfterSeconds: MIN_POLLING_INTERVAL_SECONDS,
+          };
+        });
 
         // -----------------------------------------------------------------
         // Send HTTP response after transaction commits

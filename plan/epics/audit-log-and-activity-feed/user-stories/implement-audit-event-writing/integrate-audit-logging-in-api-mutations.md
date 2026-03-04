@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Integrate Audit Logging in API Mutations
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Audit Event Writing](./tasks.md)
 - **Parent Epic:** [Audit Log & Activity Feed](../../user-stories.md)
@@ -20,9 +20,9 @@ Add audit event writes to all CRUD API mutations (create, update, delete, status
 // Helper function for writing audit events from API route handlers.
 // Provides a consistent interface for all entity mutations.
 
-import { auditEventService } from "@laila/database";
-import type { CreateAuditEventInput, AuditEventActor } from "@laila/shared";
-import type { NextApiRequest } from "next";
+import { auditEventService } from '@laila/database';
+import type { CreateAuditEventInput, AuditEventActor } from '@laila/shared';
+import type { NextApiRequest } from 'next';
 
 /**
  * writeAuditEvent(input: CreateAuditEventInput): Promise<void>

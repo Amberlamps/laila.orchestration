@@ -44,6 +44,11 @@ import { z } from 'zod';
 import { triggerCascadingReevaluation } from '@/lib/api/cascading-reevaluation';
 import { withErrorHandler } from '@/lib/api/error-handler';
 import { withValidation } from '@/lib/api/validation';
+import {
+  logTasksUnblocked,
+  logEpicAutoComplete,
+  logProjectAutoComplete,
+} from '@/lib/audit/system-events';
 import { withAuth } from '@/lib/middleware/with-auth';
 import { guardWorkerStillAssigned } from '@/lib/orchestration/race-condition-guards';
 
@@ -175,6 +180,7 @@ const handleComplete = withErrorHandler(
 
         // 7. Log audit event for the task completion (outside transaction;
         //    audit writes to DynamoDB and should not block the PG transaction).
+        const completeProjectId = cascadeResult.projectId ?? undefined;
         await writeAuditEvent({
           entityType: 'task',
           entityId: id,
@@ -182,6 +188,8 @@ const handleComplete = withErrorHandler(
           actorType: 'worker',
           actorId: workerId,
           tenantId,
+          ...(completeProjectId ? { projectId: completeProjectId } : {}),
+          details: `Task "${String(task.title)}" completed`,
           changes: {
             before: { workStatus: 'in_progress' },
             after: { workStatus: 'done', completedAt: updated.completedAt?.toISOString() },
@@ -192,6 +200,43 @@ const handleComplete = withErrorHandler(
             allTasksComplete: cascadeResult.allTasksComplete,
           },
         });
+
+        // 7b. Fire-and-forget system audit events for cascading changes.
+        //     These log each unblocked task and any auto-complete transitions.
+        if (cascadeResult.unblockedTasks.length > 0) {
+          logTasksUnblocked({
+            triggerTaskId: id,
+            triggerTaskName: task.title as string,
+            unblockedTasks: cascadeResult.unblockedTasks,
+            tenantId,
+            projectId: completeProjectId,
+          });
+        }
+
+        if (
+          cascadeResult.epicId &&
+          cascadeResult.epicStatus === 'done' &&
+          cascadeResult.previousEpicStatus !== 'done'
+        ) {
+          logEpicAutoComplete({
+            epicId: cascadeResult.epicId,
+            previousStatus: cascadeResult.previousEpicStatus ?? 'unknown',
+            tenantId,
+            projectId: completeProjectId,
+          });
+        }
+
+        if (
+          cascadeResult.projectId &&
+          cascadeResult.projectStatus === 'done' &&
+          cascadeResult.previousProjectStatus !== 'done'
+        ) {
+          logProjectAutoComplete({
+            projectId: cascadeResult.projectId,
+            previousStatus: cascadeResult.previousProjectStatus ?? 'unknown',
+            tenantId,
+          });
+        }
 
         // 8. Send spec-compliant response
         res.status(200).json({

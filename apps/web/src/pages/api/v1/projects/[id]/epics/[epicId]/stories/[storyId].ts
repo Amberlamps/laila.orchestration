@@ -9,7 +9,12 @@
  * Uses the standard middleware composition: withErrorHandler > withAuth > withValidation.
  */
 
-import { createEpicRepository, createStoryRepository, getDb } from '@laila/database';
+import {
+  createEpicRepository,
+  createStoryRepository,
+  getDb,
+  writeAuditEventFireAndForget,
+} from '@laila/database';
 import { NotFoundError, ConflictError, DomainErrorCode, prioritySchema } from '@laila/shared';
 import { z } from 'zod';
 
@@ -169,6 +174,26 @@ const handleUpdate = withErrorHandler(
 
         try {
           const updated = await storyRepo.update(tenantId, storyId, updateData, version);
+
+          const auth = (req as AuthenticatedRequest).auth;
+          const changedFields = Object.keys(updateData);
+          writeAuditEventFireAndForget({
+            entityType: 'user_story',
+            entityId: storyId,
+            action: 'updated',
+            actorType: auth.type === 'human' ? 'user' : 'worker',
+            actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+            tenantId,
+            projectId,
+            details: `Story "${updated.title}" updated (${changedFields.join(', ')})`,
+            metadata: {
+              changedFields,
+              storyTitle: updated.title,
+              epicId,
+              projectId,
+            },
+          });
+
           res.status(200).json({ data: updated });
         } catch (error: unknown) {
           // Map repository ConflictError to HTTP ConflictError with domain code
@@ -233,6 +258,26 @@ const handleDelete = withErrorHandler(
         }
 
         await storyRepo.softDeleteWithCascade(tenantId, storyId);
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'user_story',
+          entityId: storyId,
+          action: 'deleted',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          projectId,
+          details: `Story "${String(existing.title)}" deleted`,
+          changes: {
+            before: { title: existing.title },
+          },
+          metadata: {
+            storyTitle: existing.title,
+            epicId,
+            projectId,
+          },
+        });
 
         res.status(204).end();
       },

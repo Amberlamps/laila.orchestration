@@ -189,6 +189,7 @@ vi.mock('@laila/database', () => ({
     updateWorkStatus: mockProjectRepoUpdateWorkStatus,
   })),
   writeAuditEvent: (...args: unknown[]) => mockWriteAuditEvent(...args),
+  writeAuditEventFireAndForget: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------

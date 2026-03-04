@@ -24,7 +24,12 @@
  * Requires human authentication via Better Auth session.
  */
 
-import { createEpicRepository, createStoryRepository, getDb } from '@laila/database';
+import {
+  createEpicRepository,
+  createStoryRepository,
+  getDb,
+  writeAuditEventFireAndForget,
+} from '@laila/database';
 import { NotFoundError, ConflictError, ValidationError, DomainErrorCode } from '@laila/shared';
 import { z } from 'zod';
 
@@ -153,6 +158,29 @@ const handlePublish = withErrorHandler(
 
         // 6. Transition the story from pending to ready
         const updated = await storyRepo.publishStory(tenantId, storyId);
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'user_story',
+          entityId: storyId,
+          action: 'status_changed',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          projectId,
+          details: `Story "${String(story.title)}" published (pending → ready)`,
+          changes: {
+            before: { workStatus: 'pending' },
+            after: { workStatus: 'ready' },
+          },
+          metadata: {
+            oldStatus: 'pending',
+            newStatus: 'ready',
+            storyTitle: story.title,
+            epicId,
+            projectId,
+          },
+        });
 
         res.status(200).json({ data: updated });
       },

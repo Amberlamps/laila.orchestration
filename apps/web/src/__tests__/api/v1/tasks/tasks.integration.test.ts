@@ -279,10 +279,14 @@ const mockStoryRepoFindById = vi.fn<(tenantId: string, id: string) => Promise<Mo
 
 const mockStoryRepoUpdate = vi.fn();
 
+const mockEpicRepoFindById = vi.fn();
+
 const mockEpicRepoComputeDerivedStatus =
   vi.fn<(tenantId: string, epicId: string) => Promise<string>>();
 
 const mockEpicRepoFindAllByProject = vi.fn();
+
+const mockProjectRepoFindById = vi.fn();
 
 const mockProjectRepoUpdateWorkStatus = vi.fn();
 
@@ -317,6 +321,7 @@ vi.mock('@/lib/middleware/api-key-validator', () => ({
 vi.mock('@laila/database', () => ({
   getDb: vi.fn(() => ({})),
   writeAuditEvent: vi.fn(async () => undefined),
+  writeAuditEventFireAndForget: vi.fn(),
   userStoriesTable: {
     id: 'id',
     tenantId: 'tenant_id',
@@ -351,10 +356,12 @@ vi.mock('@laila/database', () => ({
     update: mockStoryRepoUpdate,
   })),
   createEpicRepository: vi.fn(() => ({
+    findById: mockEpicRepoFindById,
     computeDerivedStatus: mockEpicRepoComputeDerivedStatus,
     findAllByProject: mockEpicRepoFindAllByProject,
   })),
   createProjectRepository: vi.fn(() => ({
+    findById: mockProjectRepoFindById,
     updateWorkStatus: mockProjectRepoUpdateWorkStatus,
   })),
 }));
@@ -1642,8 +1649,10 @@ describe('Task API Integration Tests', () => {
           hasPrev: false,
         },
       });
+      mockEpicRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
       mockEpicRepoComputeDerivedStatus.mockResolvedValue('in_progress');
       mockEpicRepoFindAllByProject.mockResolvedValue([{ workStatus: 'in_progress' }]);
+      mockProjectRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
 
       const req = createMockRequest({
         method: 'POST',
@@ -1714,8 +1723,10 @@ describe('Task API Integration Tests', () => {
           hasPrev: false,
         },
       });
+      mockEpicRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
       mockEpicRepoComputeDerivedStatus.mockResolvedValue('in_progress');
       mockEpicRepoFindAllByProject.mockResolvedValue([{ workStatus: 'in_progress' }]);
+      mockProjectRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
 
       const req = createMockRequest({
         method: 'POST',
@@ -1796,8 +1807,10 @@ describe('Task API Integration Tests', () => {
           hasPrev: false,
         },
       });
+      mockEpicRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
       mockEpicRepoComputeDerivedStatus.mockResolvedValue('in_progress');
       mockEpicRepoFindAllByProject.mockResolvedValue([{ workStatus: 'in_progress' }]);
+      mockProjectRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
 
       const req = createMockRequest({
         method: 'POST',
@@ -1870,8 +1883,10 @@ describe('Task API Integration Tests', () => {
           hasPrev: false,
         },
       });
+      mockEpicRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
       mockEpicRepoComputeDerivedStatus.mockResolvedValue('in_progress');
       mockEpicRepoFindAllByProject.mockResolvedValue([{ workStatus: 'in_progress' }]);
+      mockProjectRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
 
       const req = createMockRequest({
         method: 'POST',

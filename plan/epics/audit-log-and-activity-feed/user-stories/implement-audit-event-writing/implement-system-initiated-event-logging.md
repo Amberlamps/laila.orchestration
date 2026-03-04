@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement System-Initiated Event Logging
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Audit Event Writing](./tasks.md)
 - **Parent Epic:** [Audit Log & Activity Feed](../../user-stories.md)
@@ -20,13 +20,13 @@ Implement audit logging for system-initiated events that occur without direct us
 // Functions for logging system-initiated audit events.
 // All use the "System" actor and include detailed context.
 
-import { auditEventService } from "@laila/database";
-import type { CreateAuditEventInput } from "@laila/shared";
+import { auditEventService } from '@laila/database';
+import type { CreateAuditEventInput } from '@laila/shared';
 
 const SYSTEM_ACTOR = {
-  type: "system" as const,
-  id: "system",
-  name: "System",
+  type: 'system' as const,
+  id: 'system',
+  name: 'System',
 };
 
 /**

@@ -8,7 +8,12 @@
  * Uses the standard middleware composition: withErrorHandler > withAuth > withValidation.
  */
 
-import { createProjectRepository, getDb, type FindProjectsOptions } from '@laila/database';
+import {
+  createProjectRepository,
+  getDb,
+  writeAuditEventFireAndForget,
+  type FindProjectsOptions,
+} from '@laila/database';
 import {
   createProjectSchema,
   listProjectsQuerySchema,
@@ -49,6 +54,22 @@ const handleCreate = withErrorHandler(
           ...(body.workerInactivityTimeoutMinutes !== undefined && {
             workerInactivityTimeoutMinutes: body.workerInactivityTimeoutMinutes,
           }),
+        });
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'project',
+          entityId: project.id,
+          action: 'created',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          projectId: project.id,
+          details: `Project "${body.name}" created`,
+          changes: {
+            after: { name: body.name, description: body.description ?? null },
+          },
+          metadata: { projectName: body.name },
         });
 
         res.status(201).json({ data: project });

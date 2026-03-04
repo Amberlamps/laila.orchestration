@@ -15,10 +15,14 @@
 export {
   AUDIT_TABLE_NAME,
   ACTOR_INDEX_NAME,
+  CROSS_PROJECT_INDEX_NAME,
   PARTITION_KEY,
   SORT_KEY,
   GSI_PARTITION_KEY,
   GSI_SORT_KEY,
+  CROSS_PROJECT_PK,
+  CROSS_PROJECT_SK,
+  CROSS_PROJECT_PK_VALUE,
   TTL_ATTRIBUTE,
   AUDIT_TABLE_KEY_SCHEMA,
   type AuditEventItem,
@@ -29,6 +33,7 @@ export { createDynamoBaseClient, createDynamoClient, type DynamoClientOptions } 
 export {
   writeAuditEvent,
   writeAuditEventBatch,
+  writeAuditEventFireAndForget,
   AuditWriteError,
   type AuditEventInput,
 } from './audit-writer';
@@ -36,6 +41,8 @@ export {
 export {
   queryByEntity,
   queryByActor,
+  queryByProject,
+  queryAll,
   AuditReaderError,
   type AuditQueryOptions,
   type AuditQueryResult,

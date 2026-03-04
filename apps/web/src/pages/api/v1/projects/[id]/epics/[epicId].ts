@@ -9,7 +9,12 @@
  * Uses the standard middleware composition: withErrorHandler > withAuth > withValidation.
  */
 
-import { createEpicRepository, createProjectRepository, getDb } from '@laila/database';
+import {
+  createEpicRepository,
+  createProjectRepository,
+  getDb,
+  writeAuditEventFireAndForget,
+} from '@laila/database';
 import { updateEpicSchema, NotFoundError, ConflictError, DomainErrorCode } from '@laila/shared';
 import { z } from 'zod';
 
@@ -140,6 +145,25 @@ const handleUpdate = withErrorHandler(
 
         try {
           const updated = await epicRepo.update(tenantId, epicId, updateData, version);
+
+          const auth = (req as AuthenticatedRequest).auth;
+          const changedFields = Object.keys(updateData);
+          writeAuditEventFireAndForget({
+            entityType: 'epic',
+            entityId: epicId,
+            action: 'updated',
+            actorType: auth.type === 'human' ? 'user' : 'worker',
+            actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+            tenantId,
+            projectId,
+            details: `Epic "${updated.name}" updated (${changedFields.join(', ')})`,
+            metadata: {
+              changedFields,
+              epicName: updated.name,
+              projectId,
+            },
+          });
+
           res.status(200).json({ data: updated });
         } catch (error: unknown) {
           // Map repository ConflictError to HTTP ConflictError with domain code
@@ -190,6 +214,22 @@ const handleDelete = withErrorHandler(
         }
 
         await epicRepo.softDelete(tenantId, epicId);
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'epic',
+          entityId: epicId,
+          action: 'deleted',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          projectId,
+          details: `Epic "${String(existing.name)}" deleted`,
+          changes: {
+            before: { name: existing.name },
+          },
+          metadata: { epicName: existing.name, projectId },
+        });
 
         res.status(204).end();
       },

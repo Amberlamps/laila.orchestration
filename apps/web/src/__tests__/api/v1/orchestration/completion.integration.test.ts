@@ -194,11 +194,13 @@ const mockStoryRepoHasIncompleteUpstreamDependencies = vi.fn();
 const mockStoryRepoResetStory = vi.fn();
 
 // Epic repo mocks
+const mockEpicRepoFindById = vi.fn();
 const mockEpicRepoComputeDerivedStatus =
   vi.fn<(tenantId: string, epicId: string) => Promise<string>>();
 const mockEpicRepoFindAllByProject = vi.fn();
 
 // Project repo mocks
+const mockProjectRepoFindById = vi.fn();
 const mockProjectRepoUpdateWorkStatus = vi.fn();
 
 // Audit writer mock
@@ -255,13 +257,16 @@ vi.mock('@laila/database', () => ({
     withTransaction: mockTaskRepoWithTransaction,
   })),
   createEpicRepository: vi.fn(() => ({
+    findById: mockEpicRepoFindById,
     computeDerivedStatus: mockEpicRepoComputeDerivedStatus,
     findAllByProject: mockEpicRepoFindAllByProject,
   })),
   createProjectRepository: vi.fn(() => ({
+    findById: mockProjectRepoFindById,
     updateWorkStatus: mockProjectRepoUpdateWorkStatus,
   })),
   writeAuditEvent: (...args: unknown[]) => mockWriteAuditEvent(...args),
+  writeAuditEventFireAndForget: vi.fn(),
   attemptHistoryTable: {
     userStoryId: 'user_story_id',
     tenantId: 'tenant_id',
@@ -387,6 +392,8 @@ describe('Completion & Failure Integration Tests', () => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     setupTransactionMock();
     mockWriteAuditEvent.mockResolvedValue({});
+    mockEpicRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
+    mockProjectRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
   });
 
   afterEach(() => {

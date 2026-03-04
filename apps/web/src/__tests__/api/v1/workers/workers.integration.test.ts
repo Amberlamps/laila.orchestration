@@ -217,6 +217,7 @@ vi.mock('@laila/shared', async (importOriginal) => {
 // Mock @laila/database
 vi.mock('@laila/database', () => ({
   getDb: () => mockDb,
+  writeAuditEventFireAndForget: vi.fn(),
   createWorkerRepository: () => mockWorkerRepo,
   createProjectRepository: () => mockProjectRepo,
   workersTable: { id: 'workers.id', tenantId: 'workers.tenant_id' },

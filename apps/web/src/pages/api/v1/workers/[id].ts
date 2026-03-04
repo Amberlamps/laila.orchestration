@@ -17,7 +17,12 @@
  * - Force-delete unassigns all stories before deleting the worker.
  */
 
-import { createWorkerRepository, getDb, type Worker } from '@laila/database';
+import {
+  createWorkerRepository,
+  getDb,
+  writeAuditEventFireAndForget,
+  type Worker,
+} from '@laila/database';
 import {
   updateWorkerBodySchema,
   deleteWorkerQuerySchema,
@@ -156,6 +161,23 @@ const handleUpdate = withErrorHandler(
 
         try {
           const updated = await workerRepo.update(tenantId, id, updateData, existing.updatedAt);
+
+          const auth = (req as AuthenticatedRequest).auth;
+          const changedFields = Object.keys(updateData);
+          writeAuditEventFireAndForget({
+            entityType: 'worker',
+            entityId: id,
+            action: 'updated',
+            actorType: auth.type === 'human' ? 'user' : 'worker',
+            actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+            tenantId,
+            details: `Worker "${updated.name}" updated (${changedFields.join(', ')})`,
+            metadata: {
+              changedFields,
+              workerName: updated.name,
+            },
+          });
+
           res.status(200).json({ data: sanitizeWorker(updated) });
         } catch (error: unknown) {
           if (error instanceof Error && error.name === 'ConflictError') {
@@ -247,6 +269,24 @@ const handleDelete = withErrorHandler(
           }
           throw error;
         }
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'worker',
+          entityId: id,
+          action: 'deleted',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          details: `Worker "${existing.name}" deleted${force === true ? ' (force)' : ''}`,
+          changes: {
+            before: { name: existing.name },
+          },
+          metadata: {
+            workerName: existing.name,
+            forceDeleted: force === true,
+          },
+        });
 
         res.status(204).end();
       },

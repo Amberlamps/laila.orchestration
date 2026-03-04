@@ -17,6 +17,7 @@ import {
   createTaskRepository,
   createStoryRepository,
   getDb,
+  writeAuditEventFireAndForget,
   type FindTasksOptions,
 } from '@laila/database';
 import {
@@ -129,6 +130,26 @@ const handleCreate = withErrorHandler(
           }
 
           return created;
+        });
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'task',
+          entityId: task.id,
+          action: 'created',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          projectId,
+          details: `Task "${body.title}" created in story ${body.userStoryId}`,
+          changes: {
+            after: { title: body.title },
+          },
+          metadata: {
+            taskTitle: body.title,
+            userStoryId: body.userStoryId,
+            projectId,
+          },
         });
 
         res.status(201).json({ data: task });

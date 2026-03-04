@@ -196,11 +196,13 @@ const mockStoryRepoResetStory = vi.fn();
 const mockStoryRepoFindInProgressWithTimeout = vi.fn();
 
 // Epic repo mocks
+const mockEpicRepoFindById = vi.fn();
 const mockEpicRepoComputeDerivedStatus =
   vi.fn<(tenantId: string, epicId: string) => Promise<string>>();
 const mockEpicRepoFindAllByProject = vi.fn();
 
 // Project repo mocks
+const mockProjectRepoFindById = vi.fn();
 const mockProjectRepoUpdateWorkStatus = vi.fn();
 
 // Audit writer mock
@@ -249,13 +251,16 @@ vi.mock('@laila/database', () => ({
     findInProgressWithTimeout: mockStoryRepoFindInProgressWithTimeout,
   })),
   createEpicRepository: vi.fn(() => ({
+    findById: mockEpicRepoFindById,
     computeDerivedStatus: mockEpicRepoComputeDerivedStatus,
     findAllByProject: mockEpicRepoFindAllByProject,
   })),
   createProjectRepository: vi.fn(() => ({
+    findById: mockProjectRepoFindById,
     updateWorkStatus: mockProjectRepoUpdateWorkStatus,
   })),
   writeAuditEvent: (...args: unknown[]) => mockWriteAuditEvent(...args),
+  writeAuditEventFireAndForget: vi.fn(),
   attemptHistoryTable: {
     userStoryId: 'user_story_id',
     tenantId: 'tenant_id',
@@ -275,8 +280,10 @@ vi.mock('@laila/database', () => ({
  * Mock @/lib/api/cascading-reevaluation -- used by task completion.
  */
 const mockTriggerCascadingReevaluation = vi.fn();
+const mockTriggerBlockingCascade = vi.fn().mockResolvedValue([]);
 vi.mock('@/lib/api/cascading-reevaluation', () => ({
   triggerCascadingReevaluation: (...args: unknown[]) => mockTriggerCascadingReevaluation(...args),
+  triggerBlockingCascade: (...args: unknown[]) => mockTriggerBlockingCascade(...args),
 }));
 
 /**
@@ -336,8 +343,10 @@ describe('Race Condition Handling', () => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     setupTransactionMock();
     mockWriteAuditEvent.mockResolvedValue({});
+    mockEpicRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
     mockEpicRepoComputeDerivedStatus.mockResolvedValue('in_progress');
     mockEpicRepoFindAllByProject.mockResolvedValue([]);
+    mockProjectRepoFindById.mockResolvedValue({ workStatus: 'in_progress' });
     mockProjectRepoUpdateWorkStatus.mockResolvedValue({});
     mockTaskRepoGetProjectIdForStory.mockResolvedValue(PROJECT_UUID);
   });

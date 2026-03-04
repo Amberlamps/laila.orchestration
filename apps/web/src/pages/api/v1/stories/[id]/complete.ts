@@ -49,6 +49,7 @@ import { z } from 'zod';
 
 import { withErrorHandler } from '@/lib/api/error-handler';
 import { withValidation } from '@/lib/api/validation';
+import { logEpicAutoComplete, logProjectAutoComplete } from '@/lib/audit/system-events';
 import { withAuth } from '@/lib/middleware/with-auth';
 import { guardWorkerStillAssigned } from '@/lib/orchestration/race-condition-guards';
 
@@ -179,12 +180,29 @@ const handleComplete = withErrorHandler(
         // 5. Format cost for the numeric(10,4) column
         const costString = cost_usd.toFixed(4);
 
+        // 5b. Capture previous epic and project statuses BEFORE the
+        //     transaction so we can detect auto-complete transitions
+        //     and log system audit events after the transaction commits.
+        const epicRepo = createEpicRepository(db);
+        const storyEpicId = story.epicId as string;
+        const epicBefore = await epicRepo.findById(tenantId, storyEpicId);
+        const previousEpicStatus = (epicBefore?.workStatus as string | undefined) ?? null;
+
+        const projectIdForAudit = await taskRepo.getProjectIdForStory(tenantId, id);
+        let previousProjectStatus: string | null = null;
+        if (projectIdForAudit) {
+          const projectRepo = createProjectRepository(db);
+          const projectBefore = await projectRepo.findById(tenantId, projectIdForAudit);
+          previousProjectStatus = (projectBefore?.workStatus as string | undefined) ?? null;
+        }
+
         // 6. Single atomic transaction: story completion + attempt history +
         //    epic/project status propagation. All succeed or all roll back.
         interface TransactionResult {
           updated: CompletedStoryRow;
           epicStatus: string;
           projectStatus: string;
+          projectId: string | null;
         }
 
         const txResult: TransactionResult = await taskRepo.withTransaction(
@@ -280,6 +298,7 @@ const handleComplete = withErrorHandler(
               updated: completedStory,
               epicStatus: derivedEpicStatus,
               projectStatus: derivedProjectStatus,
+              projectId,
             };
           },
         );
@@ -304,6 +323,7 @@ const handleComplete = withErrorHandler(
         // 8. Log audit event with completion details and cost data.
         //    Audit writes to DynamoDB (outside PG transaction) but errors
         //    are surfaced, not silenced.
+        const storyCompleteProjectId = txResult.projectId ?? undefined;
         await writeAuditEvent({
           entityType: 'user_story',
           entityId: id,
@@ -311,6 +331,8 @@ const handleComplete = withErrorHandler(
           actorType: 'worker',
           actorId: workerId,
           tenantId,
+          ...(storyCompleteProjectId ? { projectId: storyCompleteProjectId } : {}),
+          details: `Story "${String(story.title)}" completed`,
           changes: {
             before: { workStatus: 'in_progress' },
             after: { workStatus: 'done', completedAt: completedAt.toISOString() },
@@ -326,6 +348,25 @@ const handleComplete = withErrorHandler(
             project_status: projectStatus,
           },
         });
+
+        // 8b. Fire-and-forget system audit events for auto-complete
+        //     transitions on the parent epic and project.
+        if (epicStatus === 'done' && previousEpicStatus !== 'done') {
+          logEpicAutoComplete({
+            epicId: storyEpicId,
+            previousStatus: previousEpicStatus ?? 'unknown',
+            tenantId,
+            projectId: storyCompleteProjectId,
+          });
+        }
+
+        if (txResult.projectId && projectStatus === 'done' && previousProjectStatus !== 'done') {
+          logProjectAutoComplete({
+            projectId: txResult.projectId,
+            previousStatus: previousProjectStatus ?? 'unknown',
+            tenantId,
+          });
+        }
 
         // 9. Return response
         res.status(200).json({

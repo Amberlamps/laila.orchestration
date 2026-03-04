@@ -26,6 +26,7 @@ import {
   createProjectRepository,
   createEpicRepository,
   getDb,
+  writeAuditEventFireAndForget,
   type EpicRecord,
 } from '@laila/database';
 import { validateTransition, PROJECT_TRANSITIONS, type ProjectStatus } from '@laila/domain';
@@ -145,6 +146,27 @@ const handlePublish = withErrorHandler(
           { lifecycleStatus: 'ready' },
           currentVersion,
         );
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'project',
+          entityId: id,
+          action: 'status_changed',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          projectId: id,
+          details: `Project "${String(project.name)}" published (${currentStatus} → ready)`,
+          changes: {
+            before: { lifecycleStatus: currentStatus },
+            after: { lifecycleStatus: 'ready' },
+          },
+          metadata: {
+            oldStatus: currentStatus,
+            newStatus: 'ready',
+            projectName: project.name,
+          },
+        });
 
         res.status(200).json({ data: updated });
       },

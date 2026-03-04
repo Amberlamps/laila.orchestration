@@ -61,6 +61,14 @@ export interface CascadeResult {
   epicStatus: string;
   /** The parent project's new work status after re-derivation. */
   projectStatus: string;
+  /** The parent epic's UUID (null if no parent story found). */
+  epicId: string | null;
+  /** The parent project's UUID (null if not resolved). */
+  projectId: string | null;
+  /** The epic's work status BEFORE re-derivation (for detecting transitions). */
+  previousEpicStatus: string | null;
+  /** The project's work status BEFORE re-derivation (for detecting transitions). */
+  previousProjectStatus: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -178,8 +186,17 @@ export const triggerCascadingReevaluation = async (
   // -------------------------------------------------------------------------
 
   let epicStatus = 'pending';
+  let epicId: string | null = null;
+  let previousEpicStatus: string | null = null;
 
   if (parentStory) {
+    epicId = parentStory.epicId;
+
+    // Read current epic status BEFORE re-derivation so callers can detect
+    // auto-complete transitions (e.g. in_progress -> done).
+    const epicBefore = await epicRepo.findById(tenantId, parentStory.epicId);
+    previousEpicStatus = (epicBefore?.workStatus as string | undefined) ?? null;
+
     epicStatus = await epicRepo.computeDerivedStatus(tenantId, parentStory.epicId);
   }
 
@@ -188,17 +205,28 @@ export const triggerCascadingReevaluation = async (
   // -------------------------------------------------------------------------
 
   let projectStatus = 'pending';
+  let resolvedProjectId: string | null = null;
+  let previousProjectStatus: string | null = null;
 
   if (parentStory) {
-    const projectId = await taskRepo.getProjectIdForTask(tenantId, completedTaskId);
+    resolvedProjectId = await taskRepo.getProjectIdForTask(tenantId, completedTaskId);
 
-    if (projectId) {
+    if (resolvedProjectId) {
+      // Read current project status BEFORE re-derivation so callers can
+      // detect auto-complete transitions (e.g. in_progress -> done).
+      const projectBefore = await projectRepo.findById(tenantId, resolvedProjectId);
+      previousProjectStatus = (projectBefore?.workStatus as string | undefined) ?? null;
+
       const derivedProjectStatus = deriveProjectWorkStatus(
-        await epicRepo.findAllByProject(tenantId, projectId),
+        await epicRepo.findAllByProject(tenantId, resolvedProjectId),
       );
 
       if (derivedProjectStatus) {
-        await projectRepo.updateWorkStatus(tenantId, projectId, derivedProjectStatus as WorkStatus);
+        await projectRepo.updateWorkStatus(
+          tenantId,
+          resolvedProjectId,
+          derivedProjectStatus as WorkStatus,
+        );
         projectStatus = derivedProjectStatus;
       }
     }
@@ -210,6 +238,10 @@ export const triggerCascadingReevaluation = async (
     storyStatus,
     epicStatus,
     projectStatus,
+    epicId,
+    projectId: resolvedProjectId,
+    previousEpicStatus,
+    previousProjectStatus,
   };
 };
 
@@ -275,4 +307,64 @@ const deriveProjectWorkStatus = (epics: ReadonlyArray<{ workStatus: string }>): 
   }
 
   return null;
+};
+
+// ---------------------------------------------------------------------------
+// Blocking cascade (inverse of unblocking)
+// ---------------------------------------------------------------------------
+
+/** A task that was blocked by the blocking cascade. */
+export interface BlockedTask {
+  id: string;
+  name: string;
+}
+
+/**
+ * Triggers cascading blocking when tasks are reset or failed.
+ *
+ * For each provided task ID, finds downstream dependents that are currently
+ * 'pending' and checks whether ALL of their dependencies are still 'done'.
+ * If any dependency is no longer 'done', the dependent is transitioned back
+ * to 'blocked'.
+ *
+ * This is the inverse of the unblocking cascade in `triggerCascadingReevaluation`.
+ *
+ * @param tenantId - The tenant UUID for data isolation
+ * @param resetTaskIds - Task IDs that were reset/failed (their dependents may need re-blocking)
+ * @param tx - Database transaction handle for atomicity
+ * @returns List of tasks that were transitioned to 'blocked'
+ */
+export const triggerBlockingCascade = async (
+  tenantId: string,
+  resetTaskIds: string[],
+  tx: DrizzleDb,
+): Promise<BlockedTask[]> => {
+  const txAsDb = tx as unknown as Parameters<typeof createTaskRepository>[0];
+  const taskRepo = createTaskRepository(txAsDb);
+
+  const blockedTasks: BlockedTask[] = [];
+  const alreadyChecked = new Set<string>();
+
+  for (const taskId of resetTaskIds) {
+    const dependents = await taskRepo.getDependents(tenantId, taskId);
+
+    for (const dependent of dependents) {
+      // Skip if already processed or not currently pending
+      if (alreadyChecked.has(dependent.id) || dependent.workStatus !== 'pending') {
+        continue;
+      }
+      alreadyChecked.add(dependent.id);
+
+      // Check if ALL dependencies are still done
+      const deps = await taskRepo.getDependencies(tenantId, dependent.id);
+      const allDepsComplete = deps.every((d) => d.workStatus === 'done');
+
+      if (!allDepsComplete) {
+        await taskRepo.bulkUpdateStatus(tenantId, [dependent.id], 'blocked');
+        blockedTasks.push({ id: dependent.id, name: dependent.title });
+      }
+    }
+  }
+
+  return blockedTasks;
 };

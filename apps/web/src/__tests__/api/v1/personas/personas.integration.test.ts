@@ -184,6 +184,7 @@ const mockDbChain = (() => {
 
 vi.mock('@laila/database', () => ({
   getDb: vi.fn(() => mockDbChain),
+  writeAuditEventFireAndForget: vi.fn(),
   tasksTable: {
     id: 'id',
     title: 'title',
