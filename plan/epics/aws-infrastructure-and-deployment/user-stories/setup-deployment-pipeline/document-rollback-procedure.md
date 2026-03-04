@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Document Rollback Procedure
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** devops-engineer
 - **Parent User Story:** [Set Up Deployment Pipeline](./tasks.md)
 - **Parent Epic:** [AWS Infrastructure & Deployment](../../user-stories.md)
@@ -18,12 +18,14 @@ Document the rollback procedure for production deployments covering all deployme
 The following sections must be documented in a runbook at `docs/runbooks/rollback-procedure.md`:
 
 **1. Lambda Function Rollback**
+
 - Terraform manages Lambda function versions via `source_code_hash`
 - To rollback: revert the commit in Git, re-run the deploy pipeline
 - Alternative: use `aws lambda update-function-code` with the previous zip from S3 versioned bucket
 - The Lambda module does not use aliases/versions by default, so rollback requires redeployment
 
 **2. Database Migration Rollback**
+
 - Drizzle ORM uses forward-only migrations
 - To "rollback" a migration: create a new migration that reverses the schema changes
 - Example: if a column was added, create a migration to drop it
@@ -31,12 +33,14 @@ The following sections must be documented in a runbook at `docs/runbooks/rollbac
 - Critical: ensure application code is compatible with both old and new schema during the rollback window
 
 **3. Static Assets Rollback (S3 + CloudFront)**
+
 - S3 bucket has versioning enabled
 - To rollback: restore previous object versions in S3
 - Create CloudFront cache invalidation to clear CDN caches: `aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"`
 - Invalidation takes 5-10 minutes to propagate globally
 
 **4. Terraform State Rollback**
+
 - Terraform state is versioned in S3
 - To rollback: restore the previous state file version in S3
 - Run `terraform plan` to verify the state matches the desired infrastructure
@@ -44,6 +48,7 @@ The following sections must be documented in a runbook at `docs/runbooks/rollbac
 - WARNING: state rollback can cause resource recreation — always plan before applying
 
 **5. Emergency Rollback Checklist**
+
 - Step 1: Identify the failing component (Lambda, database, static assets)
 - Step 2: Revert the Git commit (`git revert HEAD`)
 - Step 3: Re-run the deploy pipeline from the reverted commit
@@ -52,6 +57,7 @@ The following sections must be documented in a runbook at `docs/runbooks/rollbac
 - Step 6: Create incident report
 
 **6. Prevention Measures**
+
 - Always run `terraform plan` and review before `terraform apply`
 - Use Neon branching for database migration testing
 - Use GitHub environment protection rules (manual approval for production)

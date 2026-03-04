@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Post-Deploy Health Check
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** sre-engineer
 - **Parent User Story:** [Set Up Deployment Pipeline](./tasks.md)
 - **Parent Epic:** [AWS Infrastructure & Deployment](../../user-stories.md)
@@ -21,12 +21,12 @@ Implement a post-deploy health check script that verifies the production deploym
 // Called by the GitHub Actions deployment workflow after Terraform apply.
 // Verifies that the production application is responding correctly.
 
-const PRODUCTION_URL = process.env.PRODUCTION_URL ?? "https://laila.works";
+const PRODUCTION_URL = process.env.PRODUCTION_URL ?? 'https://laila.works';
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 10_000; // 10 seconds between retries
 
 interface HealthResponse {
-  status: "healthy" | "degraded" | "unhealthy";
+  status: 'healthy' | 'degraded' | 'unhealthy';
   version: string;
   timestamp: string;
   checks: Record<string, { status: string; latency_ms: number }>;
@@ -37,32 +37,29 @@ interface HealthResponse {
  * CloudFront may take a few seconds to propagate the new Lambda version,
  * so we retry with exponential backoff.
  */
-async function checkEndpoint(
-  path: string,
-  description: string
-): Promise<void> {
+async function checkEndpoint(path: string, description: string): Promise<void> {
   const url = `${PRODUCTION_URL}${path}`;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await fetch(url, {
-        method: "GET",
-        headers: { "Accept": "application/json" },
+        method: 'GET',
+        headers: { Accept: 'application/json' },
         signal: AbortSignal.timeout(10_000), // 10 second timeout
       });
 
       if (response.ok) {
-        const body: HealthResponse = await response.json() as HealthResponse;
+        const body: HealthResponse = (await response.json()) as HealthResponse;
         console.log(`[PASS] ${description}: ${body.status} (attempt ${attempt})`);
         return;
       }
 
       console.warn(
-        `[RETRY] ${description}: HTTP ${response.status} (attempt ${attempt}/${MAX_RETRIES})`
+        `[RETRY] ${description}: HTTP ${response.status} (attempt ${attempt}/${MAX_RETRIES})`,
       );
     } catch (error) {
       console.warn(
-        `[RETRY] ${description}: ${error instanceof Error ? error.message : "Unknown error"} (attempt ${attempt}/${MAX_RETRIES})`
+        `[RETRY] ${description}: ${error instanceof Error ? error.message : 'Unknown error'} (attempt ${attempt}/${MAX_RETRIES})`,
       );
     }
 
@@ -82,21 +79,21 @@ async function checkEndpoint(
  */
 async function main(): Promise<void> {
   console.log(`Running health checks against ${PRODUCTION_URL}...`);
-  console.log("---");
+  console.log('---');
 
   try {
     // Liveness check: is the application running?
-    await checkEndpoint("/api/v1/health", "Liveness check");
+    await checkEndpoint('/api/v1/health', 'Liveness check');
 
     // Readiness check: are all dependencies (database, DynamoDB) available?
-    await checkEndpoint("/api/v1/health/ready", "Readiness check");
+    await checkEndpoint('/api/v1/health/ready', 'Readiness check');
 
-    console.log("---");
-    console.log("All health checks passed.");
+    console.log('---');
+    console.log('All health checks passed.');
     process.exit(0);
   } catch (error) {
-    console.error("---");
-    console.error("Health check failed:", error instanceof Error ? error.message : error);
+    console.error('---');
+    console.error('Health check failed:', error instanceof Error ? error.message : error);
     process.exit(1);
   }
 }
