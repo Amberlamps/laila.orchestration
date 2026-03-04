@@ -4,18 +4,18 @@
 
 - **Title:** Background Jobs & Scheduled Tasks
 - **Description:** Lambda functions for timeout checking, DAG reconciliation, audit archival, and SQS-driven status propagation. These background processes ensure system consistency, reclaim timed-out work, archive old audit events, and propagate cascading status changes asynchronously. All functions are deployed as standalone AWS Lambda handlers bundled with tsup, targeting ARM64 (Graviton) architecture.
-- **Status:** Not Started
+- **Status:** In Progress (laila-agent-3)
 - **Total User Stories:** 4
 - **Dependencies:** Epic 7 (Orchestration & Work Assignment API)
 
 ## User Stories
 
-| User Story | Description | Status | Tasks | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Timeout Checker Lambda](./user-stories/implement-timeout-checker-lambda/tasks.md) | Lambda function that identifies and reclaims timed-out story assignments | Not Started | 3 tasks | None |
-| [Implement DAG Reconciler Lambda](./user-stories/implement-dag-reconciler-lambda/tasks.md) | Lambda function that performs full-graph consistency checks and fixes status inconsistencies | Not Started | 3 tasks | None |
-| [Implement Audit Archiver Lambda](./user-stories/implement-audit-archiver-lambda/tasks.md) | Lambda function that archives old DynamoDB audit events to S3 as newline-delimited JSON | Not Started | 3 tasks | None |
-| [Implement SQS Status Propagation Consumer](./user-stories/implement-sqs-status-propagation-consumer/tasks.md) | SQS-triggered Lambda that processes cascading status re-evaluation events | Not Started | 3 tasks | None |
+| User Story                                                                                                     | Description                                                                                  | Status                      | Tasks   | Dependencies |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------- | ------- | ------------ |
+| [Implement Timeout Checker Lambda](./user-stories/implement-timeout-checker-lambda/tasks.md)                   | Lambda function that identifies and reclaims timed-out story assignments                     | In Progress (laila-agent-3) | 3 tasks | None         |
+| [Implement DAG Reconciler Lambda](./user-stories/implement-dag-reconciler-lambda/tasks.md)                     | Lambda function that performs full-graph consistency checks and fixes status inconsistencies | Not Started                 | 3 tasks | None         |
+| [Implement Audit Archiver Lambda](./user-stories/implement-audit-archiver-lambda/tasks.md)                     | Lambda function that archives old DynamoDB audit events to S3 as newline-delimited JSON      | Not Started                 | 3 tasks | None         |
+| [Implement SQS Status Propagation Consumer](./user-stories/implement-sqs-status-propagation-consumer/tasks.md) | SQS-triggered Lambda that processes cascading status re-evaluation events                    | Not Started                 | 3 tasks | None         |
 
 ## Dependency Graph
 
