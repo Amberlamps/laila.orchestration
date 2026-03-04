@@ -29,6 +29,11 @@ Thumbs.db
 *.swp
 *.swo
 
+# Playwright
+e2e/.auth/
+test-results/
+playwright-report/
+
 # Project-specific
 .wiggum/
 .claude/

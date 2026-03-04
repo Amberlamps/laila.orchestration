@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Page Object Models
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** test-automator
 - **Parent User Story:** [Set Up Playwright Infrastructure](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -23,7 +23,7 @@ Create a base class with shared navigation and assertion behavior.
 // apps/web/e2e/page-objects/base.page.ts
 // Base page object providing common navigation, waiting, and assertion
 // methods. All page-specific POMs extend this class.
-import { type Page, type Locator, expect } from "@playwright/test";
+import { type Page, type Locator, expect } from '@playwright/test';
 
 export abstract class BasePage {
   /** The Playwright Page instance this POM wraps. */
@@ -38,24 +38,24 @@ export abstract class BasePage {
 
   /** Wait for the page to be fully loaded (network idle + main content visible). */
   async waitForPageLoad(): Promise<void> {
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForLoadState('networkidle');
   }
 
   /** Assert that a success toast notification appears with the given message. */
   async expectSuccessToast(message: string): Promise<void> {
-    const toast = this.page.getByRole("status").filter({ hasText: message });
+    const toast = this.page.getByRole('status').filter({ hasText: message });
     await expect(toast).toBeVisible({ timeout: 5_000 });
   }
 
   /** Assert that an error toast notification appears with the given message. */
   async expectErrorToast(message: string): Promise<void> {
-    const toast = this.page.getByRole("alert").filter({ hasText: message });
+    const toast = this.page.getByRole('alert').filter({ hasText: message });
     await expect(toast).toBeVisible({ timeout: 5_000 });
   }
 
   /** Assert the page URL matches the expected path pattern. */
   async expectUrl(pathPattern: string | RegExp): Promise<void> {
-    if (typeof pathPattern === "string") {
+    if (typeof pathPattern === 'string') {
       await expect(this.page).toHaveURL(new RegExp(pathPattern));
     } else {
       await expect(this.page).toHaveURL(pathPattern);
@@ -64,7 +64,7 @@ export abstract class BasePage {
 
   /** Click a navigation link in the sidebar and wait for navigation. */
   async navigateTo(linkName: string): Promise<void> {
-    await this.page.getByRole("navigation").getByRole("link", { name: linkName }).click();
+    await this.page.getByRole('navigation').getByRole('link', { name: linkName }).click();
     await this.waitForPageLoad();
   }
 
@@ -73,9 +73,8 @@ export abstract class BasePage {
     // TanStack Query polls every 15 seconds. Wait for the next
     // network request matching the API pattern to complete.
     await this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/api/v1/") && response.status() === 200,
-      { timeout: 20_000 }
+      (response) => response.url().includes('/api/v1/') && response.status() === 200,
+      { timeout: 20_000 },
     );
   }
 }
@@ -86,8 +85,8 @@ export abstract class BasePage {
 ```typescript
 // apps/web/e2e/page-objects/sign-in.page.ts
 // Page object for the sign-in page with Google OAuth button interaction.
-import { type Page, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class SignInPage extends BasePage {
   /** Locator for the "Sign in with Google" OAuth button. */
@@ -101,15 +100,15 @@ export class SignInPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.googleSignInButton = page.getByRole("button", {
+    this.googleSignInButton = page.getByRole('button', {
       name: /sign in with google/i,
     });
-    this.heading = page.getByRole("heading", { name: /sign in/i });
-    this.errorMessage = page.getByRole("alert");
+    this.heading = page.getByRole('heading', { name: /sign in/i });
+    this.errorMessage = page.getByRole('alert');
   }
 
   async goto(): Promise<void> {
-    await this.page.goto("/sign-in");
+    await this.page.goto('/sign-in');
     await this.waitForPageLoad();
   }
 
@@ -117,7 +116,7 @@ export class SignInPage extends BasePage {
   async signInWithGoogle(): Promise<void> {
     await this.googleSignInButton.click();
     // After mocked OAuth, expect redirect to dashboard.
-    await this.page.waitForURL("/dashboard", { timeout: 10_000 });
+    await this.page.waitForURL('/dashboard', { timeout: 10_000 });
   }
 
   /** Assert that the sign-in page is displayed correctly. */
@@ -143,8 +142,8 @@ export class SignInPage extends BasePage {
 // apps/web/e2e/page-objects/dashboard.page.ts
 // Page object for the main Dashboard page with summary widgets,
 // recent activity, and project health overview.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class DashboardPage extends BasePage {
   /** Locator for the dashboard heading. */
@@ -167,18 +166,18 @@ export class DashboardPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByRole("heading", { name: /dashboard/i });
-    this.createFirstProjectCta = page.getByRole("button", {
+    this.heading = page.getByRole('heading', { name: /dashboard/i });
+    this.createFirstProjectCta = page.getByRole('button', {
       name: /create your first project/i,
     });
-    this.activeProjectsWidget = page.getByTestId("widget-active-projects");
-    this.inProgressStoriesWidget = page.getByTestId("widget-in-progress-stories");
-    this.availableWorkersWidget = page.getByTestId("widget-available-workers");
-    this.activityFeed = page.getByTestId("recent-activity-feed");
+    this.activeProjectsWidget = page.getByTestId('widget-active-projects');
+    this.inProgressStoriesWidget = page.getByTestId('widget-in-progress-stories');
+    this.availableWorkersWidget = page.getByTestId('widget-available-workers');
+    this.activityFeed = page.getByTestId('recent-activity-feed');
   }
 
   async goto(): Promise<void> {
-    await this.page.goto("/dashboard");
+    await this.page.goto('/dashboard');
     await this.waitForPageLoad();
   }
 
@@ -194,11 +193,11 @@ export class DashboardPage extends BasePage {
 
   /** Assert the widget value for a specific metric. */
   async expectWidgetValue(
-    widget: "active-projects" | "in-progress-stories" | "available-workers",
-    expectedValue: string
+    widget: 'active-projects' | 'in-progress-stories' | 'available-workers',
+    expectedValue: string,
   ): Promise<void> {
     const locator = this.page.getByTestId(`widget-${widget}`);
-    await expect(locator.getByTestId("widget-value")).toHaveText(expectedValue);
+    await expect(locator.getByTestId('widget-value')).toHaveText(expectedValue);
   }
 }
 ```
@@ -209,8 +208,8 @@ export class DashboardPage extends BasePage {
 // apps/web/e2e/page-objects/project-list.page.ts
 // Page object for the Projects list page with table, filters, and
 // create project modal trigger.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class ProjectListPage extends BasePage {
   readonly heading: Locator;
@@ -221,39 +220,39 @@ export class ProjectListPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByRole("heading", { name: /projects/i });
-    this.createProjectButton = page.getByRole("button", {
+    this.heading = page.getByRole('heading', { name: /projects/i });
+    this.createProjectButton = page.getByRole('button', {
       name: /create project/i,
     });
-    this.projectsTable = page.getByRole("table");
+    this.projectsTable = page.getByRole('table');
     this.searchInput = page.getByPlaceholder(/search projects/i);
-    this.statusFilter = page.getByTestId("status-filter");
+    this.statusFilter = page.getByTestId('status-filter');
   }
 
   async goto(): Promise<void> {
-    await this.page.goto("/projects");
+    await this.page.goto('/projects');
     await this.waitForPageLoad();
   }
 
   /** Click "Create Project" and fill the modal form. */
   async createProject(name: string, description: string): Promise<void> {
     await this.createProjectButton.click();
-    const modal = this.page.getByRole("dialog");
+    const modal = this.page.getByRole('dialog');
     await modal.getByLabel(/name/i).fill(name);
     await modal.getByLabel(/description/i).fill(description);
-    await modal.getByRole("button", { name: /create/i }).click();
-    await this.expectSuccessToast("Project created");
+    await modal.getByRole('button', { name: /create/i }).click();
+    await this.expectSuccessToast('Project created');
   }
 
   /** Assert a project row exists in the table by name. */
   async expectProjectInList(name: string): Promise<void> {
-    const row = this.projectsTable.getByRole("row", { name });
+    const row = this.projectsTable.getByRole('row', { name });
     await expect(row).toBeVisible();
   }
 
   /** Click a project row to navigate to its detail page. */
   async openProject(name: string): Promise<void> {
-    await this.projectsTable.getByRole("link", { name }).click();
+    await this.projectsTable.getByRole('link', { name }).click();
     await this.waitForPageLoad();
   }
 }
@@ -265,8 +264,8 @@ export class ProjectListPage extends BasePage {
 // apps/web/e2e/page-objects/project-detail.page.ts
 // Page object for the Project Detail page with tabs (Overview, Epics,
 // Graph, Activity) and publish/delete actions.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class ProjectDetailPage extends BasePage {
   readonly heading: Locator;
@@ -282,16 +281,16 @@ export class ProjectDetailPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByTestId("entity-heading");
-    this.statusBadge = page.getByTestId("status-badge");
-    this.publishButton = page.getByRole("button", { name: /publish/i });
-    this.deleteButton = page.getByRole("button", { name: /delete/i });
-    this.createEpicButton = page.getByRole("button", { name: /create epic/i });
-    this.epicsTab = page.getByRole("tab", { name: /epics/i });
-    this.graphTab = page.getByRole("tab", { name: /graph/i });
-    this.activityTab = page.getByRole("tab", { name: /activity/i });
-    this.overviewTab = page.getByRole("tab", { name: /overview/i });
-    this.epicsTable = page.getByTestId("epics-table");
+    this.heading = page.getByTestId('entity-heading');
+    this.statusBadge = page.getByTestId('status-badge');
+    this.publishButton = page.getByRole('button', { name: /publish/i });
+    this.deleteButton = page.getByRole('button', { name: /delete/i });
+    this.createEpicButton = page.getByRole('button', { name: /create epic/i });
+    this.epicsTab = page.getByRole('tab', { name: /epics/i });
+    this.graphTab = page.getByRole('tab', { name: /graph/i });
+    this.activityTab = page.getByRole('tab', { name: /activity/i });
+    this.overviewTab = page.getByRole('tab', { name: /overview/i });
+    this.epicsTable = page.getByTestId('epics-table');
   }
 
   async goto(projectId?: string): Promise<void> {
@@ -305,11 +304,11 @@ export class ProjectDetailPage extends BasePage {
   async createEpic(title: string, description: string): Promise<void> {
     await this.epicsTab.click();
     await this.createEpicButton.click();
-    const modal = this.page.getByRole("dialog");
+    const modal = this.page.getByRole('dialog');
     await modal.getByLabel(/title/i).fill(title);
     await modal.getByLabel(/description/i).fill(description);
-    await modal.getByRole("button", { name: /create/i }).click();
-    await this.expectSuccessToast("Epic created");
+    await modal.getByRole('button', { name: /create/i }).click();
+    await this.expectSuccessToast('Epic created');
   }
 
   /** Assert the project status badge shows the expected status. */
@@ -320,22 +319,22 @@ export class ProjectDetailPage extends BasePage {
   /** Publish the project and confirm the action. */
   async publish(): Promise<void> {
     await this.publishButton.click();
-    const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /confirm/i }).click();
-    await this.expectSuccessToast("published");
+    const dialog = this.page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /confirm/i }).click();
+    await this.expectSuccessToast('published');
   }
 
   /** Delete the project via confirmation modal. */
   async deleteProject(): Promise<void> {
     await this.deleteButton.click();
-    const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /confirm/i }).click();
+    const dialog = this.page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /confirm/i }).click();
   }
 
   /** Open an epic by clicking its row in the epics table. */
   async openEpic(title: string): Promise<void> {
     await this.epicsTab.click();
-    await this.epicsTable.getByRole("link", { name: title }).click();
+    await this.epicsTable.getByRole('link', { name: title }).click();
     await this.waitForPageLoad();
   }
 }
@@ -346,8 +345,8 @@ export class ProjectDetailPage extends BasePage {
 ```typescript
 // apps/web/e2e/page-objects/epic-detail.page.ts
 // Page object for the Epic Detail page with story management and publish.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class EpicDetailPage extends BasePage {
   readonly heading: Locator;
@@ -360,13 +359,13 @@ export class EpicDetailPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByTestId("entity-heading");
-    this.statusBadge = page.getByTestId("status-badge");
-    this.publishButton = page.getByRole("button", { name: /publish/i });
-    this.deleteButton = page.getByRole("button", { name: /delete/i });
-    this.createStoryButton = page.getByRole("button", { name: /create (user )?story/i });
-    this.storiesTab = page.getByRole("tab", { name: /stories/i });
-    this.storiesTable = page.getByTestId("stories-table");
+    this.heading = page.getByTestId('entity-heading');
+    this.statusBadge = page.getByTestId('status-badge');
+    this.publishButton = page.getByRole('button', { name: /publish/i });
+    this.deleteButton = page.getByRole('button', { name: /delete/i });
+    this.createStoryButton = page.getByRole('button', { name: /create (user )?story/i });
+    this.storiesTab = page.getByRole('tab', { name: /stories/i });
+    this.storiesTable = page.getByTestId('stories-table');
   }
 
   async goto(epicId?: string): Promise<void> {
@@ -380,11 +379,11 @@ export class EpicDetailPage extends BasePage {
   async createStory(title: string, description: string): Promise<void> {
     await this.storiesTab.click();
     await this.createStoryButton.click();
-    const modal = this.page.getByRole("dialog");
+    const modal = this.page.getByRole('dialog');
     await modal.getByLabel(/title/i).fill(title);
     await modal.getByLabel(/description/i).fill(description);
-    await modal.getByRole("button", { name: /create/i }).click();
-    await this.expectSuccessToast("Story created");
+    await modal.getByRole('button', { name: /create/i }).click();
+    await this.expectSuccessToast('Story created');
   }
 
   async expectStatus(status: string): Promise<void> {
@@ -393,14 +392,14 @@ export class EpicDetailPage extends BasePage {
 
   async publish(): Promise<void> {
     await this.publishButton.click();
-    const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /confirm/i }).click();
-    await this.expectSuccessToast("published");
+    const dialog = this.page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /confirm/i }).click();
+    await this.expectSuccessToast('published');
   }
 
   async openStory(title: string): Promise<void> {
     await this.storiesTab.click();
-    await this.storiesTable.getByRole("link", { name: title }).click();
+    await this.storiesTable.getByRole('link', { name: title }).click();
     await this.waitForPageLoad();
   }
 }
@@ -412,8 +411,8 @@ export class EpicDetailPage extends BasePage {
 // apps/web/e2e/page-objects/story-detail.page.ts
 // Page object for the Story Detail page with task management,
 // assignment controls, failure recovery, and attempt history.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class StoryDetailPage extends BasePage {
   readonly heading: Locator;
@@ -433,20 +432,20 @@ export class StoryDetailPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByTestId("entity-heading");
-    this.statusBadge = page.getByTestId("status-badge");
-    this.publishButton = page.getByRole("button", { name: /publish/i });
-    this.deleteButton = page.getByRole("button", { name: /delete/i });
-    this.createTaskButton = page.getByRole("button", { name: /create task/i });
-    this.tasksTab = page.getByRole("tab", { name: /tasks/i });
-    this.tasksTable = page.getByTestId("tasks-table");
-    this.attemptHistoryTab = page.getByRole("tab", { name: /attempt history/i });
-    this.assignedWorkerBadge = page.getByTestId("assigned-worker");
-    this.unassignWorkerButton = page.getByRole("button", { name: /unassign worker/i });
-    this.resetButton = page.getByRole("button", { name: /reset/i });
-    this.failedErrorMessage = page.getByTestId("failed-error-message");
-    this.readOnlyBanner = page.getByTestId("read-only-banner");
-    this.timeoutBanner = page.getByTestId("timeout-reclamation-banner");
+    this.heading = page.getByTestId('entity-heading');
+    this.statusBadge = page.getByTestId('status-badge');
+    this.publishButton = page.getByRole('button', { name: /publish/i });
+    this.deleteButton = page.getByRole('button', { name: /delete/i });
+    this.createTaskButton = page.getByRole('button', { name: /create task/i });
+    this.tasksTab = page.getByRole('tab', { name: /tasks/i });
+    this.tasksTable = page.getByTestId('tasks-table');
+    this.attemptHistoryTab = page.getByRole('tab', { name: /attempt history/i });
+    this.assignedWorkerBadge = page.getByTestId('assigned-worker');
+    this.unassignWorkerButton = page.getByRole('button', { name: /unassign worker/i });
+    this.resetButton = page.getByRole('button', { name: /reset/i });
+    this.failedErrorMessage = page.getByTestId('failed-error-message');
+    this.readOnlyBanner = page.getByTestId('read-only-banner');
+    this.timeoutBanner = page.getByTestId('timeout-reclamation-banner');
   }
 
   async goto(storyId?: string): Promise<void> {
@@ -457,21 +456,17 @@ export class StoryDetailPage extends BasePage {
   }
 
   /** Create a task within this story. */
-  async createTask(
-    title: string,
-    description: string,
-    personaName: string
-  ): Promise<void> {
+  async createTask(title: string, description: string, personaName: string): Promise<void> {
     await this.tasksTab.click();
     await this.createTaskButton.click();
-    const modal = this.page.getByRole("dialog");
+    const modal = this.page.getByRole('dialog');
     await modal.getByLabel(/title/i).fill(title);
     await modal.getByLabel(/description/i).fill(description);
     // Select persona from dropdown.
     await modal.getByLabel(/persona/i).click();
-    await modal.getByRole("option", { name: personaName }).click();
-    await modal.getByRole("button", { name: /create/i }).click();
-    await this.expectSuccessToast("Task created");
+    await modal.getByRole('option', { name: personaName }).click();
+    await modal.getByRole('button', { name: /create/i }).click();
+    await this.expectSuccessToast('Task created');
   }
 
   async expectStatus(status: string): Promise<void> {
@@ -480,23 +475,23 @@ export class StoryDetailPage extends BasePage {
 
   async publish(): Promise<void> {
     await this.publishButton.click();
-    const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /confirm/i }).click();
-    await this.expectSuccessToast("published");
+    const dialog = this.page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /confirm/i }).click();
+    await this.expectSuccessToast('published');
   }
 
   /** Click the "Unassign Worker" button and confirm the dialog. */
   async unassignWorker(): Promise<void> {
     await this.unassignWorkerButton.click();
-    const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /confirm/i }).click();
-    await this.expectSuccessToast("unassigned");
+    const dialog = this.page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /confirm/i }).click();
+    await this.expectSuccessToast('unassigned');
   }
 
   /** Click the "Reset" button to reset a failed story. */
   async resetStory(): Promise<void> {
     await this.resetButton.click();
-    await this.expectSuccessToast("reset");
+    await this.expectSuccessToast('reset');
   }
 
   /** Assert the assigned worker name is displayed. */
@@ -518,12 +513,12 @@ export class StoryDetailPage extends BasePage {
   /** Open the Attempt History tab and return attempt rows. */
   async getAttemptHistoryRows(): Promise<Locator> {
     await this.attemptHistoryTab.click();
-    return this.page.getByTestId("attempt-history-row");
+    return this.page.getByTestId('attempt-history-row');
   }
 
   async openTask(title: string): Promise<void> {
     await this.tasksTab.click();
-    await this.tasksTable.getByRole("link", { name: title }).click();
+    await this.tasksTable.getByRole('link', { name: title }).click();
     await this.waitForPageLoad();
   }
 }
@@ -535,8 +530,8 @@ export class StoryDetailPage extends BasePage {
 // apps/web/e2e/page-objects/task-detail.page.ts
 // Page object for the Task Detail page with dependency management,
 // status display, and edit controls.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class TaskDetailPage extends BasePage {
   readonly heading: Locator;
@@ -551,15 +546,15 @@ export class TaskDetailPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByTestId("entity-heading");
-    this.statusBadge = page.getByTestId("status-badge");
-    this.editButton = page.getByRole("button", { name: /edit/i });
-    this.deleteButton = page.getByRole("button", { name: /delete/i });
-    this.personaBadge = page.getByTestId("persona-badge");
-    this.addDependencyButton = page.getByRole("button", { name: /add dependency/i });
-    this.dependenciesSection = page.getByTestId("dependencies-section");
-    this.lockIcon = page.getByTestId("lock-icon");
-    this.cycleErrorMessage = page.getByTestId("cycle-error");
+    this.heading = page.getByTestId('entity-heading');
+    this.statusBadge = page.getByTestId('status-badge');
+    this.editButton = page.getByRole('button', { name: /edit/i });
+    this.deleteButton = page.getByRole('button', { name: /delete/i });
+    this.personaBadge = page.getByTestId('persona-badge');
+    this.addDependencyButton = page.getByRole('button', { name: /add dependency/i });
+    this.dependenciesSection = page.getByTestId('dependencies-section');
+    this.lockIcon = page.getByTestId('lock-icon');
+    this.cycleErrorMessage = page.getByTestId('cycle-error');
   }
 
   async goto(taskId?: string): Promise<void> {
@@ -572,8 +567,8 @@ export class TaskDetailPage extends BasePage {
   /** Add a dependency on another task by selecting it from the dropdown. */
   async addDependency(taskTitle: string): Promise<void> {
     await this.addDependencyButton.click();
-    const dropdown = this.page.getByRole("listbox");
-    await dropdown.getByRole("option", { name: taskTitle }).click();
+    const dropdown = this.page.getByRole('listbox');
+    await dropdown.getByRole('option', { name: taskTitle }).click();
   }
 
   /** Assert a dependency exists in the dependencies section. */
@@ -605,8 +600,8 @@ export class TaskDetailPage extends BasePage {
 ```typescript
 // apps/web/e2e/page-objects/worker-list.page.ts
 // Page object for the Workers list page.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class WorkerListPage extends BasePage {
   readonly heading: Locator;
@@ -615,43 +610,43 @@ export class WorkerListPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByRole("heading", { name: /workers/i });
-    this.createWorkerButton = page.getByRole("button", {
+    this.heading = page.getByRole('heading', { name: /workers/i });
+    this.createWorkerButton = page.getByRole('button', {
       name: /create worker/i,
     });
-    this.workersTable = page.getByRole("table");
+    this.workersTable = page.getByRole('table');
   }
 
   async goto(): Promise<void> {
-    await this.page.goto("/workers");
+    await this.page.goto('/workers');
     await this.waitForPageLoad();
   }
 
   /** Create a worker and capture the displayed API key. */
   async createWorker(name: string): Promise<string> {
     await this.createWorkerButton.click();
-    const modal = this.page.getByRole("dialog");
+    const modal = this.page.getByRole('dialog');
     await modal.getByLabel(/name/i).fill(name);
-    await modal.getByRole("button", { name: /create/i }).click();
+    await modal.getByRole('button', { name: /create/i }).click();
 
     // After creation, the API key is displayed in a monospace field.
     // Capture it before the user closes the modal.
-    const apiKeyField = modal.getByTestId("api-key-display");
+    const apiKeyField = modal.getByTestId('api-key-display');
     const apiKey = await apiKeyField.textContent();
-    if (!apiKey) throw new Error("API key was not displayed after worker creation");
+    if (!apiKey) throw new Error('API key was not displayed after worker creation');
 
     return apiKey;
   }
 
   /** Close the API key reveal modal after capturing the key. */
   async closeApiKeyModal(): Promise<void> {
-    const modal = this.page.getByRole("dialog");
-    await modal.getByRole("button", { name: /done/i }).click();
+    const modal = this.page.getByRole('dialog');
+    await modal.getByRole('button', { name: /done/i }).click();
     await expect(modal).not.toBeVisible();
   }
 
   async openWorker(name: string): Promise<void> {
-    await this.workersTable.getByRole("link", { name }).click();
+    await this.workersTable.getByRole('link', { name }).click();
     await this.waitForPageLoad();
   }
 }
@@ -660,8 +655,8 @@ export class WorkerListPage extends BasePage {
 ```typescript
 // apps/web/e2e/page-objects/worker-detail.page.ts
 // Page object for the Worker Detail page with project access management.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class WorkerDetailPage extends BasePage {
   readonly heading: Locator;
@@ -671,12 +666,12 @@ export class WorkerDetailPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByTestId("entity-heading");
-    this.addProjectAccessButton = page.getByRole("button", {
+    this.heading = page.getByTestId('entity-heading');
+    this.addProjectAccessButton = page.getByRole('button', {
       name: /add project access/i,
     });
-    this.projectAccessTable = page.getByTestId("project-access-table");
-    this.deleteButton = page.getByRole("button", { name: /delete/i });
+    this.projectAccessTable = page.getByTestId('project-access-table');
+    this.deleteButton = page.getByRole('button', { name: /delete/i });
   }
 
   async goto(workerId?: string): Promise<void> {
@@ -689,25 +684,25 @@ export class WorkerDetailPage extends BasePage {
   /** Add project access for this worker. */
   async addProjectAccess(projectName: string): Promise<void> {
     await this.addProjectAccessButton.click();
-    const dropdown = this.page.getByRole("listbox");
-    await dropdown.getByRole("option", { name: projectName }).click();
-    await this.expectSuccessToast("access granted");
+    const dropdown = this.page.getByRole('listbox');
+    await dropdown.getByRole('option', { name: projectName }).click();
+    await this.expectSuccessToast('access granted');
   }
 
   /** Remove project access from this worker. */
   async removeProjectAccess(projectName: string): Promise<void> {
-    const row = this.projectAccessTable.getByRole("row", {
+    const row = this.projectAccessTable.getByRole('row', {
       name: new RegExp(projectName),
     });
-    await row.getByRole("button", { name: /remove/i }).click();
-    const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /confirm/i }).click();
-    await this.expectSuccessToast("access removed");
+    await row.getByRole('button', { name: /remove/i }).click();
+    const dialog = this.page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /confirm/i }).click();
+    await this.expectSuccessToast('access removed');
   }
 
   /** Assert a project appears in the access table. */
   async expectProjectAccess(projectName: string): Promise<void> {
-    const row = this.projectAccessTable.getByRole("row", {
+    const row = this.projectAccessTable.getByRole('row', {
       name: new RegExp(projectName),
     });
     await expect(row).toBeVisible();
@@ -715,7 +710,7 @@ export class WorkerDetailPage extends BasePage {
 
   /** Assert a project does not appear in the access table. */
   async expectNoProjectAccess(projectName: string): Promise<void> {
-    const row = this.projectAccessTable.getByRole("row", {
+    const row = this.projectAccessTable.getByRole('row', {
       name: new RegExp(projectName),
     });
     await expect(row).not.toBeVisible();
@@ -728,8 +723,8 @@ export class WorkerDetailPage extends BasePage {
 ```typescript
 // apps/web/e2e/page-objects/persona-list.page.ts
 // Page object for the Personas list page with CRUD and deletion guard.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class PersonaListPage extends BasePage {
   readonly heading: Locator;
@@ -738,56 +733,52 @@ export class PersonaListPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByRole("heading", { name: /personas/i });
-    this.createPersonaButton = page.getByRole("button", {
+    this.heading = page.getByRole('heading', { name: /personas/i });
+    this.createPersonaButton = page.getByRole('button', {
       name: /create persona/i,
     });
-    this.personasTable = page.getByRole("table");
+    this.personasTable = page.getByRole('table');
   }
 
   async goto(): Promise<void> {
-    await this.page.goto("/personas");
+    await this.page.goto('/personas');
     await this.waitForPageLoad();
   }
 
   /** Create a new persona with title and description. */
   async createPersona(title: string, description: string): Promise<void> {
     await this.createPersonaButton.click();
-    const modal = this.page.getByRole("dialog");
+    const modal = this.page.getByRole('dialog');
     await modal.getByLabel(/title/i).fill(title);
     await modal.getByLabel(/description/i).fill(description);
-    await modal.getByRole("button", { name: /create/i }).click();
-    await this.expectSuccessToast("Persona created");
+    await modal.getByRole('button', { name: /create/i }).click();
+    await this.expectSuccessToast('Persona created');
   }
 
   /** Edit an existing persona's title and description. */
-  async editPersona(
-    currentTitle: string,
-    newTitle: string,
-    newDescription: string
-  ): Promise<void> {
-    const row = this.personasTable.getByRole("row", { name: currentTitle });
-    await row.getByRole("button", { name: /edit/i }).click();
-    const modal = this.page.getByRole("dialog");
+  async editPersona(currentTitle: string, newTitle: string, newDescription: string): Promise<void> {
+    const row = this.personasTable.getByRole('row', { name: currentTitle });
+    await row.getByRole('button', { name: /edit/i }).click();
+    const modal = this.page.getByRole('dialog');
     await modal.getByLabel(/title/i).clear();
     await modal.getByLabel(/title/i).fill(newTitle);
     await modal.getByLabel(/description/i).clear();
     await modal.getByLabel(/description/i).fill(newDescription);
-    await modal.getByRole("button", { name: /save/i }).click();
-    await this.expectSuccessToast("Persona updated");
+    await modal.getByRole('button', { name: /save/i }).click();
+    await this.expectSuccessToast('Persona updated');
   }
 
   /** Attempt to delete a persona. Returns true if deletion succeeded. */
   async deletePersona(title: string): Promise<boolean> {
-    const row = this.personasTable.getByRole("row", { name: title });
-    await row.getByRole("button", { name: /delete/i }).click();
+    const row = this.personasTable.getByRole('row', { name: title });
+    await row.getByRole('button', { name: /delete/i }).click();
 
     // Check if a confirmation dialog or a blocked tooltip appears.
-    const dialog = this.page.getByRole("dialog");
+    const dialog = this.page.getByRole('dialog');
     const isDialogVisible = await dialog.isVisible().catch(() => false);
 
     if (isDialogVisible) {
-      await dialog.getByRole("button", { name: /confirm/i }).click();
+      await dialog.getByRole('button', { name: /confirm/i }).click();
       return true;
     }
     return false;
@@ -795,22 +786,22 @@ export class PersonaListPage extends BasePage {
 
   /** Assert a persona exists in the table. */
   async expectPersonaInList(title: string): Promise<void> {
-    const row = this.personasTable.getByRole("row", { name: title });
+    const row = this.personasTable.getByRole('row', { name: title });
     await expect(row).toBeVisible();
   }
 
   /** Assert a persona does not exist in the table. */
   async expectPersonaNotInList(title: string): Promise<void> {
-    const row = this.personasTable.getByRole("row", { name: title });
+    const row = this.personasTable.getByRole('row', { name: title });
     await expect(row).not.toBeVisible();
   }
 
   /** Assert the deletion-blocked tooltip is visible for a persona row. */
   async expectDeletionBlocked(title: string): Promise<void> {
-    const row = this.personasTable.getByRole("row", { name: title });
-    const deleteButton = row.getByRole("button", { name: /delete/i });
+    const row = this.personasTable.getByRole('row', { name: title });
+    const deleteButton = row.getByRole('button', { name: /delete/i });
     await deleteButton.hover();
-    const tooltip = this.page.getByRole("tooltip");
+    const tooltip = this.page.getByRole('tooltip');
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText(/referenced by/i);
   }
@@ -823,8 +814,8 @@ export class PersonaListPage extends BasePage {
 // apps/web/e2e/page-objects/audit-log.page.ts
 // Page object for the Audit Log page with chronological entries
 // and export functionality.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class AuditLogPage extends BasePage {
   readonly heading: Locator;
@@ -835,38 +826,41 @@ export class AuditLogPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByRole("heading", { name: /audit log/i });
-    this.entriesTable = page.getByTestId("audit-log-table");
-    this.exportJsonButton = page.getByRole("button", { name: /export json/i });
-    this.exportCsvButton = page.getByRole("button", { name: /export csv/i });
-    this.filterByAction = page.getByTestId("action-filter");
+    this.heading = page.getByRole('heading', { name: /audit log/i });
+    this.entriesTable = page.getByTestId('audit-log-table');
+    this.exportJsonButton = page.getByRole('button', { name: /export json/i });
+    this.exportCsvButton = page.getByRole('button', { name: /export csv/i });
+    this.filterByAction = page.getByTestId('action-filter');
   }
 
   async goto(): Promise<void> {
-    await this.page.goto("/audit-log");
+    await this.page.goto('/audit-log');
     await this.waitForPageLoad();
   }
 
   /** Assert an audit log entry exists with the given action and entity. */
   async expectEntry(action: string, entityName: string): Promise<void> {
-    const row = this.entriesTable.getByRole("row").filter({
-      hasText: action,
-    }).filter({
-      hasText: entityName,
-    });
+    const row = this.entriesTable
+      .getByRole('row')
+      .filter({
+        hasText: action,
+      })
+      .filter({
+        hasText: entityName,
+      });
     await expect(row.first()).toBeVisible();
   }
 
   /** Get the total number of visible audit log entries. */
   async getEntryCount(): Promise<number> {
-    const rows = this.entriesTable.getByRole("row");
+    const rows = this.entriesTable.getByRole('row');
     // Subtract 1 for the header row.
     return (await rows.count()) - 1;
   }
 
   /** Export audit log as JSON. Returns the download path. */
   async exportJson(): Promise<string> {
-    const downloadPromise = this.page.waitForEvent("download");
+    const downloadPromise = this.page.waitForEvent('download');
     await this.exportJsonButton.click();
     const download = await downloadPromise;
     return download.suggestedFilename();
@@ -874,7 +868,7 @@ export class AuditLogPage extends BasePage {
 
   /** Export audit log as CSV. Returns the download path. */
   async exportCsv(): Promise<string> {
-    const downloadPromise = this.page.waitForEvent("download");
+    const downloadPromise = this.page.waitForEvent('download');
     await this.exportCsvButton.click();
     const download = await downloadPromise;
     return download.suggestedFilename();
@@ -889,8 +883,8 @@ export class AuditLogPage extends BasePage {
 // Page object for the DAG Graph visualization page using ReactFlow.
 // Provides interaction methods for zoom, pan, node clicks, and
 // view level toggling.
-import { type Page, type Locator, expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { type Page, type Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
 
 export class GraphPage extends BasePage {
   /** The ReactFlow canvas container. */
@@ -916,13 +910,13 @@ export class GraphPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.canvas = page.locator(".react-flow");
-    this.minimap = page.locator(".react-flow__minimap");
-    this.zoomInButton = page.getByRole("button", { name: /zoom in/i });
-    this.zoomOutButton = page.getByRole("button", { name: /zoom out/i });
-    this.fitViewButton = page.getByRole("button", { name: /fit view/i });
-    this.viewLevelToggle = page.getByTestId("view-level-toggle");
-    this.statusFilters = page.getByTestId("status-filters");
+    this.canvas = page.locator('.react-flow');
+    this.minimap = page.locator('.react-flow__minimap');
+    this.zoomInButton = page.getByRole('button', { name: /zoom in/i });
+    this.zoomOutButton = page.getByRole('button', { name: /zoom out/i });
+    this.fitViewButton = page.getByRole('button', { name: /fit view/i });
+    this.viewLevelToggle = page.getByTestId('view-level-toggle');
+    this.statusFilters = page.getByTestId('status-filters');
   }
 
   async goto(projectId?: string): Promise<void> {
@@ -934,12 +928,12 @@ export class GraphPage extends BasePage {
 
   /** Get all graph nodes. */
   async getNodes(): Promise<Locator> {
-    return this.canvas.locator(".react-flow__node");
+    return this.canvas.locator('.react-flow__node');
   }
 
   /** Click a specific graph node by its label text. */
   async clickNode(label: string): Promise<void> {
-    const node = this.canvas.locator(".react-flow__node").filter({
+    const node = this.canvas.locator('.react-flow__node').filter({
       hasText: label,
     });
     await node.click();
@@ -947,7 +941,7 @@ export class GraphPage extends BasePage {
 
   /** Assert a node has the expected status color CSS class. */
   async expectNodeStatus(label: string, statusClass: string): Promise<void> {
-    const node = this.canvas.locator(".react-flow__node").filter({
+    const node = this.canvas.locator('.react-flow__node').filter({
       hasText: label,
     });
     await expect(node).toHaveClass(new RegExp(statusClass));
@@ -975,7 +969,7 @@ export class GraphPage extends BasePage {
   /** Pan the graph canvas by dragging. */
   async pan(deltaX: number, deltaY: number): Promise<void> {
     const box = await this.canvas.boundingBox();
-    if (!box) throw new Error("Graph canvas not found");
+    if (!box) throw new Error('Graph canvas not found');
     const startX = box.x + box.width / 2;
     const startY = box.y + box.height / 2;
     await this.page.mouse.move(startX, startY);
@@ -985,13 +979,13 @@ export class GraphPage extends BasePage {
   }
 
   /** Toggle the view level (Task, Story, Epic). */
-  async setViewLevel(level: "task" | "story" | "epic"): Promise<void> {
-    await this.viewLevelToggle.getByRole("radio", { name: new RegExp(level, "i") }).click();
+  async setViewLevel(level: 'task' | 'story' | 'epic'): Promise<void> {
+    await this.viewLevelToggle.getByRole('radio', { name: new RegExp(level, 'i') }).click();
   }
 
   /** Toggle a status filter chip on or off. */
   async toggleStatusFilter(status: string): Promise<void> {
-    await this.statusFilters.getByRole("checkbox", { name: new RegExp(status, "i") }).click();
+    await this.statusFilters.getByRole('checkbox', { name: new RegExp(status, 'i') }).click();
   }
 }
 ```
@@ -1001,19 +995,19 @@ export class GraphPage extends BasePage {
 ```typescript
 // apps/web/e2e/page-objects/index.ts
 // Barrel file re-exporting all page object models for convenient imports.
-export { BasePage } from "./base.page";
-export { SignInPage } from "./sign-in.page";
-export { DashboardPage } from "./dashboard.page";
-export { ProjectListPage } from "./project-list.page";
-export { ProjectDetailPage } from "./project-detail.page";
-export { EpicDetailPage } from "./epic-detail.page";
-export { StoryDetailPage } from "./story-detail.page";
-export { TaskDetailPage } from "./task-detail.page";
-export { WorkerListPage } from "./worker-list.page";
-export { WorkerDetailPage } from "./worker-detail.page";
-export { PersonaListPage } from "./persona-list.page";
-export { AuditLogPage } from "./audit-log.page";
-export { GraphPage } from "./graph.page";
+export { BasePage } from './base.page';
+export { SignInPage } from './sign-in.page';
+export { DashboardPage } from './dashboard.page';
+export { ProjectListPage } from './project-list.page';
+export { ProjectDetailPage } from './project-detail.page';
+export { EpicDetailPage } from './epic-detail.page';
+export { StoryDetailPage } from './story-detail.page';
+export { TaskDetailPage } from './task-detail.page';
+export { WorkerListPage } from './worker-list.page';
+export { WorkerDetailPage } from './worker-detail.page';
+export { PersonaListPage } from './persona-list.page';
+export { AuditLogPage } from './audit-log.page';
+export { GraphPage } from './graph.page';
 ```
 
 ## Acceptance Criteria

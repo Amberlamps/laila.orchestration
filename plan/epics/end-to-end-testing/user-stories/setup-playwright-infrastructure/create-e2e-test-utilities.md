@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create E2E Test Utilities
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** test-automator
 - **Parent User Story:** [Set Up Playwright Infrastructure](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -22,14 +22,14 @@ Navigation helpers encapsulate multi-step navigation flows that are shared acros
 // Navigation helpers for common multi-step flows across E2E tests.
 // These helpers abstract away the navigation details so tests can
 // focus on the behavior being tested.
-import { type Page } from "@playwright/test";
+import { type Page } from '@playwright/test';
 import {
   ProjectListPage,
   ProjectDetailPage,
   EpicDetailPage,
   StoryDetailPage,
   DashboardPage,
-} from "../page-objects";
+} from '../page-objects';
 
 /**
  * Navigate from the dashboard to a specific project's detail page.
@@ -37,10 +37,10 @@ import {
  */
 export async function navigateToProject(
   page: Page,
-  projectName: string
+  projectName: string,
 ): Promise<ProjectDetailPage> {
   const dashboard = new DashboardPage(page);
-  await dashboard.navigateTo("Projects");
+  await dashboard.navigateTo('Projects');
   const projectList = new ProjectListPage(page);
   await projectList.openProject(projectName);
   return new ProjectDetailPage(page);
@@ -50,10 +50,7 @@ export async function navigateToProject(
  * Navigate from a project detail page to a specific epic's detail page.
  * Assumes the user is already on the project detail page.
  */
-export async function navigateToEpic(
-  page: Page,
-  epicTitle: string
-): Promise<EpicDetailPage> {
+export async function navigateToEpic(page: Page, epicTitle: string): Promise<EpicDetailPage> {
   const projectDetail = new ProjectDetailPage(page);
   await projectDetail.openEpic(epicTitle);
   return new EpicDetailPage(page);
@@ -63,10 +60,7 @@ export async function navigateToEpic(
  * Navigate from an epic detail page to a specific story's detail page.
  * Assumes the user is already on the epic detail page.
  */
-export async function navigateToStory(
-  page: Page,
-  storyTitle: string
-): Promise<StoryDetailPage> {
+export async function navigateToStory(page: Page, storyTitle: string): Promise<StoryDetailPage> {
   const epicDetail = new EpicDetailPage(page);
   await epicDetail.openStory(storyTitle);
   return new StoryDetailPage(page);
@@ -81,7 +75,7 @@ export async function navigateToStoryFromDashboard(
   page: Page,
   projectName: string,
   epicTitle: string,
-  storyTitle: string
+  storyTitle: string,
 ): Promise<StoryDetailPage> {
   await navigateToProject(page, projectName);
   await navigateToEpic(page, epicTitle);
@@ -99,7 +93,7 @@ TanStack Query polls the API every 15 seconds. These helpers wait for the next p
 // TanStack Query is configured with a 15-second refetch interval.
 // After mutating data via MSW, tests must wait for the next poll
 // before asserting on UI updates.
-import { type Page, expect } from "@playwright/test";
+import { type Page, expect } from '@playwright/test';
 
 /**
  * Wait for the next TanStack Query polling cycle to complete.
@@ -109,14 +103,13 @@ import { type Page, expect } from "@playwright/test";
  */
 export async function waitForPollingRefresh(
   page: Page,
-  urlPattern: string | RegExp = /\/api\/v1\//
+  urlPattern: string | RegExp = /\/api\/v1\//,
 ): Promise<void> {
-  const pattern =
-    typeof urlPattern === "string" ? new RegExp(urlPattern) : urlPattern;
+  const pattern = typeof urlPattern === 'string' ? new RegExp(urlPattern) : urlPattern;
 
   await page.waitForResponse(
     (response) => pattern.test(response.url()) && response.status() === 200,
-    { timeout: 20_000 }
+    { timeout: 20_000 },
   );
 }
 
@@ -130,12 +123,11 @@ export async function waitForApiCondition<T>(
   page: Page,
   urlPattern: string | RegExp,
   predicate: (data: T) => boolean,
-  options: { timeout?: number; pollInterval?: number } = {}
+  options: { timeout?: number; pollInterval?: number } = {},
 ): Promise<T> {
   const { timeout = 30_000, pollInterval = 1_000 } = options;
   const startTime = Date.now();
-  const pattern =
-    typeof urlPattern === "string" ? new RegExp(urlPattern) : urlPattern;
+  const pattern = typeof urlPattern === 'string' ? new RegExp(urlPattern) : urlPattern;
 
   // Poll by intercepting responses until the predicate is satisfied.
   // This avoids relying solely on the 15s TanStack Query interval
@@ -147,7 +139,7 @@ export async function waitForApiCondition<T>(
       }
     };
 
-    page.on("response", async (response) => {
+    page.on('response', async (response) => {
       if (pattern.test(response.url()) && response.status() === 200) {
         try {
           const json = await response.json();
@@ -172,7 +164,7 @@ export async function waitForApiCondition<T>(
 export async function triggerQueryRefetch(page: Page): Promise<void> {
   // Dispatch a focus event to trigger TanStack Query's refetchOnWindowFocus.
   await page.evaluate(() => {
-    window.dispatchEvent(new Event("focus"));
+    window.dispatchEvent(new Event('focus'));
   });
 
   // Wait briefly for the refetch to complete.
@@ -189,7 +181,7 @@ Custom assertion helpers for common UI patterns: status badges, toast notificati
 // Custom assertion helpers for common UI patterns in E2E tests.
 // These helpers provide semantic, reusable assertions that make
 // tests more readable and maintainable.
-import { type Page, type Locator, expect } from "@playwright/test";
+import { type Page, type Locator, expect } from '@playwright/test';
 
 /**
  * Assert that a status badge displays the expected status text and
@@ -198,15 +190,15 @@ import { type Page, type Locator, expect } from "@playwright/test";
 export async function expectStatusBadge(
   page: Page,
   expectedStatus: string,
-  options: { testId?: string; variant?: string } = {}
+  options: { testId?: string; variant?: string } = {},
 ): Promise<void> {
-  const { testId = "status-badge", variant } = options;
+  const { testId = 'status-badge', variant } = options;
   const badge = page.getByTestId(testId);
   await expect(badge).toBeVisible();
   await expect(badge).toHaveText(expectedStatus, { ignoreCase: true });
 
   if (variant) {
-    await expect(badge).toHaveAttribute("data-variant", variant);
+    await expect(badge).toHaveAttribute('data-variant', variant);
   }
 }
 
@@ -215,28 +207,21 @@ export async function expectStatusBadge(
  */
 export async function expectSuccessToast(
   page: Page,
-  messagePattern: string | RegExp
+  messagePattern: string | RegExp,
 ): Promise<void> {
   const pattern =
-    typeof messagePattern === "string"
-      ? new RegExp(messagePattern, "i")
-      : messagePattern;
-  const toast = page.getByRole("status").filter({ hasText: pattern });
+    typeof messagePattern === 'string' ? new RegExp(messagePattern, 'i') : messagePattern;
+  const toast = page.getByRole('status').filter({ hasText: pattern });
   await expect(toast).toBeVisible({ timeout: 5_000 });
 }
 
 /**
  * Assert that an error toast notification appears.
  */
-export async function expectErrorToast(
-  page: Page,
-  messagePattern: string | RegExp
-): Promise<void> {
+export async function expectErrorToast(page: Page, messagePattern: string | RegExp): Promise<void> {
   const pattern =
-    typeof messagePattern === "string"
-      ? new RegExp(messagePattern, "i")
-      : messagePattern;
-  const toast = page.getByRole("alert").filter({ hasText: pattern });
+    typeof messagePattern === 'string' ? new RegExp(messagePattern, 'i') : messagePattern;
+  const toast = page.getByRole('alert').filter({ hasText: pattern });
   await expect(toast).toBeVisible({ timeout: 5_000 });
 }
 
@@ -249,14 +234,14 @@ export async function handleConfirmationModal(
   options: {
     expectedTitle?: string | RegExp;
     expectedContent?: string | RegExp;
-    action: "confirm" | "cancel";
-  }
+    action: 'confirm' | 'cancel';
+  },
 ): Promise<void> {
-  const dialog = page.getByRole("dialog");
+  const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
 
   if (options.expectedTitle) {
-    const heading = dialog.getByRole("heading");
+    const heading = dialog.getByRole('heading');
     await expect(heading).toHaveText(options.expectedTitle);
   }
 
@@ -264,10 +249,10 @@ export async function handleConfirmationModal(
     await expect(dialog).toContainText(options.expectedContent);
   }
 
-  if (options.action === "confirm") {
-    await dialog.getByRole("button", { name: /confirm|delete|yes/i }).click();
+  if (options.action === 'confirm') {
+    await dialog.getByRole('button', { name: /confirm|delete|yes/i }).click();
   } else {
-    await dialog.getByRole("button", { name: /cancel|no/i }).click();
+    await dialog.getByRole('button', { name: /cancel|no/i }).click();
   }
 }
 
@@ -277,12 +262,12 @@ export async function handleConfirmationModal(
 export async function expectFieldError(
   page: Page,
   fieldLabel: string,
-  errorMessage: string | RegExp
+  errorMessage: string | RegExp,
 ): Promise<void> {
   const field = page.getByLabel(fieldLabel);
   // Zod + React Hook Form renders validation errors in an
   // element associated via aria-describedby.
-  const errorId = await field.getAttribute("aria-describedby");
+  const errorId = await field.getAttribute('aria-describedby');
   if (errorId) {
     const errorElement = page.locator(`#${errorId}`);
     await expect(errorElement).toHaveText(errorMessage);
@@ -293,11 +278,8 @@ export async function expectFieldError(
  * Assert that a table contains exactly the expected number of data rows.
  * Excludes the header row from the count.
  */
-export async function expectTableRowCount(
-  table: Locator,
-  expectedCount: number
-): Promise<void> {
-  const rows = table.getByRole("row");
+export async function expectTableRowCount(table: Locator, expectedCount: number): Promise<void> {
+  const rows = table.getByRole('row');
   // Subtract 1 for the header row.
   await expect(rows).toHaveCount(expectedCount + 1);
 }
@@ -309,14 +291,14 @@ export async function expectTableRowCount(
 export async function expectButtonDisabledWithTooltip(
   page: Page,
   buttonName: string | RegExp,
-  tooltipText?: string | RegExp
+  tooltipText?: string | RegExp,
 ): Promise<void> {
-  const button = page.getByRole("button", { name: buttonName });
+  const button = page.getByRole('button', { name: buttonName });
   await expect(button).toBeDisabled();
 
   if (tooltipText) {
     await button.hover();
-    const tooltip = page.getByRole("tooltip");
+    const tooltip = page.getByRole('tooltip');
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toHaveText(tooltipText);
   }
@@ -333,13 +315,9 @@ export {
   navigateToEpic,
   navigateToStory,
   navigateToStoryFromDashboard,
-} from "./navigation.helpers";
+} from './navigation.helpers';
 
-export {
-  waitForPollingRefresh,
-  waitForApiCondition,
-  triggerQueryRefetch,
-} from "./polling.helpers";
+export { waitForPollingRefresh, waitForApiCondition, triggerQueryRefetch } from './polling.helpers';
 
 export {
   expectStatusBadge,
@@ -349,7 +327,7 @@ export {
   expectFieldError,
   expectTableRowCount,
   expectButtonDisabledWithTooltip,
-} from "./assertion.helpers";
+} from './assertion.helpers';
 ```
 
 ## Acceptance Criteria

@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@e2e/*": ["./*"]
+    }
+  },
+  "include": ["./**/*.ts"]
+}

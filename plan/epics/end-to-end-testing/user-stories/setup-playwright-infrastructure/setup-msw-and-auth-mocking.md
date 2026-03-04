@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Set Up MSW and Auth Mocking
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** test-automator
 - **Parent User Story:** [Set Up Playwright Infrastructure](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -32,7 +32,7 @@ Create request handlers that mock all `/api/v1/*` REST endpoints. These handlers
 // apps/web/e2e/fixtures/msw-handlers.ts
 // MSW v2 request handlers for mocking the REST API during E2E tests.
 // Each handler returns factory-generated data with correct relationships.
-import { http, HttpResponse, type HttpHandler } from "msw";
+import { http, HttpResponse, type HttpHandler } from 'msw';
 import {
   createMockProject,
   createMockEpic,
@@ -43,7 +43,7 @@ import {
   createMockAuditLogEntry,
   type MockProject,
   type MockStory,
-} from "./entity-factories";
+} from './entity-factories';
 
 // In-memory data store for stateful E2E test scenarios.
 // MSW handlers read from and write to this store, enabling
@@ -92,19 +92,19 @@ export function seedTestData(seed: Partial<TestDataStore>): void {
 /** All MSW handlers for the /api/v1 REST API. */
 export const apiHandlers: HttpHandler[] = [
   // --- Projects ---
-  http.get("/api/v1/projects", () => {
+  http.get('/api/v1/projects', () => {
     return HttpResponse.json({
       data: Array.from(dataStore.projects.values()),
     });
   }),
 
-  http.get("/api/v1/projects/:id", ({ params }) => {
+  http.get('/api/v1/projects/:id', ({ params }) => {
     const project = dataStore.projects.get(params.id as string);
     if (!project) return new HttpResponse(null, { status: 404 });
     return HttpResponse.json({ data: project });
   }),
 
-  http.post("/api/v1/projects", async ({ request }) => {
+  http.post('/api/v1/projects', async ({ request }) => {
     const body = (await request.json()) as Record<string, string>;
     const project = createMockProject({
       name: body.name,
@@ -113,15 +113,15 @@ export const apiHandlers: HttpHandler[] = [
     dataStore.projects.set(project.id, project);
     dataStore.auditLog.push(
       createMockAuditLogEntry({
-        action: "project.created",
+        action: 'project.created',
         entityId: project.id,
         entityName: project.name,
-      })
+      }),
     );
     return HttpResponse.json({ data: project }, { status: 201 });
   }),
 
-  http.delete("/api/v1/projects/:id", ({ params }) => {
+  http.delete('/api/v1/projects/:id', ({ params }) => {
     const id = params.id as string;
     const project = dataStore.projects.get(id);
     if (!project) return new HttpResponse(null, { status: 404 });
@@ -130,15 +130,13 @@ export const apiHandlers: HttpHandler[] = [
   }),
 
   // --- Epics ---
-  http.get("/api/v1/projects/:projectId/epics", ({ params }) => {
+  http.get('/api/v1/projects/:projectId/epics', ({ params }) => {
     const projectId = params.projectId as string;
-    const epics = Array.from(dataStore.epics.values()).filter(
-      (e) => e.projectId === projectId
-    );
+    const epics = Array.from(dataStore.epics.values()).filter((e) => e.projectId === projectId);
     return HttpResponse.json({ data: epics });
   }),
 
-  http.post("/api/v1/projects/:projectId/epics", async ({ params, request }) => {
+  http.post('/api/v1/projects/:projectId/epics', async ({ params, request }) => {
     const body = (await request.json()) as Record<string, string>;
     const epic = createMockEpic({
       projectId: params.projectId as string,
@@ -150,35 +148,33 @@ export const apiHandlers: HttpHandler[] = [
   }),
 
   // --- Stories ---
-  http.get("/api/v1/epics/:epicId/stories", ({ params }) => {
+  http.get('/api/v1/epics/:epicId/stories', ({ params }) => {
     const epicId = params.epicId as string;
-    const stories = Array.from(dataStore.stories.values()).filter(
-      (s) => s.epicId === epicId
-    );
+    const stories = Array.from(dataStore.stories.values()).filter((s) => s.epicId === epicId);
     return HttpResponse.json({ data: stories });
   }),
 
   // --- Work Assignment (Orchestration) ---
-  http.post("/api/v1/work/request", async ({ request }) => {
+  http.post('/api/v1/work/request', async ({ request }) => {
     // Simulate worker requesting work. Find the first story
     // in "not-started" status and assign it to the requesting worker.
     const body = (await request.json()) as { workerId: string };
     const availableStory = Array.from(dataStore.stories.values()).find(
-      (s) => s.status === "not-started"
+      (s) => s.status === 'not-started',
     );
     if (!availableStory) {
-      return HttpResponse.json({ data: null, message: "No work available" });
+      return HttpResponse.json({ data: null, message: 'No work available' });
     }
-    availableStory.status = "in-progress";
+    availableStory.status = 'in-progress';
     availableStory.assignedWorkerId = body.workerId;
     return HttpResponse.json({ data: availableStory });
   }),
 
   // --- Audit Log ---
-  http.get("/api/v1/audit-log", () => {
+  http.get('/api/v1/audit-log', () => {
     return HttpResponse.json({
       data: dataStore.auditLog.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),
     });
   }),
@@ -193,24 +189,24 @@ Create a mocked OAuth flow that bypasses real Google servers. The mock intercept
 // apps/web/e2e/fixtures/auth.fixture.ts
 // Mocked Google OAuth flow for E2E tests. Intercepts Better Auth's
 // OAuth endpoints and creates a test session without hitting Google.
-import { http, HttpResponse, type HttpHandler } from "msw";
+import { http, HttpResponse, type HttpHandler } from 'msw';
 
 /** Test user profile used across all authenticated E2E tests. */
 export const TEST_USER = {
-  id: "test-user-001",
-  name: "E2E Test User",
-  email: "e2e-test@laila.works",
-  image: "https://example.com/avatar.png",
+  id: 'test-user-001',
+  name: 'E2E Test User',
+  email: 'e2e-test@laila.works',
+  image: 'https://example.com/avatar.png',
 } as const;
 
 /** Test session returned by the mocked auth endpoints. */
 export const TEST_SESSION = {
   user: TEST_USER,
   session: {
-    id: "test-session-001",
+    id: 'test-session-001',
     userId: TEST_USER.id,
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    token: "mock-jwt-token-for-e2e-tests",
+    token: 'mock-jwt-token-for-e2e-tests',
   },
 } as const;
 
@@ -225,64 +221,57 @@ export const TEST_SESSION = {
 export const authHandlers: HttpHandler[] = [
   // Intercept the OAuth initiation. Instead of redirecting to Google,
   // immediately redirect to the callback with a mock code.
-  http.get("/api/auth/signin/google", () => {
+  http.get('/api/auth/signin/google', () => {
     return HttpResponse.redirect(
-      "/api/auth/callback/google?code=mock-auth-code&state=mock-state",
-      302
+      '/api/auth/callback/google?code=mock-auth-code&state=mock-state',
+      302,
     );
   }),
 
   // Intercept the OAuth callback. Instead of exchanging the code with
   // Google, create a test session directly and redirect to dashboard.
-  http.get("/api/auth/callback/google", () => {
-    return HttpResponse.redirect("/dashboard", 302, {
+  http.get('/api/auth/callback/google', () => {
+    return HttpResponse.redirect('/dashboard', 302, {
       headers: {
         // Set session cookies that Better Auth would normally set.
-        "Set-Cookie": [
+        'Set-Cookie': [
           `better-auth.session_token=${TEST_SESSION.session.token}; Path=/; HttpOnly; SameSite=Lax`,
           `better-auth.session_data=${encodeURIComponent(JSON.stringify(TEST_SESSION))}; Path=/; HttpOnly; SameSite=Lax`,
-        ].join(", "),
+        ].join(', '),
       },
     });
   }),
 
   // Return the current test session for session checks.
-  http.get("/api/auth/get-session", () => {
+  http.get('/api/auth/get-session', () => {
     return HttpResponse.json(TEST_SESSION);
   }),
 
   // Handle sign-out by clearing the session.
-  http.post("/api/auth/sign-out", () => {
+  http.post('/api/auth/sign-out', () => {
     return HttpResponse.json(
       { success: true },
       {
         headers: {
-          "Set-Cookie":
-            "better-auth.session_token=; Path=/; HttpOnly; Max-Age=0",
+          'Set-Cookie': 'better-auth.session_token=; Path=/; HttpOnly; Max-Age=0',
         },
-      }
+      },
     );
   }),
 ];
 
 /** Handler that simulates an expired session (returns 401). */
-export const expiredSessionHandler: HttpHandler = http.get(
-  "/api/auth/get-session",
-  () => {
-    return new HttpResponse(null, { status: 401 });
-  }
-);
+export const expiredSessionHandler: HttpHandler = http.get('/api/auth/get-session', () => {
+  return new HttpResponse(null, { status: 401 });
+});
 
 /** Handler that simulates an OAuth failure (error redirect). */
-export const oauthFailureHandler: HttpHandler = http.get(
-  "/api/auth/callback/google",
-  () => {
-    return HttpResponse.redirect(
-      "/sign-in?error=OAuthCallbackError&error_description=Authentication+failed",
-      302
-    );
-  }
-);
+export const oauthFailureHandler: HttpHandler = http.get('/api/auth/callback/google', () => {
+  return HttpResponse.redirect(
+    '/sign-in?error=OAuthCallbackError&error_description=Authentication+failed',
+    302,
+  );
+});
 ```
 
 ### Entity Factory Functions
@@ -294,13 +283,20 @@ Create type-safe factory functions for generating test entities with valid defau
 // Factory functions for generating type-safe test entities.
 // Each factory produces a complete entity with sensible defaults
 // that can be overridden via partial input.
-import { randomUUID } from "crypto";
+import { randomUUID } from 'crypto';
 
 // ---- Entity Types ----
 // These mirror the domain types from @laila/shared but are defined
 // locally to avoid importing application code into test fixtures.
 
-type EntityStatus = "draft" | "not-started" | "blocked" | "in-progress" | "completed" | "failed" | "ready";
+type EntityStatus =
+  | 'draft'
+  | 'not-started'
+  | 'blocked'
+  | 'in-progress'
+  | 'completed'
+  | 'failed'
+  | 'ready';
 
 export interface MockProject {
   id: string;
@@ -350,7 +346,7 @@ export interface MockWorker {
   id: string;
   name: string;
   apiKeyPrefix: string;
-  status: "active" | "inactive";
+  status: 'active' | 'inactive';
   projectIds: string[];
   createdAt: string;
   updatedAt: string;
@@ -381,31 +377,27 @@ export interface MockAuditLogEntry {
 const now = () => new Date().toISOString();
 
 /** Create a mock project with sensible defaults. */
-export function createMockProject(
-  overrides: Partial<MockProject> = {}
-): MockProject {
+export function createMockProject(overrides: Partial<MockProject> = {}): MockProject {
   return {
     id: randomUUID(),
-    name: "Test Project",
-    description: "A test project for E2E testing",
-    status: "draft",
+    name: 'Test Project',
+    description: 'A test project for E2E testing',
+    status: 'draft',
     createdAt: now(),
     updatedAt: now(),
-    ownerId: "test-user-001",
+    ownerId: 'test-user-001',
     ...overrides,
   };
 }
 
 /** Create a mock epic with sensible defaults. */
-export function createMockEpic(
-  overrides: Partial<MockEpic> = {}
-): MockEpic {
+export function createMockEpic(overrides: Partial<MockEpic> = {}): MockEpic {
   return {
     id: randomUUID(),
-    projectId: "default-project-id",
-    title: "Test Epic",
-    description: "A test epic for E2E testing",
-    status: "draft",
+    projectId: 'default-project-id',
+    title: 'Test Epic',
+    description: 'A test epic for E2E testing',
+    status: 'draft',
     createdAt: now(),
     updatedAt: now(),
     ...overrides,
@@ -413,15 +405,13 @@ export function createMockEpic(
 }
 
 /** Create a mock story with sensible defaults. */
-export function createMockStory(
-  overrides: Partial<MockStory> = {}
-): MockStory {
+export function createMockStory(overrides: Partial<MockStory> = {}): MockStory {
   return {
     id: randomUUID(),
-    epicId: "default-epic-id",
-    title: "Test Story",
-    description: "A test story for E2E testing",
-    status: "draft",
+    epicId: 'default-epic-id',
+    title: 'Test Story',
+    description: 'A test story for E2E testing',
+    status: 'draft',
     assignedWorkerId: null,
     createdAt: now(),
     updatedAt: now(),
@@ -430,17 +420,15 @@ export function createMockStory(
 }
 
 /** Create a mock task with sensible defaults. */
-export function createMockTask(
-  overrides: Partial<MockTask> = {}
-): MockTask {
+export function createMockTask(overrides: Partial<MockTask> = {}): MockTask {
   return {
     id: randomUUID(),
-    storyId: "default-story-id",
-    title: "Test Task",
-    description: "A test task for E2E testing",
-    status: "draft",
-    personaId: "default-persona-id",
-    acceptanceCriteria: ["Task output is verified"],
+    storyId: 'default-story-id',
+    title: 'Test Task',
+    description: 'A test task for E2E testing',
+    status: 'draft',
+    personaId: 'default-persona-id',
+    acceptanceCriteria: ['Task output is verified'],
     dependsOn: [],
     createdAt: now(),
     updatedAt: now(),
@@ -449,14 +437,12 @@ export function createMockTask(
 }
 
 /** Create a mock worker with sensible defaults. */
-export function createMockWorker(
-  overrides: Partial<MockWorker> = {}
-): MockWorker {
+export function createMockWorker(overrides: Partial<MockWorker> = {}): MockWorker {
   return {
     id: randomUUID(),
-    name: "Test Worker",
-    apiKeyPrefix: "lw_test",
-    status: "active",
+    name: 'Test Worker',
+    apiKeyPrefix: 'lw_test',
+    status: 'active',
     projectIds: [],
     createdAt: now(),
     updatedAt: now(),
@@ -465,13 +451,11 @@ export function createMockWorker(
 }
 
 /** Create a mock persona with sensible defaults. */
-export function createMockPersona(
-  overrides: Partial<MockPersona> = {}
-): MockPersona {
+export function createMockPersona(overrides: Partial<MockPersona> = {}): MockPersona {
   return {
     id: randomUUID(),
-    title: "Test Persona",
-    description: "A test persona for E2E testing",
+    title: 'Test Persona',
+    description: 'A test persona for E2E testing',
     createdAt: now(),
     updatedAt: now(),
     ...overrides,
@@ -480,16 +464,16 @@ export function createMockPersona(
 
 /** Create a mock audit log entry with sensible defaults. */
 export function createMockAuditLogEntry(
-  overrides: Partial<MockAuditLogEntry> = {}
+  overrides: Partial<MockAuditLogEntry> = {},
 ): MockAuditLogEntry {
   return {
     id: randomUUID(),
-    action: "entity.created",
-    actorId: "test-user-001",
-    actorName: "E2E Test User",
-    entityId: "default-entity-id",
-    entityName: "Test Entity",
-    entityType: "project",
+    action: 'entity.created',
+    actorId: 'test-user-001',
+    actorName: 'E2E Test User',
+    entityId: 'default-entity-id',
+    entityName: 'Test Entity',
+    entityType: 'project',
     metadata: {},
     createdAt: now(),
     ...overrides,
@@ -500,39 +484,39 @@ export function createMockAuditLogEntry(
 
 /** Create a complete project plan with epic, story, tasks, and dependencies. */
 export function createMockProjectPlan() {
-  const persona = createMockPersona({ title: "Backend Developer" });
-  const project = createMockProject({ name: "E2E Test Plan", status: "ready" });
+  const persona = createMockPersona({ title: 'Backend Developer' });
+  const project = createMockProject({ name: 'E2E Test Plan', status: 'ready' });
   const epic = createMockEpic({
     projectId: project.id,
-    title: "Core Feature Epic",
-    status: "ready",
+    title: 'Core Feature Epic',
+    status: 'ready',
   });
   const story = createMockStory({
     epicId: epic.id,
-    title: "Implement Feature",
-    status: "not-started",
+    title: 'Implement Feature',
+    status: 'not-started',
   });
 
   // Create 3 tasks with a linear dependency chain: task1 -> task2 -> task3
   const task1 = createMockTask({
     storyId: story.id,
-    title: "Setup Database Schema",
+    title: 'Setup Database Schema',
     personaId: persona.id,
-    status: "not-started",
+    status: 'not-started',
     dependsOn: [],
   });
   const task2 = createMockTask({
     storyId: story.id,
-    title: "Implement API Endpoint",
+    title: 'Implement API Endpoint',
     personaId: persona.id,
-    status: "blocked",
+    status: 'blocked',
     dependsOn: [task1.id],
   });
   const task3 = createMockTask({
     storyId: story.id,
-    title: "Write Integration Tests",
+    title: 'Write Integration Tests',
     personaId: persona.id,
-    status: "blocked",
+    status: 'blocked',
     dependsOn: [task2.id],
   });
 
@@ -548,10 +532,10 @@ Create a Playwright fixture that integrates MSW into the browser context for eac
 // apps/web/e2e/fixtures/index.ts
 // Custom Playwright test fixture that sets up MSW in the browser
 // context, providing mocked API responses for all E2E tests.
-import { test as base, type Page } from "@playwright/test";
-import { authHandlers, TEST_SESSION } from "./auth.fixture";
-import { apiHandlers, resetTestData, seedTestData } from "./msw-handlers";
-import type { TestDataStore } from "./msw-handlers";
+import { test as base, type Page } from '@playwright/test';
+import { authHandlers, TEST_SESSION } from './auth.fixture';
+import { apiHandlers, resetTestData, seedTestData } from './msw-handlers';
+import type { TestDataStore } from './msw-handlers';
 
 // Extended Playwright test fixture with MSW integration.
 // Every test using this fixture gets a browser with MSW active,
@@ -574,17 +558,17 @@ export const test = base.extend<TestFixtures>({
     });
 
     // Navigate to the app to activate the service worker.
-    await page.goto("/");
+    await page.goto('/');
 
     // Set the authenticated storage state (cookies).
     await page.context().addCookies([
       {
-        name: "better-auth.session_token",
+        name: 'better-auth.session_token',
         value: TEST_SESSION.session.token,
-        domain: "localhost",
-        path: "/",
+        domain: 'localhost',
+        path: '/',
         httpOnly: true,
-        sameSite: "Lax",
+        sameSite: 'Lax',
       },
     ]);
 
@@ -601,8 +585,8 @@ export const test = base.extend<TestFixtures>({
   },
 });
 
-export { expect } from "@playwright/test";
-export { TEST_USER, TEST_SESSION } from "./auth.fixture";
+export { expect } from '@playwright/test';
+export { TEST_USER, TEST_SESSION } from './auth.fixture';
 ```
 
 ## Acceptance Criteria

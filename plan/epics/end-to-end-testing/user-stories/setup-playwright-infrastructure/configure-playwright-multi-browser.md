@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Playwright Multi-Browser
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** test-automator
 - **Parent User Story:** [Set Up Playwright Infrastructure](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -34,15 +34,15 @@ Create `apps/web/playwright.config.ts` with multi-browser projects, parallel exe
 // Playwright configuration for multi-browser E2E testing.
 // Configures Chromium, Firefox, and WebKit projects with parallel
 // execution, screenshot/video on failure, and HTML reporting.
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from '@playwright/test';
 
 // Base URL for the local development server.
 // Override with PLAYWRIGHT_BASE_URL env var for CI environments.
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
 
 export default defineConfig({
   // Root directory for all E2E test files.
-  testDir: "./e2e",
+  testDir: './e2e',
 
   // Run tests in parallel across workers for faster execution.
   // Each worker runs in an isolated browser context.
@@ -61,8 +61,8 @@ export default defineConfig({
   // HTML reporter generates a browsable test results report.
   // On CI, also output a list format for log readability.
   reporter: process.env.CI
-    ? [["html", { open: "never" }], ["list"]]
-    : [["html", { open: "on-failure" }]],
+    ? [['html', { open: 'never' }], ['list']]
+    : [['html', { open: 'on-failure' }]],
 
   // Shared settings applied to all browser projects.
   use: {
@@ -70,13 +70,13 @@ export default defineConfig({
     baseURL: BASE_URL,
 
     // Capture a screenshot when a test fails for debugging.
-    screenshot: "only-on-failure",
+    screenshot: 'only-on-failure',
 
     // Record a video when a test fails for step-by-step replay.
-    video: "retain-on-failure",
+    video: 'retain-on-failure',
 
     // Capture the full page trace on first retry for deep debugging.
-    trace: "on-first-retry",
+    trace: 'on-first-retry',
 
     // Default timeout for actions (clicks, fills, etc.).
     actionTimeout: 10_000,
@@ -88,28 +88,28 @@ export default defineConfig({
   // Browser projects: run every test in Chromium, Firefox, and WebKit.
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
     },
     {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
     },
   ],
 
   // Start the Next.js dev server before running tests.
   // Playwright waits until the server responds with 200 on the base URL.
   webServer: {
-    command: "pnpm dev",
+    command: 'pnpm dev',
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000, // 2 minutes for Next.js cold start
-    stdout: "pipe",
-    stderr: "pipe",
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 
   // Global timeout per test (30 seconds).
@@ -189,9 +189,9 @@ Create a global setup file that produces a reusable authenticated storage state,
 // Global setup that creates an authenticated browser storage state.
 // This state is reused by tests that require a signed-in user,
 // avoiding redundant sign-in flows for each test.
-import { chromium, type FullConfig } from "@playwright/test";
+import { chromium, type FullConfig } from '@playwright/test';
 
-const STORAGE_STATE_PATH = "e2e/.auth/storage-state.json";
+const STORAGE_STATE_PATH = 'e2e/.auth/storage-state.json';
 
 async function globalSetup(config: FullConfig): Promise<void> {
   const browser = await chromium.launch();
@@ -201,11 +201,11 @@ async function globalSetup(config: FullConfig): Promise<void> {
   // Navigate to the sign-in page and perform mocked OAuth flow.
   // The MSW handlers intercept the OAuth callback and create a
   // test session without hitting real Google servers.
-  await page.goto("/sign-in");
-  await page.getByRole("button", { name: /sign in with google/i }).click();
+  await page.goto('/sign-in');
+  await page.getByRole('button', { name: /sign in with google/i }).click();
 
   // Wait for redirect to dashboard after mocked OAuth completes.
-  await page.waitForURL("/dashboard");
+  await page.waitForURL('/dashboard');
 
   // Save the authenticated storage state (cookies, localStorage)
   // for reuse across all tests that need a signed-in user.

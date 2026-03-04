@@ -10,6 +10,7 @@ import { ToastProvider } from '@/components/ui/toast';
 import { inter, jetbrainsMono, roboto } from '@/lib/fonts';
 import { createQueryClient } from '@/lib/query-client';
 import { setupVisibilityIntegration } from '@/lib/query-visibility';
+import { initMocking } from '@/mocks';
 
 import type { NextPage } from 'next';
 import type { AppProps } from 'next/app';
@@ -46,6 +47,18 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   // and avoids sharing state between SSR requests.
   const [queryClient] = useState(() => createQueryClient());
 
+  // Start MSW in the browser when API mocking is enabled (E2E tests).
+  // This runs before the app renders meaningful content, ensuring all
+  // API requests are intercepted from the start.
+  const [mswReady, setMswReady] = useState(process.env.NEXT_PUBLIC_API_MOCKING !== 'enabled');
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_API_MOCKING === 'enabled') {
+      void initMocking().then(() => {
+        setMswReady(true);
+      });
+    }
+  }, []);
+
   // Wire up the Page Visibility API so polling pauses when the tab is hidden
   // and an immediate refetch fires when the tab becomes visible again.
   useEffect(() => {
@@ -54,6 +67,9 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   }, []);
 
   const getLayout = Component.getLayout ?? defaultGetLayout;
+
+  // Block rendering until MSW is ready so no requests bypass the mock layer.
+  if (!mswReady) return null;
 
   return (
     <QueryClientProvider client={queryClient}>

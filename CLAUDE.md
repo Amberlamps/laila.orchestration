@@ -35,3 +35,4 @@
 - [eslint/ignores]: Add non-TypeScript directories (e.g. `infra/` for Terraform) to ESLint's global ignores to avoid unnecessary processing
 - [eslint/import-resolver]: When adding function directories with TypeScript, include `functions/*/tsconfig.json` in the `import-x/resolver-next` project array
 - [monorepo/build-types]: When a workspace package uses `exports` with `"types": "./dist/index.d.ts"`, run `build:types` before linting — missing dist type declarations cause `import-x/no-unresolved` in consuming packages
+- [eslint/require-await]: Don't mark methods `async` if they only return a synchronous value (e.g. a Playwright `Locator`) — `@typescript-eslint/require-await` flags async methods with no `await`
