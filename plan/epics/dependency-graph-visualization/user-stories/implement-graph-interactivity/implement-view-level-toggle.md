@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement View Level Toggle
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Graph Interactivity](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,8 +20,8 @@ Implement a toggle control that allows users to switch between three view levels
 // Toggle control for switching between Task, Story, and Epic graph views.
 // Rendered in the graph toolbar above the canvas.
 
-import { cn } from "@/lib/utils";
-import { ListChecks, BookOpen, Layers } from "lucide-react";
+import { cn } from '@/lib/utils';
+import { ListChecks, BookOpen, Layers } from 'lucide-react';
 
 /**
  * GraphViewLevelToggle renders:
@@ -52,7 +52,7 @@ import { ListChecks, BookOpen, Layers } from "lucide-react";
 // Functions to derive story-level and epic-level dependency graphs
 // from the underlying task-level DAG.
 
-import type { Node, Edge } from "@xyflow/react";
+import type { Node, Edge } from '@xyflow/react';
 
 /**
  * deriveStoryView(taskNodes: Node[], taskEdges: Edge[]):

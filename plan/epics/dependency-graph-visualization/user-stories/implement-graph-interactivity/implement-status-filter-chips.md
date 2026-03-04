@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Status Filter Chips
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Graph Interactivity](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,9 +20,9 @@ Implement a horizontal row of filter chips above the graph that allow users to s
 // Horizontal row of toggleable status filter chips above the graph canvas.
 // Controls which nodes are visible based on entity status.
 
-import { useState, useCallback } from "react";
-import { cn } from "@/lib/utils";
-import { statusHexColors } from "@/lib/graph/status-colors";
+import { useState, useCallback } from 'react';
+import { cn } from '@/lib/utils';
+import { statusHexColors } from '@/lib/graph/status-colors';
 
 /**
  * GraphStatusFilter renders:
@@ -60,8 +60,8 @@ import { statusHexColors } from "@/lib/graph/status-colors";
 // apps/web/src/hooks/use-graph-status-filter.ts
 // Hook that manages status filter state and computes visible nodes/edges.
 
-import { useState, useMemo, useCallback } from "react";
-import type { Node, Edge } from "@xyflow/react";
+import { useState, useMemo, useCallback } from 'react';
+import type { Node, Edge } from '@xyflow/react';
 
 /**
  * useGraphStatusFilter(allNodes: Node[], allEdges: Edge[]):
