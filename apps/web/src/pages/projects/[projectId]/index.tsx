@@ -10,6 +10,7 @@
  * Auth: ProtectedRoute wraps via custom getLayout.
  * Data: TanStack Query `useProject` hook.
  */
+import { ReactFlowProvider } from '@xyflow/react';
 import { AlertTriangle, Pencil, Send, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -18,6 +19,7 @@ import { useState } from 'react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { CreateEditEpicModal } from '@/components/epics/create-edit-epic-modal';
 import { AppLayout } from '@/components/layout/app-layout';
+import { DependencyGraphContainer } from '@/components/project/graph/dependency-graph-container';
 import { DeleteProjectButton, DeleteProjectFlow } from '@/components/projects/delete-project-flow';
 import { ProjectSettingsTab } from '@/components/projects/project-settings-tab';
 import { PublishProjectFlow } from '@/components/projects/publish-project-flow';
@@ -719,7 +721,9 @@ const ProjectDetailPage: NextPageWithLayout = () => {
         </TabsContent>
 
         <TabsContent value="graph">
-          <PlaceholderTabContent tabLabel="Graph" />
+          <ReactFlowProvider>
+            <DependencyGraphContainer projectId={project.id} />
+          </ReactFlowProvider>
         </TabsContent>
 
         <TabsContent value="activity">

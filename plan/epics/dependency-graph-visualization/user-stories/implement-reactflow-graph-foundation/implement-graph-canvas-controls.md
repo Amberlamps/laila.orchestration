@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Graph Canvas Controls
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement ReactFlow Graph Foundation](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,15 +20,10 @@ Implement canvas control buttons for the dependency graph: zoom in, zoom out, zo
 // Floating toolbar with zoom and navigation controls for the graph canvas.
 // Uses ReactFlow's useReactFlow hook for programmatic zoom and pan.
 
-import { useCallback } from "react";
-import { useReactFlow, useViewport } from "@xyflow/react";
-import { Button } from "@/components/ui/button";
-import {
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  RotateCcw,
-} from "lucide-react";
+import { useCallback } from 'react';
+import { useReactFlow, useViewport } from '@xyflow/react';
+import { Button } from '@/components/ui/button';
+import { ZoomIn, ZoomOut, Maximize2, RotateCcw } from 'lucide-react';
 
 /**
  * GraphCanvasControls renders a floating toolbar:

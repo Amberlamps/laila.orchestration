@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Set Up ReactFlow with Dagre Layout
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement ReactFlow Graph Foundation](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -28,7 +28,7 @@ pnpm add @xyflow/react @dagrejs/dagre
 // Main container component for the dependency graph visualization.
 // Wraps ReactFlow with the Dagre-computed layout.
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -38,14 +38,14 @@ import {
   type Node,
   type Edge,
   ReactFlowProvider,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { useQuery } from "@tanstack/react-query";
-import { projectKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { computeDagreLayout } from "@/lib/graph/dagre-layout";
-import { transformToGraphData } from "@/lib/graph/transform-graph-data";
-import type { TaskDependencyGraph } from "@laila/shared";
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { useQuery } from '@tanstack/react-query';
+import { projectKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { computeDagreLayout } from '@/lib/graph/dagre-layout';
+import { transformToGraphData } from '@/lib/graph/transform-graph-data';
+import type { TaskDependencyGraph } from '@laila/shared';
 
 /**
  * DependencyGraphContainer:
@@ -81,8 +81,8 @@ import type { TaskDependencyGraph } from "@laila/shared";
 // Separates layout computation from rendering for testability and
 // potential Web Worker offloading (in the performance task).
 
-import Dagre from "@dagrejs/dagre";
-import type { Node, Edge } from "@xyflow/react";
+import Dagre from '@dagrejs/dagre';
+import type { Node, Edge } from '@xyflow/react';
 
 /**
  * computeDagreLayout(nodes: Node[], edges: Edge[], options?):
@@ -113,8 +113,8 @@ import type { Node, Edge } from "@xyflow/react";
 // Transforms API task dependency data into ReactFlow nodes and edges.
 // Maps entity types, statuses, and dependency relationships.
 
-import type { Node, Edge } from "@xyflow/react";
-import type { TaskDependencyGraph, GraphNode, GraphEdge } from "@laila/shared";
+import type { Node, Edge } from '@xyflow/react';
+import type { TaskDependencyGraph, GraphNode, GraphEdge } from '@laila/shared';
 
 /**
  * transformToGraphData(apiData: TaskDependencyGraph):

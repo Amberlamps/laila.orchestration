@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Custom DAG Node Components
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Implement ReactFlow Graph Foundation](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,11 +20,11 @@ Implement custom ReactFlow node components for each entity type in the dependenc
 // Base custom node component used for all entity types in the DAG.
 // Renders a rounded rectangle with status-colored left border.
 
-import { memo } from "react";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Layers, BookOpen, ListChecks } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { memo } from 'react';
+import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Layers, BookOpen, ListChecks } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /**
  * DagNode renders:
@@ -88,7 +88,7 @@ import { cn } from "@/lib/utils";
 // Registers custom node types with ReactFlow.
 // Must use useMemo to create a stable reference.
 
-import { DagNode } from "./nodes/dag-node";
+import { DagNode } from './nodes/dag-node';
 
 /**
  * Custom node types map:
@@ -113,23 +113,23 @@ import { DagNode } from "./nodes/dag-node";
 // Shared across all graph components (nodes, edges, legend).
 
 export const statusBorderColors: Record<string, string> = {
-  not_started: "border-l-zinc-400",
-  in_progress: "border-l-blue-500",
-  completed: "border-l-emerald-500",
-  blocked: "border-l-amber-500",
-  failed: "border-l-red-500",
-  draft: "border-l-zinc-300",
-  ready: "border-l-indigo-500",
+  not_started: 'border-l-zinc-400',
+  in_progress: 'border-l-blue-500',
+  completed: 'border-l-emerald-500',
+  blocked: 'border-l-amber-500',
+  failed: 'border-l-red-500',
+  draft: 'border-l-zinc-300',
+  ready: 'border-l-indigo-500',
 };
 
 export const statusHexColors: Record<string, string> = {
-  not_started: "#a1a1aa",  // zinc-400
-  in_progress: "#3b82f6",  // blue-500
-  completed: "#10b981",    // emerald-500
-  blocked: "#f59e0b",      // amber-500
-  failed: "#ef4444",       // red-500
-  draft: "#d4d4d8",        // zinc-300
-  ready: "#6366f1",        // indigo-500
+  not_started: '#a1a1aa', // zinc-400
+  in_progress: '#3b82f6', // blue-500
+  completed: '#10b981', // emerald-500
+  blocked: '#f59e0b', // amber-500
+  failed: '#ef4444', // red-500
+  draft: '#d4d4d8', // zinc-300
+  ready: '#6366f1', // indigo-500
 };
 ```
 

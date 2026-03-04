@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Edge Styling
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Implement ReactFlow Graph Foundation](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,7 +20,7 @@ Style the dependency edges in the ReactFlow graph with curved arrow connectors, 
 // Default edge styling and configuration for the dependency graph.
 // Defines edge appearance for normal, hovered, and active states.
 
-import { MarkerType, type Edge, type EdgeProps } from "@xyflow/react";
+import { MarkerType, type Edge, type EdgeProps } from '@xyflow/react';
 
 /**
  * Default edge style:
@@ -50,12 +50,8 @@ import { MarkerType, type Edge, type EdgeProps } from "@xyflow/react";
 // Optional custom edge component for advanced styling.
 // Uses ReactFlow's BaseEdge with SmoothStepEdge path computation.
 
-import { memo } from "react";
-import {
-  BaseEdge,
-  getSmoothStepPath,
-  type EdgeProps,
-} from "@xyflow/react";
+import { memo } from 'react';
+import { BaseEdge, getSmoothStepPath, type EdgeProps } from '@xyflow/react';
 
 /**
  * DependencyEdge renders:
@@ -81,8 +77,8 @@ import {
 // Hook that highlights edges connected to a hovered or selected node.
 // Updates edge styles dynamically based on node interaction state.
 
-import { useCallback, useMemo } from "react";
-import type { Edge, Node } from "@xyflow/react";
+import { useCallback, useMemo } from 'react';
+import type { Edge, Node } from '@xyflow/react';
 
 /**
  * useEdgeHighlight(edges: Edge[], hoveredNodeId: string | null, selectedNodeId: string | null):

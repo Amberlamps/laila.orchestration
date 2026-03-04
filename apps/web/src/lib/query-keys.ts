@@ -91,6 +91,8 @@ export const queryKeys = {
     list: (params?: Record<string, unknown>) => [...queryKeys.projects.lists(), params] as const,
     /** Matches a specific project detail query. */
     detail: (projectId: string) => [...queryKeys.projects.all(), 'detail', projectId] as const,
+    /** Matches the dependency graph query for a specific project. */
+    graph: (projectId: string) => [...queryKeys.projects.all(), 'graph', projectId] as const,
   },
 
   // ---------------------------------------------------------------------------

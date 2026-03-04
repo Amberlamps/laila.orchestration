@@ -20,6 +20,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './api-client';
 import { queryKeys } from './query-keys';
 
+import type { ProjectGraphResponse } from './graph/types';
 import type { components } from '@laila/api-spec';
 
 // ---------------------------------------------------------------------------
@@ -177,6 +178,33 @@ export const usePublishProject = () => {
   });
 };
 
+// ---------------------------------------------------------------------------
+// Project Graph
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetches the dependency graph for a project.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch
+ * through the same base URL that apiClient uses. Disabled when projectId is falsy.
+ */
+export const useProjectGraph = (projectId: string) =>
+  useQuery({
+    queryKey: queryKeys.projects.graph(projectId),
+    queryFn: async (): Promise<ProjectGraphResponse> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/graph`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as ProjectGraphResponse;
+    },
+    enabled: !!projectId,
+  });
+
 // ===========================================================================
 // Epics (scoped under a project)
 // ===========================================================================
@@ -250,96 +278,6 @@ export const useUpdateEpic = (epicId: string, projectId: string) => {
     },
   });
 };
-
-// ---------------------------------------------------------------------------
-// Epic Validation & Publishing
-// ---------------------------------------------------------------------------
-
-/** Validates an epic for publishing without changing state. */
-export const useValidateEpic = () => {
-  return useMutation({
-    mutationFn: async (params: {
-      projectId: string;
-      epicId: string;
-    }): Promise<{
-      valid: boolean;
-      issues?: Array<{ entityType: string; entityName: string; issue: string }>;
-    }> => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
-      const response = await fetch(
-        `${baseUrl}/v1/projects/${params.projectId}/epics/${params.epicId}/validate`,
-        {
-          method: 'POST',
-          credentials: 'include',
-        },
-      );
-      if (!response.ok) {
-        const body: unknown = await response.json().catch(() => null);
-        throw new ApiError(body);
-      }
-      return (await response.json()) as {
-        valid: boolean;
-        issues?: Array<{ entityType: string; entityName: string; issue: string }>;
-      };
-    },
-  });
-};
-
-/** Publishes an epic (transitions from Draft to Ready). */
-export const usePublishEpic = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: { projectId: string; epicId: string }): Promise<void> => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
-      const response = await fetch(
-        `${baseUrl}/v1/projects/${params.projectId}/epics/${params.epicId}/publish`,
-        {
-          method: 'POST',
-          credentials: 'include',
-        },
-      );
-      if (!response.ok) {
-        const body: unknown = await response.json().catch(() => null);
-        throw new ApiError(body);
-      }
-    },
-    onSuccess: (_data, params) => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.epics.detail(params.epicId),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.epics.lists(params.projectId),
-      });
-    },
-  });
-};
-
-/** Fetches aggregate counts for an epic (stories, tasks, in-progress status). */
-export const useEpicCounts = (projectId: string, epicId: string) =>
-  useQuery({
-    queryKey: queryKeys.epics.counts(epicId),
-    queryFn: async (): Promise<{
-      hasInProgressWork: boolean;
-      totalStories: number;
-      totalTasks: number;
-    }> => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
-      const response = await fetch(`${baseUrl}/v1/projects/${projectId}/epics/${epicId}/counts`, {
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        const body: unknown = await response.json().catch(() => null);
-        throw new ApiError(body);
-      }
-      return (await response.json()) as {
-        hasInProgressWork: boolean;
-        totalStories: number;
-        totalTasks: number;
-      };
-    },
-    enabled: !!projectId && !!epicId,
-  });
 
 /** Deletes an epic, removes its detail cache, and invalidates list caches. */
 export const useDeleteEpic = (projectId: string) => {
