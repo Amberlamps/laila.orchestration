@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Project Overview and Prerequisites
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** technical-writer
 - **Parent User Story:** [Generate Comprehensive README.md](./tasks.md)
 - **Parent Epic:** [Documentation & Validation](../../user-stories.md)
@@ -31,23 +31,24 @@ multiple AI agents working on complex, multi-step projects. It provides:
 - **Audit Trail:** Complete event history with DynamoDB + S3 archival
 
 ### Architecture
-
 ```
+
 [Next.js 14 (Pages Router)]
-        |
-        v
+|
+v
 [AWS Lambda (ARM64/Graviton2)]
-        |
-   +----+----+
-   |         |
-   v         v
-[PostgreSQL  [DynamoDB
- (Neon)]      Audit Logs]
-        |
-   +----+----+----+
-   |    |    |    |
-   v    v    v    v
+|
++----+----+
+| |
+v v
+[PostgreSQL [DynamoDB
+(Neon)] Audit Logs]
+|
++----+----+----+
+| | | |
+v v v v
 [SQS] [S3] [EventBridge] [CloudFront]
+
 ```
 
 **Tech Stack:**
@@ -72,29 +73,29 @@ Before you begin, ensure you have the following installed and configured:
 
 ### Required Tools
 
-| Tool | Version | Purpose |
-| --- | --- | --- |
-| Node.js | 22.x | JavaScript runtime |
-| pnpm | 9.x | Package manager |
-| Git | 2.x+ | Version control |
+| Tool    | Version | Purpose            |
+| ------- | ------- | ------------------ |
+| Node.js | 22.x    | JavaScript runtime |
+| pnpm    | 9.x     | Package manager    |
+| Git     | 2.x+    | Version control    |
 
 ### Required Accounts
 
-| Service | Purpose | Setup Link |
-| --- | --- | --- |
-| Neon | PostgreSQL database | https://neon.tech |
-| AWS | Infrastructure (Lambda, DynamoDB, S3, etc.) | https://aws.amazon.com |
-| Google Cloud Console | OAuth 2.0 credentials | https://console.cloud.google.com |
-| GitHub | Repository + Actions CI/CD | https://github.com |
+| Service              | Purpose                                     | Setup Link                       |
+| -------------------- | ------------------------------------------- | -------------------------------- |
+| Neon                 | PostgreSQL database                         | https://neon.tech                |
+| AWS                  | Infrastructure (Lambda, DynamoDB, S3, etc.) | https://aws.amazon.com           |
+| Google Cloud Console | OAuth 2.0 credentials                       | https://console.cloud.google.com |
+| GitHub               | Repository + Actions CI/CD                  | https://github.com               |
 
 ### Required Credentials
 
-| Credential | Where to Get |
-| --- | --- |
-| `DATABASE_URL` | Neon dashboard > Connection string |
-| `GOOGLE_CLIENT_ID` | Google Cloud Console > OAuth 2.0 Client IDs |
+| Credential             | Where to Get                                |
+| ---------------------- | ------------------------------------------- |
+| `DATABASE_URL`         | Neon dashboard > Connection string          |
+| `GOOGLE_CLIENT_ID`     | Google Cloud Console > OAuth 2.0 Client IDs |
 | `GOOGLE_CLIENT_SECRET` | Google Cloud Console > OAuth 2.0 Client IDs |
-| `BETTER_AUTH_SECRET` | Generate: `openssl rand -base64 32` |
+| `BETTER_AUTH_SECRET`   | Generate: `openssl rand -base64 32`         |
 ```
 
 ## Acceptance Criteria

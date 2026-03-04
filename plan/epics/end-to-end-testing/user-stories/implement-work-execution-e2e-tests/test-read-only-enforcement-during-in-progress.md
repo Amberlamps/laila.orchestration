@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Read-Only Enforcement During In-Progress
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Work Execution & Status Progression E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,15 +20,12 @@ Implement E2E tests for the read-only enforcement when a story is in-progress (a
 // E2E tests for read-only enforcement during in-progress states.
 // Verifies that the UI prevents modifications to stories and tasks
 // that are currently being worked on by an agent.
-import { test, expect } from "../fixtures";
-import {
-  StoryDetailPage,
-  TaskDetailPage,
-} from "../page-objects";
-import { expectButtonDisabledWithTooltip } from "../utils";
+import { test, expect } from '../fixtures';
+import { StoryDetailPage, TaskDetailPage } from '../page-objects';
+import { expectButtonDisabledWithTooltip } from '../utils';
 
-test.describe("Read-Only Enforcement During In-Progress", () => {
-  test("in-progress story shows read-only banner", async ({
+test.describe('Read-Only Enforcement During In-Progress', () => {
+  test('in-progress story shows read-only banner', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -36,7 +33,7 @@ test.describe("Read-Only Enforcement During In-Progress", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
+    await storyDetail.goto('in-progress-story-id');
 
     // Verify the read-only banner is visible.
     await storyDetail.expectReadOnly();
@@ -44,37 +41,33 @@ test.describe("Read-Only Enforcement During In-Progress", () => {
     await expect(storyDetail.readOnlyBanner).toContainText(/in progress/i);
   });
 
-  test("edit and delete buttons are disabled on in-progress story", async ({
+  test('edit and delete buttons are disabled on in-progress story', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
+    await storyDetail.goto('in-progress-story-id');
 
     // Verify the delete button is disabled.
     await expect(storyDetail.deleteButton).toBeDisabled();
 
     // Verify hovering the disabled delete button shows a tooltip.
-    await expectButtonDisabledWithTooltip(
-      page,
-      /delete/i,
-      /cannot delete.*in progress/i
-    );
+    await expectButtonDisabledWithTooltip(page, /delete/i, /cannot delete.*in progress/i);
   });
 
-  test("tasks under in-progress story show lock icons", async ({
+  test('tasks under in-progress story show lock icons', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
+    await storyDetail.goto('in-progress-story-id');
 
     // Navigate to a task under the in-progress story.
-    await storyDetail.openTask("Setup Database Schema");
+    await storyDetail.openTask('Setup Database Schema');
 
     const taskDetail = new TaskDetailPage(page);
 
@@ -88,14 +81,14 @@ test.describe("Read-Only Enforcement During In-Progress", () => {
     await expect(taskDetail.deleteButton).toBeDisabled();
   });
 
-  test("create task button is disabled on in-progress story", async ({
+  test('create task button is disabled on in-progress story', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
+    await storyDetail.goto('in-progress-story-id');
     await storyDetail.tasksTab.click();
 
     // The "Create Task" button should be disabled because the story
@@ -103,7 +96,7 @@ test.describe("Read-Only Enforcement During In-Progress", () => {
     await expect(storyDetail.createTaskButton).toBeDisabled();
   });
 
-  test("API modification attempt is rejected during in-progress", async ({
+  test('API modification attempt is rejected during in-progress', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -112,10 +105,10 @@ test.describe("Read-Only Enforcement During In-Progress", () => {
     // Attempt to modify the in-progress story directly via API.
     // This simulates someone bypassing the UI restrictions.
     const response = await page.evaluate(async () => {
-      const res = await fetch("/api/v1/stories/in-progress-story-id", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "Modified Title" }),
+      const res = await fetch('/api/v1/stories/in-progress-story-id', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Modified Title' }),
       });
       return { status: res.status, body: await res.json() };
     });
@@ -126,7 +119,7 @@ test.describe("Read-Only Enforcement During In-Progress", () => {
     expect(response.body.error).toMatch(/in.progress|read.only|locked/i);
   });
 
-  test("API delete attempt is rejected during in-progress", async ({
+  test('API delete attempt is rejected during in-progress', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -134,8 +127,8 @@ test.describe("Read-Only Enforcement During In-Progress", () => {
 
     // Attempt to delete an in-progress story via API.
     const response = await page.evaluate(async () => {
-      const res = await fetch("/api/v1/stories/in-progress-story-id", {
-        method: "DELETE",
+      const res = await fetch('/api/v1/stories/in-progress-story-id', {
+        method: 'DELETE',
       });
       return { status: res.status, body: await res.json() };
     });
@@ -145,15 +138,15 @@ test.describe("Read-Only Enforcement During In-Progress", () => {
     expect(response.body.error).toMatch(/in.progress|cannot delete|locked/i);
   });
 
-  test("dependency modification blocked on tasks under in-progress story", async ({
+  test('dependency modification blocked on tasks under in-progress story', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
-    await storyDetail.openTask("Implement API Endpoint");
+    await storyDetail.goto('in-progress-story-id');
+    await storyDetail.openTask('Implement API Endpoint');
 
     const taskDetail = new TaskDetailPage(page);
 

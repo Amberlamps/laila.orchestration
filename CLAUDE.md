@@ -39,3 +39,4 @@
 - [eslint/projectService]: When adding new top-level TS directories (e.g. `scripts/`), create a `tsconfig.json` in that directory — ESLint's `projectService: true` requires every `.ts` file to belong to a tsconfig project, otherwise you get "was not found by the project service" parse errors
 - [eslint/require-await]: Don't mark methods `async` if they only return a synchronous value (e.g. a Playwright `Locator`) — `@typescript-eslint/require-await` flags async methods with no `await`
 - [vitest/exclude-e2e]: Exclude `**/e2e/**` from vitest config when Playwright e2e tests use `.spec.ts` extension — vitest's `include: ['**/*.spec.ts']` will pick up Playwright files and fail with "test.describe() called in wrong context"
+- [eslint/no-unused-vars]: When adding a prop to a component's type but not using it in the JSX body, either use it or don't declare it — `@typescript-eslint/no-unused-vars` flags destructured props that are never referenced

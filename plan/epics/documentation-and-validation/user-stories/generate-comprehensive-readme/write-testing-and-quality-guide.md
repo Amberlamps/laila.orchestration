@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Testing and Quality Guide
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** technical-writer
 - **Parent User Story:** [Generate Comprehensive README.md](./tasks.md)
 - **Parent Epic:** [Documentation & Validation](../../user-stories.md)
@@ -31,12 +31,15 @@ Coverage threshold: 90% for lines, branches, functions, and statements.
 ### Run Tests for a Specific Package
 
 # Run tests for a specific Lambda function
+
 pnpm --filter @laila/timeout-checker test
 
 # Run tests for the domain logic package
+
 pnpm --filter @laila/domain test
 
 # Run tests for the shared package
+
 pnpm --filter @laila/shared test
 
 ### Watch Mode
@@ -51,6 +54,7 @@ Tests use [vitest](https://vitest.dev/) as the test runner. Configuration is in
 `vitest.config.ts` at the root and in each package.
 
 Key testing conventions:
+
 - Test files are co-located with source: `src/__tests__/handler.test.ts`
 - Use `vi.mock()` for module mocking
 - Use `vi.fn()` with proper TypeScript types (never use `any` for mock types)
@@ -108,6 +112,7 @@ Used in CI to verify formatting.
 ### Pre-Commit Hooks
 
 The project uses pre-commit hooks to enforce quality:
+
 - **Lint:** ESLint runs on staged `.ts` and `.tsx` files
 - **Format:** Prettier runs on all staged files
 - **Type check:** `tsc --noEmit` runs on the entire project

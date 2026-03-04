@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Audit Log and Activity Feed
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Entity Management E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,25 +20,21 @@ Implement E2E tests for the audit log and activity feed. Perform various actions
 // E2E tests for the audit log and per-project activity feed.
 // Verifies chronological ordering, actor/action/entity display,
 // project-scoped filtering, and export functionality.
-import { test, expect } from "../fixtures";
-import {
-  AuditLogPage,
-  ProjectListPage,
-  ProjectDetailPage,
-} from "../page-objects";
+import { test, expect } from '../fixtures';
+import { AuditLogPage, ProjectListPage, ProjectDetailPage } from '../page-objects';
 
-test.describe("Audit Log and Activity Feed", () => {
-  test("actions appear in audit log in chronological order", async ({
+test.describe('Audit Log and Activity Feed', () => {
+  test('actions appear in audit log in chronological order', async ({
     authenticatedPage: page,
   }) => {
     // Perform a series of actions that generate audit log entries.
     const projectList = new ProjectListPage(page);
     await projectList.goto();
-    await projectList.createProject("Audit Test Project", "Testing audit log");
-    await projectList.openProject("Audit Test Project");
+    await projectList.createProject('Audit Test Project', 'Testing audit log');
+    await projectList.openProject('Audit Test Project');
 
     const projectDetail = new ProjectDetailPage(page);
-    await projectDetail.createEpic("Audit Test Epic", "Testing audit log entries");
+    await projectDetail.createEpic('Audit Test Epic', 'Testing audit log entries');
 
     // Navigate to the audit log page.
     const auditLog = new AuditLogPage(page);
@@ -46,15 +42,15 @@ test.describe("Audit Log and Activity Feed", () => {
 
     // Verify the entries exist in reverse chronological order
     // (most recent first).
-    await auditLog.expectEntry("epic.created", "Audit Test Epic");
-    await auditLog.expectEntry("project.created", "Audit Test Project");
+    await auditLog.expectEntry('epic.created', 'Audit Test Epic');
+    await auditLog.expectEntry('project.created', 'Audit Test Project');
 
     // Verify the most recent entry is at the top.
-    const firstRow = auditLog.entriesTable.getByRole("row").nth(1); // Skip header
-    await expect(firstRow).toContainText("epic.created");
+    const firstRow = auditLog.entriesTable.getByRole('row').nth(1); // Skip header
+    await expect(firstRow).toContainText('epic.created');
   });
 
-  test("audit log entries include actor name and entity links", async ({
+  test('audit log entries include actor name and entity links', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -65,11 +61,11 @@ test.describe("Audit Log and Activity Feed", () => {
     await auditLog.goto();
 
     // Verify entries show the actor name.
-    const firstRow = auditLog.entriesTable.getByRole("row").nth(1);
-    await expect(firstRow).toContainText("E2E Test User");
+    const firstRow = auditLog.entriesTable.getByRole('row').nth(1);
+    await expect(firstRow).toContainText('E2E Test User');
 
     // Verify entity names are rendered as clickable links.
-    const entityLink = firstRow.getByRole("link");
+    const entityLink = firstRow.getByRole('link');
     await expect(entityLink).toBeVisible();
 
     // Click the entity link and verify navigation to the entity detail.
@@ -77,7 +73,7 @@ test.describe("Audit Log and Activity Feed", () => {
     await expect(page).toHaveURL(/\/projects\/|\/epics\/|\/stories\//);
   });
 
-  test("project Activity tab shows project-scoped entries", async ({
+  test('project Activity tab shows project-scoped entries', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -85,27 +81,24 @@ test.describe("Audit Log and Activity Feed", () => {
     seedData({});
 
     const projectDetail = new ProjectDetailPage(page);
-    await projectDetail.goto("seeded-project-id");
+    await projectDetail.goto('seeded-project-id');
 
     // Click the Activity tab.
     await projectDetail.activityTab.click();
 
     // Verify the activity feed shows entries scoped to this project.
-    const activityFeed = page.getByTestId("activity-feed");
+    const activityFeed = page.getByTestId('activity-feed');
     await expect(activityFeed).toBeVisible();
 
     // Verify project-related entries are present.
-    await expect(activityFeed).toContainText("project.created");
-    await expect(activityFeed).toContainText("epic.created");
+    await expect(activityFeed).toContainText('project.created');
+    await expect(activityFeed).toContainText('epic.created');
 
     // Verify entries from other projects are NOT present.
-    await expect(activityFeed).not.toContainText("Other Project");
+    await expect(activityFeed).not.toContainText('Other Project');
   });
 
-  test("export audit log as JSON", async ({
-    authenticatedPage: page,
-    seedData,
-  }) => {
+  test('export audit log as JSON', async ({ authenticatedPage: page, seedData }) => {
     seedData({});
 
     const auditLog = new AuditLogPage(page);
@@ -116,10 +109,7 @@ test.describe("Audit Log and Activity Feed", () => {
     expect(filename).toMatch(/audit.*\.json$/i);
   });
 
-  test("export audit log as CSV", async ({
-    authenticatedPage: page,
-    seedData,
-  }) => {
+  test('export audit log as CSV', async ({ authenticatedPage: page, seedData }) => {
     seedData({});
 
     const auditLog = new AuditLogPage(page);
@@ -130,23 +120,20 @@ test.describe("Audit Log and Activity Feed", () => {
     expect(filename).toMatch(/audit.*\.csv$/i);
   });
 
-  test("audit log tracks publish actions", async ({
-    authenticatedPage: page,
-    seedData,
-  }) => {
+  test('audit log tracks publish actions', async ({ authenticatedPage: page, seedData }) => {
     // Seed a project and publish it to generate publish audit entries.
     seedData({});
 
     // Simulate publishing a story.
     const projectDetail = new ProjectDetailPage(page);
-    await projectDetail.goto("seeded-project-id");
+    await projectDetail.goto('seeded-project-id');
     await projectDetail.publish();
 
     // Navigate to audit log and verify publish entry.
     const auditLog = new AuditLogPage(page);
     await auditLog.goto();
 
-    await auditLog.expectEntry("project.published", "E2E Test Plan");
+    await auditLog.expectEntry('project.published', 'E2E Test Plan');
   });
 });
 ```

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Destructive Action Confirmations
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Plan Creation & Publish E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,17 +20,17 @@ Implement E2E tests for destructive action confirmation flows. When a user attem
 // E2E tests for destructive action confirmation modals.
 // Verifies cancel/confirm behavior, cascading delete counts,
 // and deletion blocking for in-progress entities.
-import { test, expect } from "../fixtures";
+import { test, expect } from '../fixtures';
 import {
   ProjectListPage,
   ProjectDetailPage,
   EpicDetailPage,
   StoryDetailPage,
-} from "../page-objects";
-import { handleConfirmationModal, expectSuccessToast } from "../utils";
+} from '../page-objects';
+import { handleConfirmationModal, expectSuccessToast } from '../utils';
 
-test.describe("Destructive Action Confirmations", () => {
-  test("delete project with children shows entity counts in confirmation modal", async ({
+test.describe('Destructive Action Confirmations', () => {
+  test('delete project with children shows entity counts in confirmation modal', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -38,13 +38,13 @@ test.describe("Destructive Action Confirmations", () => {
     seedData({});
 
     const projectDetail = new ProjectDetailPage(page);
-    await projectDetail.goto("seeded-project-id");
+    await projectDetail.goto('seeded-project-id');
 
     // Click the delete button.
     await projectDetail.deleteButton.click();
 
     // Verify the confirmation modal displays cascading entity counts.
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText(/2 epics/i);
     await expect(dialog).toContainText(/3 stories/i);
@@ -52,44 +52,44 @@ test.describe("Destructive Action Confirmations", () => {
     await expect(dialog).toContainText(/permanently deleted/i);
   });
 
-  test("cancel delete leaves all entities intact", async ({
+  test('cancel delete leaves all entities intact', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     const projectDetail = new ProjectDetailPage(page);
-    await projectDetail.goto("seeded-project-id");
+    await projectDetail.goto('seeded-project-id');
 
     // Click delete then cancel.
     await projectDetail.deleteButton.click();
-    await handleConfirmationModal(page, { action: "cancel" });
+    await handleConfirmationModal(page, { action: 'cancel' });
 
     // Verify the project is still visible and accessible.
     await expect(projectDetail.heading).toBeVisible();
-    await projectDetail.expectStatus("Draft");
+    await projectDetail.expectStatus('Draft');
 
     // Verify children still exist.
     await projectDetail.epicsTab.click();
-    const epicRows = projectDetail.epicsTable.getByRole("row");
+    const epicRows = projectDetail.epicsTable.getByRole('row');
     // 2 data rows + 1 header = 3
     await expect(epicRows).toHaveCount(3);
   });
 
-  test("confirm delete removes project and all children", async ({
+  test('confirm delete removes project and all children', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     const projectDetail = new ProjectDetailPage(page);
-    await projectDetail.goto("seeded-project-id");
+    await projectDetail.goto('seeded-project-id');
 
     // Click delete then confirm.
     await projectDetail.deleteButton.click();
     await handleConfirmationModal(page, {
       expectedContent: /permanently deleted/i,
-      action: "confirm",
+      action: 'confirm',
     });
 
     // Verify redirect to projects list after deletion.
@@ -97,76 +97,76 @@ test.describe("Destructive Action Confirmations", () => {
 
     // Verify the project no longer appears in the list.
     const projectList = new ProjectListPage(page);
-    const deletedProject = projectList.projectsTable.getByRole("row", {
+    const deletedProject = projectList.projectsTable.getByRole('row', {
       name: /E2E Test Plan/,
     });
     await expect(deletedProject).not.toBeVisible();
   });
 
-  test("delete epic shows confirmation with child counts", async ({
+  test('delete epic shows confirmation with child counts', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     const epicDetail = new EpicDetailPage(page);
-    await epicDetail.goto("seeded-epic-id");
+    await epicDetail.goto('seeded-epic-id');
 
     await epicDetail.deleteButton.click();
 
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText(/stories/i);
     await expect(dialog).toContainText(/tasks/i);
 
     // Cancel the deletion.
-    await handleConfirmationModal(page, { action: "cancel" });
+    await handleConfirmationModal(page, { action: 'cancel' });
     await expect(epicDetail.heading).toBeVisible();
   });
 
-  test("delete story shows confirmation and removes story", async ({
+  test('delete story shows confirmation and removes story', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("seeded-story-id");
+    await storyDetail.goto('seeded-story-id');
 
     await storyDetail.deleteButton.click();
 
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText(/tasks/i);
 
     // Confirm the deletion.
-    await dialog.getByRole("button", { name: /confirm/i }).click();
+    await dialog.getByRole('button', { name: /confirm/i }).click();
 
     // Verify redirect to the parent epic.
     await expect(page).toHaveURL(/\/epics\//);
   });
 
-  test("delete task shows confirmation and removes task", async ({
+  test('delete task shows confirmation and removes task', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     // Navigate to a task and delete it.
-    await page.goto("/tasks/seeded-task-id");
-    const deleteButton = page.getByRole("button", { name: /delete/i });
+    await page.goto('/tasks/seeded-task-id');
+    const deleteButton = page.getByRole('button', { name: /delete/i });
     await deleteButton.click();
 
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
 
-    await dialog.getByRole("button", { name: /confirm/i }).click();
+    await dialog.getByRole('button', { name: /confirm/i }).click();
 
     // Verify redirect to the parent story.
     await expect(page).toHaveURL(/\/stories\//);
   });
 
-  test("deletion blocked when entity is in-progress", async ({
+  test('deletion blocked when entity is in-progress', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -174,19 +174,19 @@ test.describe("Destructive Action Confirmations", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
+    await storyDetail.goto('in-progress-story-id');
 
     // Verify the delete button is disabled.
     await expect(storyDetail.deleteButton).toBeDisabled();
 
     // Hover over the disabled button to see the tooltip explanation.
     await storyDetail.deleteButton.hover();
-    const tooltip = page.getByRole("tooltip");
+    const tooltip = page.getByRole('tooltip');
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText(/in-progress/i);
   });
 
-  test("deletion blocked for project with in-progress children", async ({
+  test('deletion blocked for project with in-progress children', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -194,7 +194,7 @@ test.describe("Destructive Action Confirmations", () => {
     seedData({});
 
     const projectDetail = new ProjectDetailPage(page);
-    await projectDetail.goto("project-with-in-progress-story-id");
+    await projectDetail.goto('project-with-in-progress-story-id');
 
     // The delete button should be disabled.
     await expect(projectDetail.deleteButton).toBeDisabled();

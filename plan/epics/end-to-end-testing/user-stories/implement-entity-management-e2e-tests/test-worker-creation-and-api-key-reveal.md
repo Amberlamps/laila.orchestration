@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Worker Creation and API Key Reveal
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Entity Management E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,11 +20,11 @@ Implement E2E tests for the worker creation flow with API key reveal. Navigate t
 // E2E tests for worker creation with one-time API key reveal.
 // Verifies the critical security flow where the API key is shown
 // exactly once and never again after the modal is closed.
-import { test, expect } from "../fixtures";
-import { WorkerListPage, WorkerDetailPage } from "../page-objects";
+import { test, expect } from '../fixtures';
+import { WorkerListPage, WorkerDetailPage } from '../page-objects';
 
-test.describe("Worker Creation and API Key Reveal", () => {
-  test("create worker displays API key in monospace with copy button", async ({
+test.describe('Worker Creation and API Key Reveal', () => {
+  test('create worker displays API key in monospace with copy button', async ({
     authenticatedPage: page,
   }) => {
     const workerList = new WorkerListPage(page);
@@ -32,31 +32,29 @@ test.describe("Worker Creation and API Key Reveal", () => {
 
     // Click "+ Create Worker" to open the creation modal.
     await workerList.createWorkerButton.click();
-    const modal = page.getByRole("dialog");
+    const modal = page.getByRole('dialog');
     await expect(modal).toBeVisible();
 
     // Fill in the worker name.
-    await modal.getByLabel(/name/i).fill("CI Build Agent");
-    await modal.getByRole("button", { name: /create/i }).click();
+    await modal.getByLabel(/name/i).fill('CI Build Agent');
+    await modal.getByRole('button', { name: /create/i }).click();
 
     // Verify the API key is displayed after creation.
-    const apiKeyDisplay = modal.getByTestId("api-key-display");
+    const apiKeyDisplay = modal.getByTestId('api-key-display');
     await expect(apiKeyDisplay).toBeVisible();
 
     // Verify the API key starts with the "lw_" prefix.
     const apiKeyText = await apiKeyDisplay.textContent();
     expect(apiKeyText).toBeTruthy();
-    expect(apiKeyText!.startsWith("lw_")).toBe(true);
+    expect(apiKeyText!.startsWith('lw_')).toBe(true);
 
     // Verify the API key is displayed in a monospace font.
     // Check the computed font-family CSS property.
-    const fontFamily = await apiKeyDisplay.evaluate(
-      (el) => window.getComputedStyle(el).fontFamily
-    );
+    const fontFamily = await apiKeyDisplay.evaluate((el) => window.getComputedStyle(el).fontFamily);
     expect(fontFamily).toMatch(/mono|courier|consolas/i);
 
     // Verify the copy button is present and functional.
-    const copyButton = modal.getByRole("button", { name: /copy/i });
+    const copyButton = modal.getByRole('button', { name: /copy/i });
     await expect(copyButton).toBeVisible();
 
     // Click the copy button and verify clipboard interaction.
@@ -68,73 +66,65 @@ test.describe("Worker Creation and API Key Reveal", () => {
     await expect(copiedIndicator).toBeVisible();
   });
 
-  test("closing API key modal hides the key permanently", async ({
-    authenticatedPage: page,
-  }) => {
+  test('closing API key modal hides the key permanently', async ({ authenticatedPage: page }) => {
     const workerList = new WorkerListPage(page);
     await workerList.goto();
 
     // Create a worker and capture the API key.
-    const apiKey = await workerList.createWorker("Deployment Agent");
+    const apiKey = await workerList.createWorker('Deployment Agent');
 
     // Verify we captured a valid API key.
     expect(apiKey).toBeTruthy();
-    expect(apiKey.startsWith("lw_")).toBe(true);
+    expect(apiKey.startsWith('lw_')).toBe(true);
 
     // Close the API key modal.
     await workerList.closeApiKeyModal();
 
     // Navigate to the newly created worker's detail page.
-    await workerList.openWorker("Deployment Agent");
+    await workerList.openWorker('Deployment Agent');
     const workerDetail = new WorkerDetailPage(page);
 
     // Verify the full API key is NOT shown on the detail page.
     // Only the prefix should be visible (e.g., "lw_abc1...").
-    const detailPageContent = await page.textContent("body");
+    const detailPageContent = await page.textContent('body');
     expect(detailPageContent).not.toContain(apiKey);
 
     // Verify the API key prefix is shown (truncated).
-    const apiKeyPrefixDisplay = page.getByTestId("api-key-prefix");
+    const apiKeyPrefixDisplay = page.getByTestId('api-key-prefix');
     await expect(apiKeyPrefixDisplay).toBeVisible();
     const prefixText = await apiKeyPrefixDisplay.textContent();
     expect(prefixText).toMatch(/lw_\w+\.\.\./);
   });
 
-  test("worker appears in list after creation", async ({
-    authenticatedPage: page,
-  }) => {
+  test('worker appears in list after creation', async ({ authenticatedPage: page }) => {
     const workerList = new WorkerListPage(page);
     await workerList.goto();
 
     // Create a worker.
-    await workerList.createWorker("Test Execution Agent");
+    await workerList.createWorker('Test Execution Agent');
     await workerList.closeApiKeyModal();
 
     // Verify the worker appears in the workers table.
-    const workerRow = workerList.workersTable.getByRole("row", {
+    const workerRow = workerList.workersTable.getByRole('row', {
       name: /Test Execution Agent/,
     });
     await expect(workerRow).toBeVisible();
 
     // Verify the worker shows "Active" status.
-    await expect(workerRow).toContainText("Active");
+    await expect(workerRow).toContainText('Active');
   });
 
-  test("warning message about one-time key display", async ({
-    authenticatedPage: page,
-  }) => {
+  test('warning message about one-time key display', async ({ authenticatedPage: page }) => {
     const workerList = new WorkerListPage(page);
     await workerList.goto();
     await workerList.createWorkerButton.click();
 
-    const modal = page.getByRole("dialog");
-    await modal.getByLabel(/name/i).fill("Warning Test Agent");
-    await modal.getByRole("button", { name: /create/i }).click();
+    const modal = page.getByRole('dialog');
+    await modal.getByLabel(/name/i).fill('Warning Test Agent');
+    await modal.getByRole('button', { name: /create/i }).click();
 
     // Verify a warning message is displayed about the one-time key reveal.
-    const warningMessage = modal.getByText(
-      /this is the only time.*api key.*will be shown/i
-    );
+    const warningMessage = modal.getByText(/this is the only time.*api key.*will be shown/i);
     await expect(warningMessage).toBeVisible();
   });
 });
@@ -164,7 +154,7 @@ test.describe("Worker Creation and API Key Reveal", () => {
 ## References
 
 - **Project Setup Specification:** Section G.4 (End-to-End Testing — Worker creation and API key reveal)
-- **Functional Requirements:** FR-WORKER-001 (worker creation), FR-AUTH-005 (API key generation with lw_ prefix and SHA-256 hashing)
+- **Functional Requirements:** FR-WORKER-001 (worker creation), FR-AUTH-005 (API key generation with lw\_ prefix and SHA-256 hashing)
 - **Design Specification:** Worker creation modal, API key reveal component, monospace styling
 
 ## Estimated Complexity

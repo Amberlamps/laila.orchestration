@@ -44,6 +44,8 @@ export interface MockStory {
   description: string;
   status: EntityStatus;
   assignedWorkerId: string | null;
+  errorMessage: string | null;
+  failedTaskId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -77,6 +79,17 @@ export interface MockPersona {
   description: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface MockAttempt {
+  id: string;
+  storyId: string;
+  workerId: string;
+  workerName: string;
+  status: 'completed' | 'failed' | 'timed-out' | 'manual';
+  errorMessage: string | null;
+  startedAt: string;
+  endedAt: string;
 }
 
 export interface MockAuditLogEntry {
@@ -124,6 +137,8 @@ export const createMockStory = (overrides: Partial<MockStory> = {}): MockStory =
   description: 'A test story for E2E testing',
   status: 'draft',
   assignedWorkerId: null,
+  errorMessage: null,
+  failedTaskId: null,
   createdAt: now(),
   updatedAt: now(),
   ...overrides,
@@ -160,6 +175,18 @@ export const createMockPersona = (overrides: Partial<MockPersona> = {}): MockPer
   description: 'A test persona for E2E testing',
   createdAt: now(),
   updatedAt: now(),
+  ...overrides,
+});
+
+export const createMockAttempt = (overrides: Partial<MockAttempt> = {}): MockAttempt => ({
+  id: crypto.randomUUID(),
+  storyId: 'default-story-id',
+  workerId: 'default-worker-id',
+  workerName: 'Test Worker',
+  status: 'failed',
+  errorMessage: null,
+  startedAt: now(),
+  endedAt: now(),
   ...overrides,
 });
 

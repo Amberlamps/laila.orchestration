@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Publish Flow
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Plan Creation & Publish E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,16 +20,16 @@ Implement E2E tests for the publish lifecycle: publish user stories (which valid
 // E2E tests for the publish lifecycle.
 // Tests the bottom-up publish flow: stories → epics → project.
 // Verifies validation gates at each level and status transitions.
-import { test, expect } from "../fixtures";
+import { test, expect } from '../fixtures';
 import {
   ProjectListPage,
   ProjectDetailPage,
   EpicDetailPage,
   StoryDetailPage,
-} from "../page-objects";
-import { expectStatusBadge, expectErrorToast } from "../utils";
+} from '../page-objects';
+import { expectStatusBadge, expectErrorToast } from '../utils';
 
-test.describe("Publish Flow", () => {
+test.describe('Publish Flow', () => {
   // Before each test, create a complete plan structure.
   // This setup mirrors the full plan creation flow test.
   test.beforeEach(async ({ authenticatedPage: page, seedData }) => {
@@ -41,108 +41,100 @@ test.describe("Publish Flow", () => {
     });
   });
 
-  test("publish story validates tasks have persona and acceptance criteria", async ({
+  test('publish story validates tasks have persona and acceptance criteria', async ({
     authenticatedPage: page,
   }) => {
     // Navigate to a story with fully configured tasks.
-    await page.goto("/dashboard");
+    await page.goto('/dashboard');
     // (Navigation assumes seeded data is accessible via known IDs.)
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("seeded-story-id");
+    await storyDetail.goto('seeded-story-id');
 
     // Verify the story is in Draft status before publishing.
-    await storyDetail.expectStatus("Draft");
+    await storyDetail.expectStatus('Draft');
 
     // Publish the story — should succeed because all tasks
     // have persona assignments and acceptance criteria.
     await storyDetail.publish();
 
     // Verify the story status transitions to Ready.
-    await storyDetail.expectStatus("Ready");
+    await storyDetail.expectStatus('Ready');
   });
 
-  test("publish story rejected when task missing persona", async ({
-    authenticatedPage: page,
-  }) => {
+  test('publish story rejected when task missing persona', async ({ authenticatedPage: page }) => {
     // Attempt to publish a story where one task is missing a persona.
     // The publish action should fail with a validation error.
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("story-with-incomplete-task-id");
+    await storyDetail.goto('story-with-incomplete-task-id');
 
     await storyDetail.publishButton.click();
-    const dialog = page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /confirm/i }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /confirm/i }).click();
 
     // Verify the error toast explains the validation failure.
     await expectErrorToast(page, /task.*missing.*persona/i);
 
     // Verify the story remains in Draft status.
-    await storyDetail.expectStatus("Draft");
+    await storyDetail.expectStatus('Draft');
   });
 
-  test("publish story rejected when task missing acceptance criteria", async ({
+  test('publish story rejected when task missing acceptance criteria', async ({
     authenticatedPage: page,
   }) => {
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("story-with-no-acceptance-criteria-id");
+    await storyDetail.goto('story-with-no-acceptance-criteria-id');
 
     await storyDetail.publishButton.click();
-    const dialog = page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /confirm/i }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /confirm/i }).click();
 
     // Verify the validation error references acceptance criteria.
     await expectErrorToast(page, /acceptance criteria/i);
-    await storyDetail.expectStatus("Draft");
+    await storyDetail.expectStatus('Draft');
   });
 
-  test("publish epic validates all stories are Ready", async ({
-    authenticatedPage: page,
-  }) => {
+  test('publish epic validates all stories are Ready', async ({ authenticatedPage: page }) => {
     // Navigate to the epic. All stories must be Ready before
     // the epic can be published.
     const epicDetail = new EpicDetailPage(page);
-    await epicDetail.goto("seeded-epic-id");
-    await epicDetail.expectStatus("Draft");
+    await epicDetail.goto('seeded-epic-id');
+    await epicDetail.expectStatus('Draft');
 
     // Publish the epic — should succeed because all stories are Ready.
     await epicDetail.publish();
 
     // Verify the epic status transitions to Ready.
-    await epicDetail.expectStatus("Ready");
+    await epicDetail.expectStatus('Ready');
   });
 
-  test("publish epic rejected when story still in Draft", async ({
-    authenticatedPage: page,
-  }) => {
+  test('publish epic rejected when story still in Draft', async ({ authenticatedPage: page }) => {
     // Attempt to publish an epic where one story is still Draft.
     const epicDetail = new EpicDetailPage(page);
-    await epicDetail.goto("epic-with-draft-story-id");
+    await epicDetail.goto('epic-with-draft-story-id');
 
     await epicDetail.publishButton.click();
-    const dialog = page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /confirm/i }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /confirm/i }).click();
 
     await expectErrorToast(page, /stories.*not ready/i);
-    await epicDetail.expectStatus("Draft");
+    await epicDetail.expectStatus('Draft');
   });
 
-  test("publish project validates all epics are Ready", async ({
-    authenticatedPage: page,
-  }) => {
+  test('publish project validates all epics are Ready', async ({ authenticatedPage: page }) => {
     // Navigate to the project. All epics must be Ready.
     const projectDetail = new ProjectDetailPage(page);
-    await projectDetail.goto("seeded-project-id");
-    await projectDetail.expectStatus("Draft");
+    await projectDetail.goto('seeded-project-id');
+    await projectDetail.expectStatus('Draft');
 
     // Publish the project.
     await projectDetail.publish();
 
     // Verify the project status transitions to Ready.
-    await projectDetail.expectStatus("Ready");
+    await projectDetail.expectStatus('Ready');
   });
 
-  test("complete bottom-up publish: stories → epic → project", async ({
+  test('complete bottom-up publish: stories → epic → project', async ({
     authenticatedPage: page,
   }) => {
     // This test verifies the full bottom-up publish sequence.
@@ -152,29 +144,29 @@ test.describe("Publish Flow", () => {
 
     // Publish story.
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("seeded-story-id");
+    await storyDetail.goto('seeded-story-id');
     await storyDetail.publish();
-    await storyDetail.expectStatus("Ready");
+    await storyDetail.expectStatus('Ready');
 
     // Publish epic.
     const epicDetail = new EpicDetailPage(page);
-    await epicDetail.goto("seeded-epic-id");
+    await epicDetail.goto('seeded-epic-id');
     await epicDetail.publish();
-    await epicDetail.expectStatus("Ready");
+    await epicDetail.expectStatus('Ready');
 
     // Publish project.
     const projectDetail = new ProjectDetailPage(page);
-    await projectDetail.goto("seeded-project-id");
+    await projectDetail.goto('seeded-project-id');
     await projectDetail.publish();
-    await projectDetail.expectStatus("Ready");
+    await projectDetail.expectStatus('Ready');
 
     // Verify status transitions are reflected on the project overview.
     // All children should show Ready status in their respective tables.
     await projectDetail.epicsTab.click();
-    const epicRow = projectDetail.epicsTable.getByRole("row", {
+    const epicRow = projectDetail.epicsTable.getByRole('row', {
       name: /Core Feature Epic/,
     });
-    await expect(epicRow).toContainText("Ready");
+    await expect(epicRow).toContainText('Ready');
   });
 });
 ```

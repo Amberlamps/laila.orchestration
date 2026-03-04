@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Responsive Layout Tablet
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** accessibility-tester
 - **Parent User Story:** [Implement DAG Graph & Responsive Layout E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,36 +20,32 @@ Implement E2E tests for the tablet responsive layout at 768px viewport width. Ve
 // E2E tests for the tablet layout at 768px viewport.
 // Verifies collapsed sidebar, 8-column grid, 2-column card grid,
 // and adaptive table behavior.
-import { test, expect } from "../fixtures";
-import { DashboardPage, ProjectListPage } from "../page-objects";
+import { test, expect } from '../fixtures';
+import { DashboardPage, ProjectListPage } from '../page-objects';
 
 // Configure this test file to use a tablet viewport.
 test.use({
   viewport: { width: 768, height: 1024 },
 });
 
-test.describe("Responsive Layout — Tablet (768px)", () => {
-  test("sidebar is collapsed or has a toggle button", async ({
-    authenticatedPage: page,
-  }) => {
-    await page.goto("/dashboard");
+test.describe('Responsive Layout — Tablet (768px)', () => {
+  test('sidebar is collapsed or has a toggle button', async ({ authenticatedPage: page }) => {
+    await page.goto('/dashboard');
 
     // At tablet width, the sidebar should be collapsed (icon-only)
     // or hidden behind a toggle button.
-    const sidebar = page.getByRole("navigation", { name: /main/i });
+    const sidebar = page.getByRole('navigation', { name: /main/i });
 
     // Option A: Sidebar is collapsed (narrow width, icon-only).
     const sidebarVisible = await sidebar.isVisible();
 
     if (sidebarVisible) {
       // Collapsed sidebar should be narrow (< 80px).
-      const sidebarWidth = await sidebar.evaluate(
-        (el) => el.getBoundingClientRect().width
-      );
+      const sidebarWidth = await sidebar.evaluate((el) => el.getBoundingClientRect().width);
       expect(sidebarWidth).toBeLessThan(80);
     } else {
       // Option B: Sidebar is hidden behind a hamburger/toggle button.
-      const toggleButton = page.getByRole("button", { name: /menu|toggle/i });
+      const toggleButton = page.getByRole('button', { name: /menu|toggle/i });
       await expect(toggleButton).toBeVisible();
 
       // Click toggle to open the sidebar.
@@ -62,27 +58,24 @@ test.describe("Responsive Layout — Tablet (768px)", () => {
     }
   });
 
-  test("project cards render in 2-column grid", async ({
-    authenticatedPage: page,
-    seedData,
-  }) => {
+  test('project cards render in 2-column grid', async ({ authenticatedPage: page, seedData }) => {
     seedData({});
 
     const projectList = new ProjectListPage(page);
     await projectList.goto();
 
-    const cardGrid = page.getByTestId("project-card-grid");
+    const cardGrid = page.getByTestId('project-card-grid');
     await expect(cardGrid).toBeVisible();
 
     // Verify the grid has 2 columns at tablet width.
     const gridColumns = await cardGrid.evaluate(
-      (el) => window.getComputedStyle(el).gridTemplateColumns
+      (el) => window.getComputedStyle(el).gridTemplateColumns,
     );
-    const columnCount = gridColumns.split(" ").length;
+    const columnCount = gridColumns.split(' ').length;
     expect(columnCount).toBe(2);
   });
 
-  test("tables adapt by hiding secondary columns or enabling scroll", async ({
+  test('tables adapt by hiding secondary columns or enabling scroll', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -91,19 +84,15 @@ test.describe("Responsive Layout — Tablet (768px)", () => {
     const projectList = new ProjectListPage(page);
     await projectList.goto();
 
-    const headerRow = projectList.projectsTable.getByRole("row").first();
+    const headerRow = projectList.projectsTable.getByRole('row').first();
 
     // Primary columns (Name, Status) should always be visible.
-    await expect(
-      headerRow.getByRole("columnheader", { name: /name/i })
-    ).toBeVisible();
-    await expect(
-      headerRow.getByRole("columnheader", { name: /status/i })
-    ).toBeVisible();
+    await expect(headerRow.getByRole('columnheader', { name: /name/i })).toBeVisible();
+    await expect(headerRow.getByRole('columnheader', { name: /status/i })).toBeVisible();
 
     // Secondary columns may be hidden or the table may scroll.
     // Check if the "Updated" column is hidden at tablet width.
-    const updatedColumn = headerRow.getByRole("columnheader", {
+    const updatedColumn = headerRow.getByRole('columnheader', {
       name: /updated/i,
     });
 
@@ -113,46 +102,39 @@ test.describe("Responsive Layout — Tablet (768px)", () => {
       // This is the expected behavior for secondary columns.
     } else {
       // If the column is visible, verify horizontal scrolling is available.
-      const tableContainer = page.getByTestId("table-container");
-      const hasScroll = await tableContainer.evaluate(
-        (el) => el.scrollWidth > el.clientWidth
-      );
+      const tableContainer = page.getByTestId('table-container');
+      const hasScroll = await tableContainer.evaluate((el) => el.scrollWidth > el.clientWidth);
       // At tablet width, some overflow is acceptable if scrollable.
       expect(hasScroll).toBe(true);
     }
   });
 
-  test("8-column grid layout on dashboard", async ({
-    authenticatedPage: page,
-    seedData,
-  }) => {
+  test('8-column grid layout on dashboard', async ({ authenticatedPage: page, seedData }) => {
     seedData({});
 
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
 
     // Verify the main content area adapts to an 8-column grid.
-    const mainContent = page.getByRole("main");
+    const mainContent = page.getByRole('main');
     const gridColumns = await mainContent.evaluate(
-      (el) => window.getComputedStyle(el).gridTemplateColumns
+      (el) => window.getComputedStyle(el).gridTemplateColumns,
     );
 
-    const columnCount = gridColumns.split(" ").length;
+    const columnCount = gridColumns.split(' ').length;
     // At tablet width, the grid should have 8 columns
     // (or a responsive equivalent like 4+4).
     expect(columnCount).toBeLessThanOrEqual(8);
     expect(columnCount).toBeGreaterThanOrEqual(4);
   });
 
-  test("modals render within viewport bounds", async ({
-    authenticatedPage: page,
-  }) => {
+  test('modals render within viewport bounds', async ({ authenticatedPage: page }) => {
     const projectList = new ProjectListPage(page);
     await projectList.goto();
 
     // Open the create project modal.
     await projectList.createProjectButton.click();
-    const modal = page.getByRole("dialog");
+    const modal = page.getByRole('dialog');
     await expect(modal).toBeVisible();
 
     // Verify the modal fits within the 768px viewport.

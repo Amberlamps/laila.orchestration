@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Failure Recovery Flow
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Work Execution & Status Progression E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,12 +20,12 @@ Implement E2E tests for the failure recovery flow. Assign a story to a worker, s
 // E2E tests for the failure recovery flow.
 // Covers: worker fails story → error displayed → human reviews →
 // edits task → resets story → worker picks up again.
-import { test, expect } from "../fixtures";
-import { StoryDetailPage, TaskDetailPage } from "../page-objects";
-import { triggerQueryRefetch } from "../utils";
+import { test, expect } from '../fixtures';
+import { StoryDetailPage, TaskDetailPage } from '../page-objects';
+import { triggerQueryRefetch } from '../utils';
 
-test.describe("Failure Recovery Flow", () => {
-  test("worker failure displays error and allows human reset", async ({
+test.describe('Failure Recovery Flow', () => {
+  test('worker failure displays error and allows human reset', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -33,55 +33,55 @@ test.describe("Failure Recovery Flow", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
-    await storyDetail.expectStatus("In Progress");
-    await storyDetail.expectAssignedWorker("Test Worker");
+    await storyDetail.goto('in-progress-story-id');
+    await storyDetail.expectStatus('In Progress');
+    await storyDetail.expectAssignedWorker('Test Worker');
 
     // Step 1: Simulate the worker marking the story as failed.
     await page.evaluate(async () => {
-      await fetch("/api/v1/stories/in-progress-story-id/fail", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/v1/stories/in-progress-story-id/fail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          errorMessage: "Build failed: TypeScript compilation error in auth module",
-          failedTaskId: "task-2-id",
+          errorMessage: 'Build failed: TypeScript compilation error in auth module',
+          failedTaskId: 'task-2-id',
         }),
       });
     });
 
     // Step 2: Wait for polling to update the UI.
     await triggerQueryRefetch(page);
-    await storyDetail.goto("in-progress-story-id");
+    await storyDetail.goto('in-progress-story-id');
 
     // Verify the Failed badge is displayed.
-    await storyDetail.expectStatus("Failed");
+    await storyDetail.expectStatus('Failed');
 
     // Verify the error message is displayed on the story detail.
     await storyDetail.expectFailedWithError(
-      "Build failed: TypeScript compilation error in auth module"
+      'Build failed: TypeScript compilation error in auth module',
     );
 
     // Step 3: Human reviews the failure and edits the problematic task.
     // Navigate to the failed task to make corrections.
-    await storyDetail.openTask("Implement API Endpoint");
+    await storyDetail.openTask('Implement API Endpoint');
     const taskDetail = new TaskDetailPage(page);
 
     // Edit the task description to fix the issue.
     await taskDetail.editButton.click();
-    const modal = page.getByRole("dialog");
+    const modal = page.getByRole('dialog');
     await modal.getByLabel(/description/i).clear();
-    await modal.getByLabel(/description/i).fill(
-      "Implement API endpoint with corrected TypeScript types for auth module"
-    );
-    await modal.getByRole("button", { name: /save/i }).click();
+    await modal
+      .getByLabel(/description/i)
+      .fill('Implement API endpoint with corrected TypeScript types for auth module');
+    await modal.getByRole('button', { name: /save/i }).click();
 
     // Step 4: Navigate back to the story and click Reset.
     await page.goBack();
-    await storyDetail.goto("in-progress-story-id");
+    await storyDetail.goto('in-progress-story-id');
     await storyDetail.resetStory();
 
     // Step 5: Verify the story returns to not-started/blocked status.
-    await storyDetail.expectStatus("Not Started");
+    await storyDetail.expectStatus('Not Started');
 
     // Verify the error message is no longer displayed.
     await expect(storyDetail.failedErrorMessage).not.toBeVisible();
@@ -90,7 +90,7 @@ test.describe("Failure Recovery Flow", () => {
     await expect(storyDetail.assignedWorkerBadge).not.toBeVisible();
   });
 
-  test("reset story allows worker to pick it up again", async ({
+  test('reset story allows worker to pick it up again', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -98,35 +98,32 @@ test.describe("Failure Recovery Flow", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("reset-story-id");
-    await storyDetail.expectStatus("Not Started");
+    await storyDetail.goto('reset-story-id');
+    await storyDetail.expectStatus('Not Started');
 
     // Simulate a worker requesting work again.
     await page.evaluate(async () => {
-      await fetch("/api/v1/work/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workerId: "test-worker-id" }),
+      await fetch('/api/v1/work/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workerId: 'test-worker-id' }),
       });
     });
 
     await triggerQueryRefetch(page);
-    await storyDetail.goto("reset-story-id");
+    await storyDetail.goto('reset-story-id');
 
     // Verify the story is assigned again.
-    await storyDetail.expectStatus("In Progress");
-    await storyDetail.expectAssignedWorker("Test Worker");
+    await storyDetail.expectStatus('In Progress');
+    await storyDetail.expectAssignedWorker('Test Worker');
   });
 
-  test("failed story shows in attempt history", async ({
-    authenticatedPage: page,
-    seedData,
-  }) => {
+  test('failed story shows in attempt history', async ({ authenticatedPage: page, seedData }) => {
     // Seed a story with a previous failed attempt.
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("story-with-failed-attempt-id");
+    await storyDetail.goto('story-with-failed-attempt-id');
 
     // Open the Attempt History tab.
     const attemptRows = await storyDetail.getAttemptHistoryRows();
@@ -135,10 +132,8 @@ test.describe("Failure Recovery Flow", () => {
     await expect(attemptRows.first()).toBeVisible();
 
     // Verify the failed attempt includes the error message.
-    await expect(attemptRows.first()).toContainText("Failed");
-    await expect(attemptRows.first()).toContainText(
-      "TypeScript compilation error"
-    );
+    await expect(attemptRows.first()).toContainText('Failed');
+    await expect(attemptRows.first()).toContainText('TypeScript compilation error');
   });
 });
 ```

@@ -1,26 +1,8 @@
-# Test Full Plan Creation Flow
-
-## Task Details
-
-- **Title:** Test Full Plan Creation Flow
-- **Status:** Complete
-- **Assigned Agent:** qa-expert
-- **Parent User Story:** [Implement Plan Creation & Publish E2E Tests](./tasks.md)
-- **Parent Epic:** [End-to-End Testing](../../user-stories.md)
-- **Dependencies:** None (depends on User Story: Set Up Playwright Infrastructure)
-
-## Description
-
-Implement E2E tests for the complete plan creation flow: create a project, create an epic within it, create a user story within the epic, create tasks with personas assigned, and add dependencies between tasks. Verify the DAG validates successfully with no cycles. This tests the complete happy path from an empty project to a fully defined plan.
-
-### Test: Full Plan Creation Flow
-
-```typescript
-// apps/web/e2e/plan-creation/full-plan-creation.spec.ts
 // E2E tests for the complete plan creation journey.
 // Covers: project creation → epic → story → tasks with personas → dependencies.
 // Verifies the entire entity hierarchy can be built through the UI.
 import { test, expect } from '../fixtures';
+import { createMockPersona } from '../fixtures/entity-factories';
 import {
   ProjectListPage,
   ProjectDetailPage,
@@ -30,10 +12,45 @@ import {
 } from '../page-objects';
 import { navigateToProject } from '../utils';
 
+// ---------------------------------------------------------------------------
+// Seed data helpers
+// ---------------------------------------------------------------------------
+
+/** Helper to convert a typed entity to a [id, record] tuple for seedData. */
+function toEntry(entity: { id: string }): [string, Record<string, unknown>] {
+  return [entity.id, { ...entity }];
+}
+
+/** Seed the three personas used by the task creation flow. */
+function buildPersonasSeed() {
+  const backend = createMockPersona({
+    id: 'persona-backend',
+    title: 'Backend Developer',
+    description: 'Handles server-side logic',
+  });
+  const frontend = createMockPersona({
+    id: 'persona-frontend',
+    title: 'Frontend Developer',
+    description: 'Handles client-side UI',
+  });
+  const qa = createMockPersona({
+    id: 'persona-qa',
+    title: 'QA Engineer',
+    description: 'Handles testing',
+  });
+  return {
+    personas: [toEntry(backend), toEntry(frontend), toEntry(qa)],
+  };
+}
+
 test.describe('Full Plan Creation Flow', () => {
   test('create complete plan: project → epic → story → tasks → dependencies', async ({
     authenticatedPage: page,
+    seedData,
   }) => {
+    // Seed personas so they appear in the persona dropdown when creating tasks.
+    await seedData(buildPersonasSeed());
+
     // Step 1: Create a project.
     const projectList = new ProjectListPage(page);
     await projectList.goto();
@@ -175,33 +192,3 @@ test.describe('Full Plan Creation Flow', () => {
     await expect(personaError).toBeVisible();
   });
 });
-```
-
-## Acceptance Criteria
-
-- [ ] Test verifies complete plan creation: project → epic → story → 3 tasks with personas → dependencies between tasks
-- [ ] Test verifies each entity appears in its parent's list after creation (project in projects table, epic in epics table, etc.)
-- [ ] Test verifies status badges show "Draft" for all newly created entities
-- [ ] Test verifies dependencies can be added between tasks via the task detail page
-- [ ] Test verifies the DAG graph renders without errors after adding valid dependencies
-- [ ] Test verifies multiple epics and stories can be created within a single project
-- [ ] Test verifies task creation requires persona assignment (form validation)
-- [ ] All tests pass in Chromium, Firefox, and WebKit browsers
-- [ ] No `any` types used in test code
-
-## Technical Notes
-
-- The test creates entities top-down (project → epic → story → task) which mirrors the natural user flow. The MSW handlers must correctly store each entity and associate it with its parent.
-- Dependencies are added after all tasks exist to ensure the dependency dropdown shows all available tasks.
-- The DAG graph test navigates to the Graph tab and verifies ReactFlow renders. The actual node layout is tested in more detail in the graph-specific E2E tests.
-- Form validation for persona assignment is enforced by React Hook Form + Zod on the client side. The `required` validation error message is expected to match the pattern `/persona.*required/i`.
-
-## References
-
-- **Project Setup Specification:** Section G.4 (End-to-End Testing — Project creation → Epic → Story → Task → Dependency flow)
-- **Functional Requirements:** FR-PROJ-001 (create project), FR-EPIC-001 (create epic), FR-STORY-001 (create story), FR-TASK-001 (create task with persona), FR-DEP-001 (add dependency)
-- **Design Specification:** Create entity modals, entity detail pages, dependency management UI
-
-## Estimated Complexity
-
-Large — This is a multi-step flow that creates entities across 4 levels of hierarchy and adds dependencies. Each step depends on the previous step succeeding, making it sensitive to timing, navigation, and state management. The test must handle multiple modal interactions and page navigations.

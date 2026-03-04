@@ -4,16 +4,16 @@
 
 - **Title:** Documentation & Validation
 - **Description:** Comprehensive README.md generation and validation of all documented instructions. This is ALWAYS the final epic, executed after all other epics (1-14) are complete. The README serves as the single source of truth for project setup, development, testing, and deployment. The validation user story ensures that every command and instruction in the README actually works.
-- **Status:** Not Started
+- **Status:** In Progress (laila-agent-2)
 - **Total User Stories:** 2
 - **Dependencies:** ALL other epics (1-15)
 
 ## User Stories
 
-| User Story | Description | Status | Tasks | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Generate Comprehensive README.md](./user-stories/generate-comprehensive-readme/tasks.md) | Write all README sections: overview, prerequisites, installation, development, testing, deployment | Not Started | 4 tasks | None |
-| [Validate README.md Instructions](./user-stories/validate-readme-instructions/tasks.md) | Run every command from the README and verify it works correctly | Not Started | 6 tasks | Generate Comprehensive README.md |
+| User Story                                                                                | Description                                                                                        | Status                      | Tasks   | Dependencies                     |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------- | ------- | -------------------------------- |
+| [Generate Comprehensive README.md](./user-stories/generate-comprehensive-readme/tasks.md) | Write all README sections: overview, prerequisites, installation, development, testing, deployment | Complete                    | 4 tasks | None                             |
+| [Validate README.md Instructions](./user-stories/validate-readme-instructions/tasks.md)   | Run every command from the README and verify it works correctly                                    | In Progress (laila-agent-2) | 6 tasks | Generate Comprehensive README.md |
 
 ## Dependency Graph
 

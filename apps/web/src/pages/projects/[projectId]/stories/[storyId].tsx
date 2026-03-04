@@ -11,7 +11,7 @@
  * Auth: ProtectedRoute wraps via custom getLayout.
  * Data: TanStack Query `useStory`, `useProject`, `useEpic`, `useWorker` hooks.
  */
-import { AlertCircle, Pencil, RotateCcw, Send, Trash2, UserMinus } from 'lucide-react';
+import { AlertCircle, Clock, Pencil, RotateCcw, Send, Trash2, UserMinus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -35,7 +35,14 @@ import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import { Skeleton, SkeletonText } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useEpic, useProject, useStory, useTasks, useWorker } from '@/lib/query-hooks';
+import {
+  useEpic,
+  useProject,
+  useStory,
+  useStoryAttemptHistory,
+  useTasks,
+  useWorker,
+} from '@/lib/query-hooks';
 
 import type { NextPageWithLayout } from '../../../_app';
 import type { WorkStatus } from '@/components/ui/status-badge';
@@ -326,16 +333,21 @@ const StoryHeader = ({
     <div className="flex items-start justify-between gap-4">
       {/* Left: Title, badges, and worker */}
       <div className="min-w-0 flex-1">
-        <h1 className="text-2xl font-semibold text-zinc-900">{story.title}</h1>
+        <h1 data-testid="entity-heading" className="text-2xl font-semibold text-zinc-900">
+          {story.title}
+        </h1>
         <div className="mt-2 flex items-center gap-2">
           <PriorityBadge priority={story.priority} />
           {isDraft && <StatusBadge status="draft" />}
-          <StatusBadge status={badgeStatus} />
+          <span data-testid="status-badge">
+            <StatusBadge status={badgeStatus} />
+          </span>
         </div>
         <div className="mt-2 text-sm">
           <span className="text-zinc-500">Assigned Worker: </span>
           {isAssigned && story.assignedWorkerId ? (
             <Link
+              data-testid="assigned-worker"
               href={`/workers/${story.assignedWorkerId}`}
               className="text-indigo-600 hover:underline"
             >
@@ -349,12 +361,10 @@ const StoryHeader = ({
 
       {/* Right: Action buttons */}
       <div className="flex shrink-0 items-center gap-2">
-        {isDraft && (
-          <Button variant="outline" onClick={onEditClick}>
-            <Pencil className="size-4" aria-hidden="true" />
-            Edit
-          </Button>
-        )}
+        <Button variant="outline" onClick={onEditClick} disabled={!isDraft}>
+          <Pencil className="size-4" aria-hidden="true" />
+          Edit
+        </Button>
 
         {isDraft && (
           <Button onClick={onPublishClick}>
@@ -475,7 +485,10 @@ const MetadataGrid = ({ story, workerName }: { story: StoryData; workerName: str
 
 /** Error message display for failed stories. */
 const ErrorDisplay = ({ message }: { message: string }) => (
-  <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4">
+  <div
+    data-testid="failed-error-message"
+    className="mt-6 rounded-md border border-red-200 bg-red-50 p-4"
+  >
     <div className="flex items-start gap-3">
       <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-700" aria-hidden="true" />
       <div>
@@ -593,6 +606,11 @@ const StoryDetailPage: NextPageWithLayout = () => {
   const taskList = (tasksData as { data?: unknown[] } | undefined)?.data;
   const taskCount = Array.isArray(taskList) ? taskList.length : 0;
 
+  // Fetch attempt history to detect if the story was recently reclaimed due to timeout.
+  const { data: attemptHistory } = useStoryAttemptHistory(storyId);
+  const hasTimedOutAttempt =
+    Array.isArray(attemptHistory) && attemptHistory.some((a) => a.reason === 'timeout');
+
   // Handle tab switching with shallow routing
   const handleTabChange = (value: string) => {
     void router.push(
@@ -682,6 +700,44 @@ const StoryDetailPage: NextPageWithLayout = () => {
         onResetClick={handleReset}
         onDeleteClick={handleDelete}
       />
+
+      {/* Read-only banner for in-progress stories */}
+      {(story.workStatus === 'in_progress' ||
+        story.workStatus === 'done' ||
+        story.workStatus === 'review') && (
+        <div
+          data-testid="read-only-banner"
+          className="mt-4 flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 p-4"
+          role="alert"
+        >
+          <AlertCircle className="h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+          <p className="text-sm text-amber-700">
+            This story is in read-only mode because it is currently{' '}
+            {story.workStatus === 'done' ? 'complete' : 'in progress'}. Tasks and dependencies
+            cannot be modified.
+          </p>
+        </div>
+      )}
+
+      {/* Timeout reclamation banner */}
+      {hasTimedOutAttempt && (
+        <div
+          data-testid="timeout-reclamation-banner"
+          className="mt-4 flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 p-4"
+          role="alert"
+        >
+          <Clock className="h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+          <div>
+            <p className="text-sm font-medium text-amber-700">
+              This story was timed out and reclaimed due to worker inactivity.
+            </p>
+            <p className="mt-0.5 text-xs text-amber-600">
+              The previous worker assignment has been cleared. This story can be picked up by
+              another worker.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Tab bar */}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-6">

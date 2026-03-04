@@ -11,7 +11,7 @@ export abstract class BasePage {
   }
 
   /** Navigate to this page's canonical URL. Subclasses set the path. */
-  abstract goto(): Promise<this>;
+  abstract goto(...args: string[]): Promise<this>;
 
   /** Wait for the page to be fully loaded (network idle + main content visible). */
   async waitForPageLoad(): Promise<this> {
@@ -21,7 +21,7 @@ export abstract class BasePage {
 
   /** Assert that a success toast notification appears with the given message. */
   async expectSuccessToast(message: string): Promise<void> {
-    const toast = this.page.getByRole('status').filter({ hasText: message });
+    const toast = this.page.getByRole('alert').filter({ hasText: message });
     await expect(toast).toBeVisible({ timeout: 5_000 });
   }
 

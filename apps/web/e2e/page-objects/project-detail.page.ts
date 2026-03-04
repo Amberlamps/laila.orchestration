@@ -58,8 +58,12 @@ export class ProjectDetailPage extends BasePage {
   /** Publish the project and confirm the action. */
   async publish(): Promise<this> {
     await this.publishButton.click();
+    // The publish flow dialog first validates, then shows a confirm step.
+    // Wait for the "Publish Project" button to appear after validation passes.
     const dialog = this.page.getByRole('dialog');
-    await dialog.getByRole('button', { name: /confirm/i }).click();
+    await dialog.getByRole('button', { name: /publish project/i }).click();
+    // After successful publish, a success dialog appears with a "Done" button.
+    await dialog.getByRole('button', { name: /done/i }).click();
     await this.expectSuccessToast('published');
     return this;
   }

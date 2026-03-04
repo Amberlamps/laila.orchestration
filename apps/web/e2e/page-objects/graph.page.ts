@@ -34,8 +34,8 @@ export class GraphPage extends BasePage {
     this.zoomInButton = page.getByRole('button', { name: /zoom in/i });
     this.zoomOutButton = page.getByRole('button', { name: /zoom out/i });
     this.fitViewButton = page.getByRole('button', { name: /fit view/i });
-    this.viewLevelToggle = page.getByTestId('view-level-toggle');
-    this.statusFilters = page.getByTestId('status-filters');
+    this.viewLevelToggle = page.getByRole('group', { name: /graph view level/i });
+    this.statusFilters = page.getByText('Filter by status:').locator('..');
   }
 
   async goto(projectId?: string): Promise<this> {
@@ -60,12 +60,15 @@ export class GraphPage extends BasePage {
     return this;
   }
 
-  /** Assert a node has the expected status color CSS class. */
-  async expectNodeStatus(label: string, statusClass: string): Promise<void> {
+  /** Assert a node with the given label has the expected status border color class. */
+  async expectNodeStatus(label: string, borderColorClass: string): Promise<void> {
     const node = this.canvas.locator('.react-flow__node').filter({
       hasText: label,
     });
-    await expect(node).toHaveClass(new RegExp(statusClass));
+    await expect(node).toBeVisible();
+    // The status border color is on the inner div with border-l-[3px]
+    const nodeBody = node.locator('div.border-l-\\[3px\\]');
+    await expect(nodeBody).toHaveClass(new RegExp(borderColorClass));
   }
 
   /** Zoom in using the control button. */
@@ -103,15 +106,17 @@ export class GraphPage extends BasePage {
     return this;
   }
 
-  /** Toggle the view level (Task, Story, Epic). */
-  async setViewLevel(level: 'task' | 'story' | 'epic'): Promise<this> {
+  /** Toggle the view level (Tasks, Stories, Epics). */
+  async setViewLevel(level: 'tasks' | 'stories' | 'epics'): Promise<this> {
     await this.viewLevelToggle.getByRole('radio', { name: new RegExp(level, 'i') }).click();
     return this;
   }
 
   /** Toggle a status filter chip on or off. */
   async toggleStatusFilter(status: string): Promise<this> {
-    await this.statusFilters.getByRole('checkbox', { name: new RegExp(status, 'i') }).click();
+    // Status filter chips are <button> elements with aria-pressed and
+    // aria-label like "Filter by Blocked: 2 nodes"
+    await this.page.getByRole('button', { name: new RegExp(`filter by ${status}`, 'i') }).click();
     return this;
   }
 }
