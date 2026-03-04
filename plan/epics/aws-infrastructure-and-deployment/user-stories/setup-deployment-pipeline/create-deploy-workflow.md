@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Deploy Workflow
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** devops-engineer
 - **Parent User Story:** [Set Up Deployment Pipeline](./tasks.md)
 - **Parent Epic:** [AWS Infrastructure & Deployment](../../user-stories.md)
@@ -29,19 +29,19 @@ on:
   workflow_dispatch:
     inputs:
       skip_migrations:
-        description: "Skip database migrations"
+        description: 'Skip database migrations'
         required: false
-        default: "false"
+        default: 'false'
         type: boolean
 
 concurrency:
   group: production-deploy
-  cancel-in-progress: false  # Never cancel a running deployment
+  cancel-in-progress: false # Never cancel a running deployment
 
 permissions:
-  id-token: write    # For OIDC authentication with AWS
+  id-token: write # For OIDC authentication with AWS
   contents: read
-  deployments: write  # For GitHub deployment status
+  deployments: write # For GitHub deployment status
 
 jobs:
   deploy:
@@ -57,7 +57,7 @@ jobs:
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: '22'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -110,7 +110,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.7"
+          terraform_version: '1.7'
 
       - name: Terraform Init
         working-directory: infra/environments/production
@@ -120,11 +120,11 @@ jobs:
         working-directory: infra/environments/production
         run: terraform plan -out=tfplan
         env:
-          TF_VAR_nextjs_deployment_package: "../../../.open-next/server-function/index.zip"
-          TF_VAR_timeout_checker_package: "../../../deploy/functions/timeout-checker.zip"
-          TF_VAR_dag_reconciler_package: "../../../deploy/functions/dag-reconciler.zip"
-          TF_VAR_audit_archiver_package: "../../../deploy/functions/audit-archiver.zip"
-          TF_VAR_status_propagation_package: "../../../deploy/functions/status-propagation.zip"
+          TF_VAR_nextjs_deployment_package: '../../../.open-next/server-function/index.zip'
+          TF_VAR_timeout_checker_package: '../../../deploy/functions/timeout-checker.zip'
+          TF_VAR_dag_reconciler_package: '../../../deploy/functions/dag-reconciler.zip'
+          TF_VAR_audit_archiver_package: '../../../deploy/functions/audit-archiver.zip'
+          TF_VAR_status_propagation_package: '../../../deploy/functions/status-propagation.zip'
 
       - name: Terraform Apply
         working-directory: infra/environments/production

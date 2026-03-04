@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure OpenNext Build
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** devops-engineer
 - **Parent User Story:** [Set Up Deployment Pipeline](./tasks.md)
 - **Parent Epic:** [AWS Infrastructure & Deployment](../../user-stories.md)
@@ -20,7 +20,7 @@ Configure OpenNext v3 for deploying Next.js 14 (Pages Router) to AWS Lambda + Cl
 // OpenNext v3 configuration for deploying Next.js 14 to AWS Lambda.
 // Configures the server function, static assets, and cache behavior.
 
-import type { OpenNextConfig } from "open-next/types/open-next";
+import type { OpenNextConfig } from 'open-next/types/open-next';
 
 const config: OpenNextConfig = {
   // Server function configuration
@@ -28,17 +28,17 @@ const config: OpenNextConfig = {
     // Override the default wrapper for Lambda
     override: {
       // Use the Lambda wrapper for Function URL integration
-      wrapper: "aws-lambda",
+      wrapper: 'aws-lambda',
       // Use S3 for incremental static regeneration cache
-      incrementalCache: "s3",
+      incrementalCache: 's3',
       // Use DynamoDB for tag-based cache revalidation
-      tagCache: "dynamodb",
+      tagCache: 'dynamodb',
     },
   },
 
   // Build configuration
-  buildCommand: "npx next build",
-  buildOutputPath: ".next",
+  buildCommand: 'npx next build',
+  buildOutputPath: '.next',
 
   // Dangerous: skip minification for debugging (set to false in production)
   dangerous: {
@@ -73,25 +73,20 @@ export default config;
 // Creates zip files from the built function bundles.
 // Output: deploy/functions/{function-name}.zip
 
-import { createWriteStream } from "node:fs";
-import { mkdir } from "node:fs/promises";
-import { resolve } from "node:path";
-import archiver from "archiver";
+import { createWriteStream } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import archiver from 'archiver';
 
-const FUNCTIONS = [
-  "timeout-checker",
-  "dag-reconciler",
-  "audit-archiver",
-  "status-propagation",
-];
+const FUNCTIONS = ['timeout-checker', 'dag-reconciler', 'audit-archiver', 'status-propagation'];
 
 async function packageFunction(name: string): Promise<void> {
   const distDir = resolve(`functions/${name}/dist`);
-  const outputDir = resolve("deploy/functions");
+  const outputDir = resolve('deploy/functions');
   await mkdir(outputDir, { recursive: true });
 
   const output = createWriteStream(`${outputDir}/${name}.zip`);
-  const archive = archiver("zip", { zlib: { level: 9 } });
+  const archive = archiver('zip', { zlib: { level: 9 } });
 
   archive.pipe(output);
   archive.directory(distDir, false);

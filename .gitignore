@@ -5,8 +5,12 @@ node_modules/
 dist/
 build/
 .next/
+.open-next/
 *.tsbuildinfo
 .turbo/
+
+# Deployment artifacts
+deploy/
 
 # Coverage
 coverage/

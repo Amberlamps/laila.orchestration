@@ -11,6 +11,11 @@
   "scripts": {
     "dev": "pnpm -r run dev",
     "build": "pnpm -r run build",
+    "build:next": "pnpm --filter @laila/web run build",
+    "build:open-next": "open-next build",
+    "build:lambdas": "pnpm --filter '@laila/*' --parallel run build",
+    "build:all": "pnpm build:open-next && pnpm build:lambdas",
+    "deploy:package": "tsx scripts/package-lambdas.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -24,7 +29,10 @@
   "devDependencies": {
     "@eslint/compat": "^2.0.2",
     "@eslint/js": "^9.39.3",
+    "@opennextjs/aws": "3.6.6",
+    "@types/archiver": "^7.0.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "archiver": "^7.0.1",
     "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -39,6 +47,7 @@
     "lint-staged": "^16.3.1",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
     "vitest": "^4.0.18"
