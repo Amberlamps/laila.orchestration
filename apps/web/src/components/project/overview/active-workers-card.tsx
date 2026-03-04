@@ -1,159 +1,163 @@
 'use client';
 
 /**
- * ActiveWorkersCard — displays workers currently assigned to in-progress
- * stories within a specific project.
+ * Active Workers Card for the project overview tab.
  *
- * Each row shows the worker name (linked to the worker detail page),
- * the assigned story title (linked to the story detail page), and the
- * elapsed time since assignment.
+ * Displays workers currently assigned to in-progress stories within a specific
+ * project. Each row shows the worker name (linked to worker detail), the story
+ * they are assigned to (linked to story detail), and elapsed time since assignment.
  *
- * The query hook is defined locally because the API endpoint
- * (`GET /api/v1/projects/:id/workers/active`) is not yet in the OpenAPI spec.
+ * Uses shadcn/ui Card components with compact row styling.
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { Bot, Clock } from 'lucide-react';
 import Link from 'next/link';
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatElapsedTime } from '@/lib/format-elapsed-time';
+import { useProjectActiveWorkers } from '@/lib/query-hooks';
+import { cn } from '@/lib/utils';
+
+import type { TimeoutRisk } from '@/lib/format-elapsed-time';
+import type { ActiveWorkerAssignment } from '@/lib/query-hooks';
 
 // ---------------------------------------------------------------------------
-// Types (local until shared types are available)
+// Constants
 // ---------------------------------------------------------------------------
 
-/** A single worker-to-story assignment returned by the active workers endpoint. */
-interface ActiveWorkerAssignment {
-  /** Unique worker ID. */
-  workerId: string;
-  /** Display name of the worker. */
-  workerName: string;
-  /** ID of the story the worker is assigned to. */
-  storyId: string;
-  /** Title of the assigned story. */
-  storyTitle: string;
-  /** ISO 8601 timestamp of when the worker was assigned. */
-  assignedAt: string;
-}
+/** CSS class for timeout risk text color */
+const RISK_COLOR_CLASS: Record<TimeoutRisk, string> = {
+  normal: 'text-zinc-600',
+  warning: 'text-amber-500',
+  critical: 'text-red-500',
+};
 
-/** Shape of the API response from the active workers endpoint. */
-interface ActiveWorkersResponse {
-  data: ActiveWorkerAssignment[];
-}
-
-// ---------------------------------------------------------------------------
-// Local query hook
-// ---------------------------------------------------------------------------
-
-/**
- * Fetches the list of active worker assignments scoped to a project.
- *
- * Uses raw `fetch` because this endpoint is not yet in the OpenAPI spec.
- * The query key follows the project-scoped pattern from the query-keys factory.
- */
-function useProjectActiveWorkers(projectId: string) {
-  return useQuery({
-    queryKey: ['projects', projectId, 'workers', 'active'] as const,
-    queryFn: async (): Promise<ActiveWorkerAssignment[]> => {
-      const response = await fetch(`/api/v1/projects/${projectId}/workers/active`, {
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch active workers: ${String(response.status)}`);
-      }
-      const body = (await response.json()) as ActiveWorkersResponse;
-      return body.data;
-    },
-    enabled: !!projectId,
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Skeleton loading state
-// ---------------------------------------------------------------------------
-
+/** Number of skeleton rows to display while loading */
 const SKELETON_ROW_COUNT = 3;
 
-function ActiveWorkersCardSkeleton() {
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
+interface ActiveWorkersCardProps {
+  /** Project ID to scope the active workers query. */
+  projectId: string;
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+/** Renders the elapsed time with a Clock icon and risk-based color. */
+function ElapsedTimeCell({
+  assignedAt,
+  timeoutMinutes,
+}: {
+  assignedAt: string;
+  timeoutMinutes: number;
+}) {
+  const { formatted, risk } = formatElapsedTime(assignedAt, timeoutMinutes);
+
+  return (
+    <span className={cn('inline-flex items-center gap-1.5 text-sm', RISK_COLOR_CLASS[risk])}>
+      <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      {formatted}
+    </span>
+  );
+}
+
+/** Renders a single worker assignment row. */
+function WorkerRow({ worker, projectId }: { worker: ActiveWorkerAssignment; projectId: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-md px-3 py-2 transition-colors hover:bg-zinc-50">
+      <div className="flex min-w-0 flex-col gap-1">
+        <Link
+          href={`/workers/${worker.workerId}`}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-900 transition-colors hover:text-indigo-600"
+        >
+          <Bot className="h-3.5 w-3.5 shrink-0 text-zinc-400" aria-hidden="true" />
+          <span className="truncate">{worker.workerName}</span>
+        </Link>
+        <Link
+          href={`/projects/${projectId}/stories/${worker.storyId}`}
+          className="truncate text-sm text-zinc-600 transition-colors hover:text-indigo-600"
+        >
+          {worker.storyTitle}
+        </Link>
+      </div>
+      <ElapsedTimeCell assignedAt={worker.assignedAt} timeoutMinutes={worker.timeoutMinutes} />
+    </div>
+  );
+}
+
+/** Renders skeleton rows for the loading state. */
+function LoadingSkeleton() {
   return (
     <div role="status" aria-live="polite" aria-label="Loading active workers">
-      <div className="space-y-3">
-        {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between rounded-md px-3 py-2">
-            <div className="flex flex-col gap-1.5">
-              <Skeleton width="120px" height="14px" rounded="rounded-sm" />
-              <Skeleton width="180px" height="12px" rounded="rounded-sm" />
-            </div>
-            <Skeleton width="80px" height="12px" rounded="rounded-sm" />
+      {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between gap-4 px-3 py-2">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <Skeleton width="120px" height="14px" rounded="rounded-sm" />
+            <Skeleton width="180px" height="14px" rounded="rounded-sm" />
           </div>
-        ))}
-      </div>
+          <Skeleton width="64px" height="14px" rounded="rounded-sm" />
+        </div>
+      ))}
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Main component
 // ---------------------------------------------------------------------------
 
-interface ActiveWorkersCardProps {
-  /** The project ID to scope the active workers query. */
-  projectId: string;
-}
-
+/**
+ * ActiveWorkersCard renders:
+ *
+ * - Card header: "Active Workers" with Bot icon and count badge
+ * - List of currently assigned workers, each row showing:
+ *   - Worker name (linked to worker detail) with Bot icon
+ *   - Assigned story title (linked to /projects/:projectId/stories/:storyId)
+ *   - Time elapsed since assignment (Clock icon, formatted duration)
+ *
+ * - Empty state (centered within card):
+ *   "No workers currently active."
+ *   Subtle text-zinc-500 styling
+ *
+ * Each row uses a compact layout with space-between alignment.
+ * Rows have hover:bg-zinc-50 for interactive feel.
+ */
 export function ActiveWorkersCard({ projectId }: ActiveWorkersCardProps) {
   const { data: workers, isLoading } = useProjectActiveWorkers(projectId);
 
-  const workerCount = workers?.length ?? 0;
+  const workerList = workers ?? [];
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-          <Bot className="h-4 w-4 text-zinc-500" />
-          Active Workers
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Bot className="h-5 w-5 text-zinc-500" aria-hidden="true" />
+          <span>Active Workers</span>
+          {!isLoading && (
+            <Badge variant="secondary" className="ml-1">
+              {String(workerList.length)}
+            </Badge>
+          )}
         </CardTitle>
-        {!isLoading && (
-          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-zinc-100 px-1.5 text-xs font-medium text-zinc-700">
-            {workerCount}
-          </span>
-        )}
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <ActiveWorkersCardSkeleton />
-        ) : workerCount === 0 ? (
-          <p className="py-6 text-center text-sm text-zinc-500">No workers currently active.</p>
-        ) : (
-          <div className="space-y-1">
-            {workers?.map((assignment) => (
-              <div
-                key={assignment.workerId}
-                className="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-zinc-50"
-              >
-                <div className="flex flex-col gap-1">
-                  <Link
-                    href={`/workers/${assignment.workerId}`}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-900 hover:underline"
-                  >
-                    <Bot className="h-3.5 w-3.5 text-zinc-400" />
-                    {assignment.workerName}
-                  </Link>
-                  <Link
-                    href={`/projects/${projectId}/stories/${assignment.storyId}`}
-                    className="text-xs text-zinc-500 hover:text-zinc-700 hover:underline"
-                  >
-                    {assignment.storyTitle}
-                  </Link>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-zinc-400">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>{formatElapsedTime(assignment.assignedAt)}</span>
-                </div>
-              </div>
+        {isLoading && <LoadingSkeleton />}
+
+        {!isLoading && workerList.length === 0 && (
+          <p className="py-4 text-center text-sm text-zinc-500">No workers currently active.</p>
+        )}
+
+        {!isLoading && workerList.length > 0 && (
+          <div className="flex flex-col">
+            {workerList.map((worker) => (
+              <WorkerRow key={worker.workerId} worker={worker} projectId={projectId} />
             ))}
           </div>
         )}

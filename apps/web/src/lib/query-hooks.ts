@@ -205,6 +205,153 @@ export const useProjectGraph = (projectId: string) =>
     enabled: !!projectId,
   });
 
+// ---------------------------------------------------------------------------
+// Project Overview (unified endpoint)
+// ---------------------------------------------------------------------------
+
+/** Status count entry for a specific status within an entity type. */
+export interface StatusCount {
+  status: string;
+  count: number;
+}
+
+/** Entity-level completion summary with per-status breakdown. */
+export interface EntityOverviewStats {
+  total: number;
+  completed: number;
+  byStatus: StatusCount[];
+}
+
+/**
+ * Canonical response shape for GET /api/v1/projects/:id/overview.
+ *
+ * Contains both the summary stat-card data (epics/stories/tasks breakdowns,
+ * activeWorkers) and the progress indicator data (progressPercentage,
+ * completedTasks, totalTasks). A single query key is used so React Query
+ * never caches conflicting shapes for the same endpoint.
+ */
+export interface ProjectOverviewData {
+  /** Overall completion percentage (0-100). */
+  progressPercentage: number;
+  /** Number of tasks with a terminal status. */
+  completedTasks: number;
+  /** Total number of tasks in the project. */
+  totalTasks: number;
+  /** Per-entity breakdown for summary stat cards. */
+  epics: EntityOverviewStats;
+  stories: EntityOverviewStats;
+  tasks: EntityOverviewStats;
+  /** Count of workers currently assigned to in-progress stories. */
+  activeWorkers: number;
+}
+
+/**
+ * Fetches the unified project overview data.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch.
+ * Uses `projects.overview(projectId)` query key for cache invalidation.
+ */
+export const useProjectOverview = (projectId: string) =>
+  useQuery({
+    queryKey: queryKeys.projects.overview(projectId),
+    queryFn: async (): Promise<ProjectOverviewData> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/overview`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as ProjectOverviewData;
+    },
+    enabled: !!projectId,
+    staleTime: 30_000, // 30 seconds
+  });
+
+// ---------------------------------------------------------------------------
+// Project Throughput Metrics
+// ---------------------------------------------------------------------------
+
+/** Shape of a single throughput data point returned by the metrics endpoint. */
+export interface ThroughputDataPoint {
+  /** ISO date string (YYYY-MM-DD) for the day. */
+  date: string;
+  /** Number of stories completed on that day. */
+  completed: number;
+}
+
+/** Response shape from the project throughput metrics endpoint. */
+interface ThroughputResponse {
+  data: ThroughputDataPoint[];
+}
+
+/**
+ * Fetches daily story throughput data for a project.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch
+ * through the same base URL that apiClient uses. Disabled when projectId is falsy.
+ */
+export const useProjectThroughput = (projectId: string) =>
+  useQuery({
+    queryKey: queryKeys.projects.throughput(projectId),
+    queryFn: async (): Promise<ThroughputDataPoint[]> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/metrics/throughput`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      const result = (await response.json()) as ThroughputResponse;
+      return result.data;
+    },
+    enabled: !!projectId,
+    staleTime: 60_000, // 1 minute — throughput data changes infrequently
+  });
+
+// ---------------------------------------------------------------------------
+// Project Metrics (completion rate)
+// ---------------------------------------------------------------------------
+
+/** Shape of a single data point in the task completion rate time series. */
+export interface CompletionRateDataPoint {
+  /** ISO-8601 date string (e.g. "2026-02-28"). */
+  date: string;
+  /** Cumulative number of tasks completed as of this date. */
+  cumulative_completed: number;
+}
+
+/** Response shape for the task completion rate metrics endpoint. */
+export interface CompletionRateResponse {
+  data: CompletionRateDataPoint[];
+  total_tasks: number;
+}
+
+/**
+ * Fetches the task completion rate metrics for a project.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch
+ * through the same base URL that apiClient uses. Disabled when projectId is falsy.
+ */
+export const useTaskCompletionRate = (projectId: string) =>
+  useQuery({
+    queryKey: queryKeys.projects.completionRate(projectId),
+    queryFn: async (): Promise<CompletionRateResponse> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/metrics/completion-rate`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as CompletionRateResponse;
+    },
+    enabled: !!projectId,
+  });
+
 // ===========================================================================
 // Epics (scoped under a project)
 // ===========================================================================
@@ -1165,6 +1312,44 @@ export const useActiveWorkers = () =>
     },
   });
 
+// ---------------------------------------------------------------------------
+// Active Workers (project-scoped)
+// ---------------------------------------------------------------------------
+
+/** Shape of an active worker assignment returned by the project-scoped endpoint. */
+export interface ActiveWorkerAssignment {
+  workerId: string;
+  workerName: string;
+  storyId: string;
+  storyTitle: string;
+  assignedAt: string;
+  timeoutMinutes: number;
+}
+
+/**
+ * Fetches active workers scoped to a single project.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch.
+ * Returns workers assigned to in-progress stories within the given project.
+ */
+export const useProjectActiveWorkers = (projectId: string) =>
+  useQuery({
+    queryKey: queryKeys.projects.activeWorkers(projectId),
+    queryFn: async (): Promise<ActiveWorkerAssignment[]> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/workers/active`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      const json = (await response.json()) as { data: ActiveWorkerAssignment[] };
+      return json.data;
+    },
+    enabled: !!projectId,
+  });
+
 /** Deletes a worker, removes its detail cache, and invalidates list caches. */
 export const useDeleteWorker = () => {
   const queryClient = useQueryClient();
@@ -1357,6 +1542,88 @@ export const useDashboardActivity = () =>
       }
       return (await response.json()) as DashboardActivityResponse;
     },
+    staleTime: 30_000, // 30 seconds
+    refetchInterval: 60_000, // Refetch every minute to keep activity fresh
+  });
+
+// ---------------------------------------------------------------------------
+// Project Cost Tracking
+// ---------------------------------------------------------------------------
+
+/** Daily cost entry for a single worker/story. */
+export interface CostTrackingDailyEntry {
+  date: string;
+  [workerOrStory: string]: number | string;
+}
+
+/** Response shape for the project cost tracking endpoint. */
+export interface CostTrackingData {
+  totalCostUsd: number;
+  totalTokens: number;
+  /** Unique worker/story names that appear in the daily breakdown. */
+  series: string[];
+  /** Daily cost breakdown with one numeric key per worker/story. */
+  daily: CostTrackingDailyEntry[];
+}
+
+/**
+ * Fetches cost tracking metrics for a project.
+ *
+ * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch
+ * through the same base URL that apiClient uses. Disabled when projectId is falsy.
+ */
+export const useProjectCostTracking = (projectId: string) =>
+  useQuery({
+    queryKey: queryKeys.projects.costTracking(projectId),
+    queryFn: async (): Promise<CostTrackingData> => {
+      const response = await fetch(`/api/v1/projects/${projectId}/metrics/cost`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as CostTrackingData;
+    },
+    enabled: !!projectId,
+    staleTime: 60_000, // 1 minute
+  });
+
+// ---------------------------------------------------------------------------
+// Project Activity (project-scoped audit events)
+// ---------------------------------------------------------------------------
+
+/** Paginated response for the project activity feed. */
+interface ProjectActivityResponse {
+  data: DashboardAuditEvent[];
+}
+
+/**
+ * Fetches the most recent audit events scoped to a specific project.
+ *
+ * Uses the project-scoped audit events endpoint with descending sort order
+ * to get the newest 50 events. Uses `projects.activity(projectId)` query key
+ * for cache invalidation.
+ */
+export const useProjectActivity = (projectId: string) =>
+  useQuery({
+    queryKey: queryKeys.projects.activity(projectId),
+    queryFn: async (): Promise<ProjectActivityResponse> => {
+      const response = await fetch(
+        `/api/v1/projects/${projectId}/audit-events?limit=50&sort_order=desc`,
+        {
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        throw new ApiError(body);
+      }
+      return (await response.json()) as ProjectActivityResponse;
+    },
+    enabled: !!projectId,
     staleTime: 30_000, // 30 seconds
     refetchInterval: 60_000, // Refetch every minute to keep activity fresh
   });

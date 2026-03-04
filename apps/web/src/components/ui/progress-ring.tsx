@@ -1,49 +1,48 @@
 /**
  * Reusable SVG-based circular progress ring component.
  *
- * Renders a circular progress indicator using SVG stroke-dasharray and
- * stroke-dashoffset techniques. The arc starts from the 12 o'clock position
- * (via a -90deg rotation) and fills clockwise.
+ * Renders a circular track with an animated progress arc. The arc starts
+ * from the 12 o'clock position and fills clockwise using SVG
+ * stroke-dasharray / stroke-dashoffset techniques.
  *
- * Features:
- * - Configurable size, stroke width, and colors
- * - Animated transitions on value changes (0.5s ease-in-out)
- * - Rounded stroke line caps for smooth visual appearance
- * - Optional center label and sublabel
- * - JetBrains Mono font for percentage display via font-mono
+ * Visual spec:
+ *   - Track: configurable background color (default zinc-100)
+ *   - Progress arc: configurable color with smooth stroke-linecap
+ *   - Center label: optional percentage text + sublabel
+ *   - Animation: CSS transition on stroke-dashoffset (0.5s ease-in-out)
  *
  * @example
  * ```tsx
  * <ProgressRing value={73} />
- * <ProgressRing value={100} size={120} strokeWidth={8} progressColor="#22c55e" />
- * <ProgressRing value={50} showLabel={false} />
+ * <ProgressRing value={100} progressColor="#10b981" sublabel="done" />
+ * <ProgressRing value={50} size={120} strokeWidth={8} showLabel={false} />
  * ```
  */
 
 import { cn } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
-// Types
+// Props
 // ---------------------------------------------------------------------------
 
 interface ProgressRingProps {
-  /** Progress value from 0 to 100. */
+  /** Progress value from 0 to 100 (percentage). */
   value: number;
   /** Diameter of the ring in pixels. Defaults to 160. */
   size?: number;
-  /** Width of the stroke in pixels. Defaults to 12. */
+  /** Width of the ring stroke in pixels. Defaults to 12. */
   strokeWidth?: number;
-  /** CSS color value for the background track. Defaults to "var(--color-zinc-100)". */
+  /** CSS color for the background track. Defaults to zinc-100. */
   trackColor?: string;
-  /** CSS color value for the progress arc. When not provided, uses the default track color. */
+  /** CSS color for the progress arc. When omitted, computed from value thresholds. */
   progressColor?: string;
-  /** Whether to display the center label. Defaults to true. */
+  /** Whether to display the center label (percentage + sublabel). Defaults to true. */
   showLabel?: boolean;
-  /** Primary label text in the center. Defaults to "{value}%". */
+  /** Primary label text shown in the center. Defaults to "{value}%". */
   label?: string;
-  /** Secondary label text below the primary. Defaults to "complete". */
+  /** Secondary label below the primary. Defaults to "complete". */
   sublabel?: string;
-  /** Additional CSS class names for the SVG container. */
+  /** Additional CSS classes for the wrapper. */
   className?: string;
 }
 
@@ -53,7 +52,30 @@ interface ProgressRingProps {
 
 const DEFAULT_SIZE = 160;
 const DEFAULT_STROKE_WIDTH = 12;
-const DEFAULT_TRACK_COLOR = 'var(--color-zinc-100)';
+const DEFAULT_TRACK_COLOR = '#f4f4f5'; // zinc-100
+const DEFAULT_SUBLABEL = 'complete';
+
+// ---------------------------------------------------------------------------
+// Color threshold helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns a hex color for the progress arc based on percentage thresholds.
+ *
+ * Thresholds:
+ *   0-25%:  zinc-400  (#a1a1aa)
+ *   25-50%: amber-500 (#f59e0b)
+ *   50-75%: indigo-500 (#6366f1)
+ *   75-99%: blue-500  (#3b82f6)
+ *   100%:   emerald-500 (#10b981)
+ */
+function getProgressColor(value: number): string {
+  if (value >= 100) return '#10b981'; // emerald-500
+  if (value >= 75) return '#3b82f6'; // blue-500
+  if (value >= 50) return '#6366f1'; // indigo-500
+  if (value >= 25) return '#f59e0b'; // amber-500
+  return '#a1a1aa'; // zinc-400
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -67,88 +89,63 @@ function ProgressRing({
   progressColor,
   showLabel = true,
   label,
-  sublabel = 'complete',
+  sublabel = DEFAULT_SUBLABEL,
   className,
 }: ProgressRingProps) {
-  // Clamp value between 0 and 100
+  // Clamp value to [0, 100]
   const clampedValue = Math.min(100, Math.max(0, value));
 
-  // SVG geometry calculations
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - clampedValue / 100);
-
-  // Center coordinates
-  const center = size / 2;
-
-  // Display label
+  const dashOffset = circumference * (1 - clampedValue / 100);
+  const resolvedColor = progressColor ?? getProgressColor(clampedValue);
   const displayLabel = label ?? `${String(Math.round(clampedValue))}%`;
 
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${String(size)} ${String(size)}`}
-      className={cn('shrink-0', className)}
-      role="img"
-      aria-label={`Progress: ${String(Math.round(clampedValue))}% ${sublabel}`}
-    >
-      {/* Background track circle */}
-      <circle
-        cx={center}
-        cy={center}
-        r={radius}
-        fill="none"
-        stroke={trackColor}
-        strokeWidth={strokeWidth}
-      />
+    <div className={cn('relative inline-flex items-center justify-center', className)}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${String(size)} ${String(size)}`}
+        aria-hidden="true"
+      >
+        {/* Background track */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={trackColor}
+          strokeWidth={strokeWidth}
+        />
 
-      {/* Progress arc circle */}
-      <circle
-        cx={center}
-        cy={center}
-        r={radius}
-        fill="none"
-        stroke={progressColor ?? trackColor}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        style={{
-          transition: 'stroke-dashoffset 0.5s ease-in-out',
-          transform: 'rotate(-90deg)',
-          transformOrigin: 'center',
-        }}
-      />
+        {/* Progress arc */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={resolvedColor}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          style={{
+            transition: 'stroke-dashoffset 0.5s ease-in-out',
+            transform: 'rotate(-90deg)',
+            transformOrigin: 'center',
+          }}
+        />
+      </svg>
 
       {/* Center label */}
       {showLabel && (
-        <>
-          <text
-            x={center}
-            y={center}
-            textAnchor="middle"
-            dominantBaseline="central"
-            className="font-mono text-3xl font-bold"
-            fill="var(--color-zinc-900)"
-            dy="-0.4em"
-          >
-            {displayLabel}
-          </text>
-          <text
-            x={center}
-            y={center}
-            textAnchor="middle"
-            dominantBaseline="central"
-            className="text-sm"
-            fill="var(--color-zinc-500)"
-            dy="1.2em"
-          >
-            {sublabel}
-          </text>
-        </>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-mono text-3xl font-bold text-zinc-900">{displayLabel}</span>
+          <span className="text-sm text-zinc-500">{sublabel}</span>
+        </div>
       )}
-    </svg>
+    </div>
   );
 }
 

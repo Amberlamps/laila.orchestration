@@ -93,6 +93,22 @@ export const queryKeys = {
     detail: (projectId: string) => [...queryKeys.projects.all(), 'detail', projectId] as const,
     /** Matches the dependency graph query for a specific project. */
     graph: (projectId: string) => [...queryKeys.projects.all(), 'graph', projectId] as const,
+    /** Matches the overview stats query for a specific project. */
+    overview: (projectId: string) => [...queryKeys.projects.all(), 'overview', projectId] as const,
+    /** Matches the active workers query scoped to a specific project. */
+    activeWorkers: (projectId: string) =>
+      [...queryKeys.projects.all(), projectId, 'activeWorkers'] as const,
+    /** Matches the throughput metrics query for a specific project. */
+    throughput: (projectId: string) =>
+      [...queryKeys.projects.all(), 'throughput', projectId] as const,
+    /** Matches the completion rate metrics query for a specific project. */
+    completionRate: (projectId: string) =>
+      [...queryKeys.projects.all(), 'completionRate', projectId] as const,
+    /** Matches the cost tracking metrics query for a specific project. */
+    costTracking: (projectId: string) =>
+      [...queryKeys.projects.all(), 'costTracking', projectId] as const,
+    /** Matches the activity feed query for a specific project. */
+    activity: (projectId: string) => [...queryKeys.projects.all(), 'activity', projectId] as const,
   },
 
   // ---------------------------------------------------------------------------

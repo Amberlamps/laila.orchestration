@@ -428,14 +428,14 @@ function TimeoutBanner({
   );
 }
 
-/** Overview tab content showing the full project dashboard. */
+/** Overview tab content showing the project overview dashboard. */
 function OverviewTabContent({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-6 py-6">
-      {/* Summary stat cards row */}
+      {/* Summary stat cards: Epics, Stories, Tasks, Active Workers */}
       <OverviewSummaryStatCards projectId={projectId} />
 
-      {/* Main content: charts (left/wider) + sidebar (right) */}
+      {/* Main content grid: charts on the left, sidebar on the right */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left column — charts (2/3 width on desktop) */}
         <div className="space-y-6 lg:col-span-2">
@@ -444,7 +444,7 @@ function OverviewTabContent({ projectId }: { projectId: string }) {
           <CostTrackingCard projectId={projectId} />
         </div>
 
-        {/* Right column — progress, active workers, activity (1/3 width) */}
+        {/* Right column — progress indicator, active workers, activity feed */}
         <div className="space-y-6">
           <OverallProgressIndicator projectId={projectId} />
           <ActiveWorkersCard projectId={projectId} />

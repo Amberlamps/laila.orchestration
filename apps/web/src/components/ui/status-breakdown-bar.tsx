@@ -1,20 +1,19 @@
 /**
  * A thin stacked horizontal bar showing status distribution.
  *
- * Each segment is proportionally sized and color-coded.
- * Renders a flex container with colored segments whose widths reflect
- * their proportion of the total. Each segment shows a tooltip on hover
- * with the count and status name.
+ * Each segment is proportionally sized and color-coded, with a minimum
+ * width of 2px to ensure visibility for small counts. Hovering a segment
+ * displays a tooltip with the count and status name.
  *
  * @example
  * ```tsx
  * <StatusBreakdownBar
  *   segments={[
- *     { status: "completed", count: 5, color: "bg-emerald-500" },
- *     { status: "in_progress", count: 3, color: "bg-blue-500" },
- *     { status: "not_started", count: 7, color: "bg-zinc-300" },
+ *     { status: 'completed', count: 5, color: 'bg-green-500' },
+ *     { status: 'in_progress', count: 3, color: 'bg-blue-500' },
+ *     { status: 'not_started', count: 2, color: 'bg-zinc-300' },
  *   ]}
- *   total={15}
+ *   total={10}
  * />
  * ```
  */
@@ -25,41 +24,45 @@ import { cn } from '@/lib/utils';
 // Types
 // ---------------------------------------------------------------------------
 
-export interface StatusSegment {
-  /** Status key used as React key and displayed in the tooltip */
+export interface BarSegment {
+  /** Human-readable status name used in the tooltip */
   status: string;
   /** Count for this segment */
   count: number;
-  /** Tailwind bg color class (e.g., "bg-emerald-500") */
+  /** Tailwind bg color class (e.g., "bg-green-500") */
   color: string;
 }
 
 export interface StatusBreakdownBarProps {
-  /** Array of segments describing each status slice */
-  segments: StatusSegment[];
-  /** Total count used as the denominator for percentage calculations */
+  /** Ordered array of segments to render left-to-right */
+  segments: BarSegment[];
+  /** Total count used to calculate proportional widths */
   total: number;
-  /** Bar height variant. "sm" = h-1.5, "md" = h-2.5. Defaults to "sm". */
+  /** Height variant: "sm" = h-1.5 (default), "md" = h-2.5 */
   height?: 'sm' | 'md';
-  /** Additional class names for the outer container */
+  /** Additional CSS classes on the outer container */
   className?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Minimum segment width in pixels to ensure visibility */
+const MIN_SEGMENT_PX = 2;
+
+const HEIGHT_CLASS: Record<'sm' | 'md', string> = {
+  sm: 'h-1.5',
+  md: 'h-2.5',
+};
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const HEIGHT_CLASSES: Record<'sm' | 'md', string> = {
-  sm: 'h-1.5',
-  md: 'h-2.5',
-};
-
-/** Minimum width in pixels so tiny segments remain visible */
-const MIN_SEGMENT_PX = 2;
-
 /**
- * Formats a status key into a human-readable label.
- * Replaces underscores with spaces and capitalizes each word.
+ * Formats a status string for display in the tooltip.
+ * Converts snake_case to Title Case (e.g. "in_progress" -> "In Progress").
  */
 function formatStatusLabel(status: string): string {
   return status
@@ -78,7 +81,7 @@ export function StatusBreakdownBar({
   height = 'sm',
   className,
 }: StatusBreakdownBarProps) {
-  // Filter out zero-count segments so they don't render empty divs
+  // Filter out zero-count segments
   const visibleSegments = segments.filter((seg) => seg.count > 0);
 
   if (total === 0 || visibleSegments.length === 0) {
@@ -86,7 +89,7 @@ export function StatusBreakdownBar({
       <div
         className={cn(
           'w-full overflow-hidden rounded-full bg-zinc-100',
-          HEIGHT_CLASSES[height],
+          HEIGHT_CLASS[height],
           className,
         )}
         role="img"
@@ -95,37 +98,34 @@ export function StatusBreakdownBar({
     );
   }
 
-  // Build aria-label from all visible segments
-  const ariaLabel = visibleSegments
-    .map((seg) => `${formatStatusLabel(seg.status)}: ${String(seg.count)}`)
-    .join(', ');
-
   return (
-    <TooltipProvider delayDuration={200}>
+    <TooltipProvider delayDuration={150}>
       <div
         className={cn(
           'flex w-full overflow-hidden rounded-full bg-zinc-100',
-          HEIGHT_CLASSES[height],
+          HEIGHT_CLASS[height],
           className,
         )}
         role="img"
-        aria-label={`Status breakdown: ${ariaLabel}`}
+        aria-label={`Status breakdown: ${visibleSegments
+          .map((seg) => `${String(seg.count)} ${formatStatusLabel(seg.status)}`)
+          .join(', ')}`}
       >
         {visibleSegments.map((segment) => {
-          const percentage = (segment.count / total) * 100;
+          const pct = (segment.count / total) * 100;
 
           return (
             <Tooltip key={segment.status}>
               <TooltipTrigger asChild>
                 <div
-                  className={cn('transition-all', segment.color)}
+                  className={cn(segment.color, 'transition-all')}
                   style={{
-                    width: `${String(percentage)}%`,
+                    width: `${String(pct)}%`,
                     minWidth: `${String(MIN_SEGMENT_PX)}px`,
                   }}
                 />
               </TooltipTrigger>
-              <TooltipContent side="top">
+              <TooltipContent>
                 <span>
                   {String(segment.count)} {formatStatusLabel(segment.status)}
                 </span>

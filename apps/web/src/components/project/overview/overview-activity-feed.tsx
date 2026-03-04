@@ -1,102 +1,45 @@
 /**
- * OverviewActivityFeed -- "Recent Activity" card for the project overview tab.
+ * Overview Activity Feed -- project overview tab section component.
  *
- * Displays the last 50 audit events scoped to a specific project, sorted
- * newest first. Each entry shows:
+ * Displays the last 50 audit events scoped to a specific project, newest first.
+ * Each entry shows the timestamp, actor, action, and target entity with links
+ * to the relevant detail pages.
  *
- * - Timestamp: relative time with absolute on hover (via Tooltip)
- * - Actor: worker name (Bot icon), user name (User icon), or "System" (italic, text-zinc-500)
- * - Action: human-readable description (e.g. "updated status to in_progress")
- * - Target entity: entity type + name, linked to detail page
- *
- * A "View all activity" link at the bottom navigates to the project's Activity
- * tab at `/projects/:id?tab=activity`.
- *
- * Card content is capped at max-h-[480px] with overflow-y-auto to prevent
- * the feed from pushing other content down.
+ * States:
+ * - Loading: Skeleton row placeholders
+ * - Empty: "No activity recorded yet" message
+ * - Data: Chronological list of audit entries with a "View all activity" footer link
  */
-import { useQuery } from '@tanstack/react-query';
-import { Activity } from 'lucide-react';
+
+import { Activity, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 import { AuditEntryRow } from '@/components/audit/audit-entry-row';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-
-import type { AuditEvent } from '@/components/audit/audit-entry-row';
-
-// ---------------------------------------------------------------------------
-// Local query hook
-// ---------------------------------------------------------------------------
-
-/**
- * Response shape returned by the project-scoped audit events API.
- * Defined locally since this endpoint is not yet in the OpenAPI spec.
- */
-interface AuditEventsResponse {
-  data: AuditEvent[];
-}
-
-/**
- * Query key factory for project-scoped audit events.
- * Scoped under the project key to allow prefix-based invalidation when
- * the project changes.
- */
-const projectActivityKeys = {
-  all: (projectId: string) => ['projects', projectId, 'activity'] as const,
-};
-
-/**
- * Fetches the most recent audit events for a specific project.
- *
- * NOTE: This endpoint is not in the OpenAPI spec yet, so we use a manual fetch
- * through the same base URL that apiClient uses. Disabled when projectId is falsy.
- */
-const useProjectActivity = (projectId: string) =>
-  useQuery({
-    queryKey: projectActivityKeys.all(projectId),
-    queryFn: async (): Promise<AuditEvent[]> => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
-      const response = await fetch(
-        `${baseUrl}/v1/projects/${projectId}/audit-events?limit=50&sort_order=desc`,
-        {
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch project activity (${String(response.status)})`);
-      }
-
-      const result = (await response.json()) as AuditEventsResponse;
-      return result.data;
-    },
-    enabled: !!projectId,
-  });
+import { useProjectActivity } from '@/lib/query-hooks';
 
 // ---------------------------------------------------------------------------
 // Loading skeleton
 // ---------------------------------------------------------------------------
 
+/** Number of skeleton rows to display while loading. */
 const SKELETON_ROW_COUNT = 6;
 
-function ActivityLoadingSkeleton() {
+function ActivitySkeleton() {
   return (
-    <div role="status" aria-live="polite" aria-label="Loading activity feed">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Loading project activity"
+      className="space-y-3"
+    >
       {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-start gap-3 border-b border-zinc-100 px-1 py-2.5 last:border-b-0"
-        >
-          <Skeleton width="96px" height="14px" rounded="rounded-sm" />
-          <div className="flex flex-1 flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <Skeleton width="80px" height="14px" rounded="rounded-sm" />
-              <Skeleton width="140px" height="14px" rounded="rounded-sm" />
-            </div>
-            <Skeleton width="120px" height="14px" rounded="rounded-sm" />
-          </div>
+        <div key={i} className="flex items-center gap-3 py-2.5">
+          <Skeleton width="72px" height="14px" rounded="rounded-sm" />
+          <Skeleton width="80px" height="14px" rounded="rounded-sm" />
+          <Skeleton width="60px" height="14px" rounded="rounded-sm" />
+          <Skeleton width="120px" height="14px" rounded="rounded-sm" />
         </div>
       ))}
     </div>
@@ -109,54 +52,77 @@ function ActivityLoadingSkeleton() {
 
 function ActivityEmptyState() {
   return (
-    <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
-      No activity recorded yet
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <Activity className="mb-3 size-8 text-zinc-300" aria-hidden="true" />
+      <p className="text-sm text-zinc-500">No activity recorded yet</p>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Main component
 // ---------------------------------------------------------------------------
 
-export interface OverviewActivityFeedProps {
-  /** The project ID whose activity to display. */
+interface OverviewActivityFeedProps {
+  /** The project ID to scope audit events to. */
   projectId: string;
 }
 
+/**
+ * OverviewActivityFeed renders a "Recent Activity" card on the project
+ * overview tab with the last 50 audit events scoped to this project.
+ *
+ * Features:
+ * - Card with header: "Recent Activity" with Activity icon
+ * - Chronological list (newest first) of the last 50 audit events
+ * - Each entry: relative timestamp (absolute on hover), actor (Bot/User/System
+ *   icon), action description, target entity link
+ * - "View all activity" link at the bottom navigating to the project Activity tab
+ * - Max height: max-h-[480px] overflow-y-auto to prevent feed from pushing
+ *   other content down
+ * - Loading skeleton placeholders
+ * - Empty state when no events exist
+ */
 export function OverviewActivityFeed({ projectId }: OverviewActivityFeedProps) {
-  const { data: events, isLoading } = useProjectActivity(projectId);
+  const { data, isLoading } = useProjectActivity(projectId);
+
+  const events = data?.data ?? [];
 
   return (
-    <Card>
+    <Card data-testid="overview-activity-feed">
       <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-4">
-        <Activity className="h-5 w-5 text-zinc-500" />
-        <CardTitle className="text-base">Recent Activity</CardTitle>
+        <Activity className="size-5 text-zinc-600" aria-hidden="true" />
+        <CardTitle className="text-lg">Recent Activity</CardTitle>
       </CardHeader>
 
       <CardContent>
+        {/* Scrollable content area */}
         <div className="max-h-[480px] overflow-y-auto">
-          {isLoading && <ActivityLoadingSkeleton />}
+          {isLoading && <ActivitySkeleton />}
 
-          {!isLoading && (!events || events.length === 0) && <ActivityEmptyState />}
+          {!isLoading && events.length === 0 && <ActivityEmptyState />}
 
-          {!isLoading &&
-            events &&
-            events.length > 0 &&
-            events.map((event) => (
-              <AuditEntryRow key={event.id} event={event} projectId={projectId} />
-            ))}
+          {!isLoading && events.length > 0 && (
+            <div className="divide-y divide-zinc-100">
+              {events.map((event) => (
+                <AuditEntryRow key={event.eventId} event={event} />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* "View all activity" link */}
-        <div className="mt-4 border-t border-zinc-100 pt-3 text-center">
-          <Link
-            href={`/projects/${projectId}?tab=activity`}
-            className="text-sm text-indigo-600 hover:text-indigo-700"
-          >
-            View all activity
-          </Link>
-        </div>
+        {/* Footer link */}
+        {!isLoading && events.length > 0 && (
+          <div className="mt-4 border-t border-zinc-200 pt-3">
+            <Link
+              href={`/projects/${projectId}?tab=activity`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+            >
+              View all activity
+              <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
