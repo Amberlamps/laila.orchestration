@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Google OAuth Sign-In Flow
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Authentication E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -19,25 +19,21 @@ Implement E2E tests for the complete Google OAuth sign-in flow using the mocked 
 // apps/web/e2e/auth/google-oauth.spec.ts
 // E2E tests for the Google OAuth sign-in flow.
 // Uses mocked OAuth provider (MSW) to bypass real Google authentication.
-import { test, expect, TEST_USER } from "../fixtures";
-import { SignInPage, DashboardPage } from "../page-objects";
+import { test, expect, TEST_USER } from '../fixtures';
+import { SignInPage, DashboardPage } from '../page-objects';
 
-test.describe("Google OAuth Sign-In", () => {
-  test("unauthenticated user is redirected to sign-in page", async ({
-    page,
-  }) => {
+test.describe('Google OAuth Sign-In', () => {
+  test('unauthenticated user is redirected to sign-in page', async ({ page }) => {
     // Navigate to the dashboard without authentication.
     // The auth middleware should redirect to /sign-in.
-    await page.goto("/dashboard");
+    await page.goto('/dashboard');
 
     const signInPage = new SignInPage(page);
     await signInPage.expectSignInPageVisible();
-    await signInPage.expectUrl("/sign-in");
+    await signInPage.expectUrl('/sign-in');
   });
 
-  test("successful Google OAuth sign-in redirects to dashboard", async ({
-    page,
-  }) => {
+  test('successful Google OAuth sign-in redirects to dashboard', async ({ page }) => {
     const signInPage = new SignInPage(page);
     await signInPage.goto();
 
@@ -51,43 +47,38 @@ test.describe("Google OAuth Sign-In", () => {
     // Verify redirect to dashboard after successful OAuth.
     const dashboardPage = new DashboardPage(page);
     await expect(dashboardPage.heading).toBeVisible();
-    await dashboardPage.expectUrl("/dashboard");
+    await dashboardPage.expectUrl('/dashboard');
   });
 
-  test("session persists across page navigations after sign-in", async ({
-    page,
-  }) => {
+  test('session persists across page navigations after sign-in', async ({ page }) => {
     const signInPage = new SignInPage(page);
     await signInPage.goto();
     await signInPage.signInWithGoogle();
 
     // Navigate to different pages and verify session remains active.
     // The user should not be redirected back to sign-in.
-    await page.goto("/projects");
+    await page.goto('/projects');
     await expect(page).toHaveURL(/\/projects/);
 
-    await page.goto("/workers");
+    await page.goto('/workers');
     await expect(page).toHaveURL(/\/workers/);
 
-    await page.goto("/dashboard");
+    await page.goto('/dashboard');
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Verify the user's name/email is displayed in the header.
-    const userMenu = page.getByTestId("user-menu");
+    const userMenu = page.getByTestId('user-menu');
     await expect(userMenu).toContainText(TEST_USER.name);
   });
 
-  test("OAuth failure displays error message on sign-in page", async ({
-    page,
-  }) => {
+  test('OAuth failure displays error message on sign-in page', async ({ page }) => {
     // Override the OAuth callback handler to simulate failure.
     // The oauthFailureHandler redirects to /sign-in?error=OAuthCallbackError.
-    await page.route("**/api/auth/callback/google*", (route) => {
+    await page.route('**/api/auth/callback/google*', (route) => {
       route.fulfill({
         status: 302,
         headers: {
-          Location:
-            "/sign-in?error=OAuthCallbackError&error_description=Authentication+failed",
+          Location: '/sign-in?error=OAuthCallbackError&error_description=Authentication+failed',
         },
       });
     });
@@ -99,7 +90,7 @@ test.describe("Google OAuth Sign-In", () => {
     await signInPage.googleSignInButton.click();
 
     // Verify the error message is displayed on the sign-in page.
-    await signInPage.expectUrl("/sign-in");
+    await signInPage.expectUrl('/sign-in');
     await signInPage.expectOAuthError();
   });
 });

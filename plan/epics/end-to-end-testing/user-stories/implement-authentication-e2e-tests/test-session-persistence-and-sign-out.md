@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Session Persistence and Sign-Out
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Authentication E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,15 +20,15 @@ Implement E2E tests for session persistence across browser restarts (via refresh
 // E2E tests for session persistence, sign-out, and expired session handling.
 // Tests verify that refresh tokens keep sessions alive across tab closes,
 // sign-out properly clears session state, and expired sessions trigger redirects.
-import { test, expect, TEST_SESSION } from "../fixtures";
-import { SignInPage, DashboardPage } from "../page-objects";
+import { test, expect, TEST_SESSION } from '../fixtures';
+import { SignInPage, DashboardPage } from '../page-objects';
 
-test.describe("Session Persistence and Sign-Out", () => {
-  test("session persists after page reload (refresh token)", async ({
+test.describe('Session Persistence and Sign-Out', () => {
+  test('session persists after page reload (refresh token)', async ({
     authenticatedPage: page,
   }) => {
     // Start on the dashboard with an active session.
-    await page.goto("/dashboard");
+    await page.goto('/dashboard');
     const dashboard = new DashboardPage(page);
     await expect(dashboard.heading).toBeVisible();
 
@@ -38,36 +38,32 @@ test.describe("Session Persistence and Sign-Out", () => {
 
     // Verify the user is still authenticated after reload.
     await expect(dashboard.heading).toBeVisible();
-    await dashboard.expectUrl("/dashboard");
+    await dashboard.expectUrl('/dashboard');
   });
 
-  test("sign-out clears session and redirects to sign-in", async ({
-    authenticatedPage: page,
-  }) => {
+  test('sign-out clears session and redirects to sign-in', async ({ authenticatedPage: page }) => {
     // Start on the dashboard with an active session.
-    await page.goto("/dashboard");
+    await page.goto('/dashboard');
 
     // Click the user menu and sign out.
-    await page.getByTestId("user-menu").click();
-    await page.getByRole("menuitem", { name: /sign out/i }).click();
+    await page.getByTestId('user-menu').click();
+    await page.getByRole('menuitem', { name: /sign out/i }).click();
 
     // Verify redirect to the sign-in page.
     const signInPage = new SignInPage(page);
-    await signInPage.expectUrl("/sign-in");
+    await signInPage.expectUrl('/sign-in');
     await signInPage.expectSignInPageVisible();
   });
 
-  test("protected routes are inaccessible after sign-out", async ({
-    authenticatedPage: page,
-  }) => {
+  test('protected routes are inaccessible after sign-out', async ({ authenticatedPage: page }) => {
     // Sign in then sign out.
-    await page.goto("/dashboard");
-    await page.getByTestId("user-menu").click();
-    await page.getByRole("menuitem", { name: /sign out/i }).click();
+    await page.goto('/dashboard');
+    await page.getByTestId('user-menu').click();
+    await page.getByRole('menuitem', { name: /sign out/i }).click();
 
     // After sign-out, attempt to access protected routes.
     // Each should redirect to /sign-in.
-    const protectedRoutes = ["/dashboard", "/projects", "/workers", "/personas", "/audit-log"];
+    const protectedRoutes = ['/dashboard', '/projects', '/workers', '/personas', '/audit-log'];
 
     for (const route of protectedRoutes) {
       await page.goto(route);
@@ -75,24 +71,24 @@ test.describe("Session Persistence and Sign-Out", () => {
     }
   });
 
-  test("expired session redirects to sign-in page", async ({ page }) => {
+  test('expired session redirects to sign-in page', async ({ page }) => {
     // Set up an expired session by overriding the session endpoint
     // to return 401 (unauthorized).
-    await page.route("**/api/auth/get-session", (route) => {
+    await page.route('**/api/auth/get-session', (route) => {
       route.fulfill({
         status: 401,
-        contentType: "application/json",
-        body: JSON.stringify({ error: "Session expired" }),
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Session expired' }),
       });
     });
 
     // Attempt to access a protected route with an expired session.
-    await page.goto("/dashboard");
+    await page.goto('/dashboard');
 
     // Verify the user is redirected to sign-in with an appropriate
     // message indicating the session has expired.
     const signInPage = new SignInPage(page);
-    await signInPage.expectUrl("/sign-in");
+    await signInPage.expectUrl('/sign-in');
     await signInPage.expectSignInPageVisible();
   });
 });

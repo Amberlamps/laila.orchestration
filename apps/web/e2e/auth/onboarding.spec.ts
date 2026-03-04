@@ -1,21 +1,3 @@
-# Test First-Time User Onboarding
-
-## Task Details
-
-- **Title:** Test First-Time User Onboarding
-- **Status:** Complete
-- **Assigned Agent:** qa-expert
-- **Parent User Story:** [Implement Authentication E2E Tests](./tasks.md)
-- **Parent Epic:** [End-to-End Testing](../../user-stories.md)
-- **Dependencies:** None (depends on User Story: Set Up Playwright Infrastructure)
-
-## Description
-
-Implement E2E tests for the first-time user onboarding experience. When a new user signs in for the first time and has no projects, the Dashboard should display an empty state with a "Create your first project" call-to-action button. Clicking this CTA should open the Create Project modal, guiding the user toward their first action.
-
-### Test: First-Time User Onboarding Empty State
-
-```typescript
 // apps/web/e2e/auth/onboarding.spec.ts
 // E2E tests for the first-time user onboarding flow.
 // Verifies that new users see an empty state dashboard with a
@@ -105,33 +87,3 @@ test.describe('First-Time User Onboarding', () => {
     await expect(emptyMessage).toBeVisible();
   });
 });
-```
-
-## Acceptance Criteria
-
-- [ ] Test verifies new user sees Dashboard with empty state (no projects, zero widget counts)
-- [ ] Test verifies "Create your first project" CTA button is visible and enabled on empty dashboard
-- [ ] Test verifies clicking the CTA opens the Create Project modal with name and description fields
-- [ ] Test verifies creating the first project shows a success toast and transitions the dashboard from empty to populated state
-- [ ] Test verifies the active projects widget updates from "0" to "1" after first project creation
-- [ ] Test verifies the CTA disappears after the first project is created
-- [ ] Test verifies the Projects list page also shows an empty state for new users
-- [ ] All tests pass in Chromium, Firefox, and WebKit browsers
-- [ ] No `any` types used in test code
-
-## Technical Notes
-
-- The empty state is driven by the MSW data store being empty at test start. No seeding is needed -- the `resetTestData()` call in the fixture ensures a clean slate.
-- The "Create your first project" CTA may be implemented as a shadcn/ui Button or a custom empty state component. The POM uses `getByRole("button")` for accessibility.
-- After creating the first project, the dashboard should transition in real-time (TanStack Query invalidation on mutation) without needing a manual refresh.
-- The Projects list page empty state is tested separately to verify consistency between the dashboard and the dedicated projects page.
-
-## References
-
-- **Project Setup Specification:** Section G.4 (End-to-End Testing — critical user journeys)
-- **Functional Requirements:** FR-DASH-001 (dashboard empty state), FR-PROJ-001 (project creation)
-- **Design Specification:** Dashboard empty state wireframe, Create Project modal layout
-
-## Estimated Complexity
-
-Small — The empty state and CTA interaction are straightforward. The main complexity is verifying the transition from empty to populated state happens in real-time after project creation.
