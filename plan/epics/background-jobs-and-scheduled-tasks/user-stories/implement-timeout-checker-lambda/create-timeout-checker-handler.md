@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Timeout Checker Handler
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Timeout Checker Lambda](./tasks.md)
 - **Parent Epic:** [Background Jobs & Scheduled Tasks](../../user-stories.md)
@@ -22,10 +22,10 @@ Create the Lambda handler at `functions/timeout-checker/src/handler.ts` that ser
 // Scans all in-progress stories, identifies timeouts based on
 // per-project timeout_duration, and reclaims timed-out assignments.
 
-import type { ScheduledEvent, Context } from "aws-lambda";
-import { db } from "./db";
-import { logger } from "./logger";
-import { writeAuditEvent } from "./audit";
+import type { ScheduledEvent, Context } from 'aws-lambda';
+import { db } from './db';
+import { logger } from './logger';
+import { writeAuditEvent } from './audit';
 
 /**
  * Main handler for the timeout checker Lambda function.
@@ -43,7 +43,7 @@ import { writeAuditEvent } from "./audit";
  */
 export const handler = async (
   event: ScheduledEvent,
-  context: Context
+  context: Context,
 ): Promise<{ checked: number; reclaimed: number }> => {
   // Implementation here
 };
@@ -56,10 +56,10 @@ export const handler = async (
 // Database connection and query functions for the timeout checker.
 // Uses Drizzle ORM with the Neon serverless driver for PostgreSQL.
 
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-import { and, eq, isNotNull, lt } from "drizzle-orm";
-import { userStories, projects, previousAttempts } from "@laila/database/schema";
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { and, eq, isNotNull, lt } from 'drizzle-orm';
+import { userStories, projects, previousAttempts } from '@laila/database/schema';
 
 /**
  * Query all in-progress stories with assigned workers.
@@ -78,7 +78,9 @@ export async function getInProgressStories() {
  * If all DAG dependencies are complete: return "not_started" (eligible for reassignment).
  * If some dependencies are still incomplete: return "blocked".
  */
-export async function determineReclaimedStatus(storyId: string): Promise<"not_started" | "blocked"> {
+export async function determineReclaimedStatus(
+  storyId: string,
+): Promise<'not_started' | 'blocked'> {
   // Check DAG dependencies for the story
   // If all deps complete -> "not_started"
   // If any dep incomplete -> "blocked"
@@ -93,9 +95,9 @@ export async function determineReclaimedStatus(storyId: string): Promise<"not_st
  */
 export async function reclaimTimedOutStory(
   storyId: string,
-  newStatus: "not_started" | "blocked",
+  newStatus: 'not_started' | 'blocked',
   previousWorkerId: string,
-  assignedAt: Date
+  assignedAt: Date,
 ): Promise<void> {
   // Transaction: update story + insert previous_attempt
 }
@@ -109,8 +111,8 @@ export async function reclaimTimedOutStory(
 // Each reclamation generates an audit event with the story, worker,
 // and timeout details for traceability.
 
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 
 /**
  * Write a timeout reclamation audit event to DynamoDB.
@@ -136,10 +138,10 @@ export async function writeAuditEvent(params: {
 // Structured logging with pino for the timeout checker Lambda.
 // Outputs JSON to stdout, which CloudWatch Logs captures automatically.
 
-import pino from "pino";
+import pino from 'pino';
 
 export const logger = pino({
-  level: process.env.LOG_LEVEL ?? "info",
+  level: process.env.LOG_LEVEL ?? 'info',
   // Lambda request ID is added per-invocation
   // Additional context: function name, version
 });

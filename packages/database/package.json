@@ -5,15 +5,16 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
     },
     "./seed/testing": {
-      "types": "./src/seed/testing.ts",
+      "types": "./dist/seed/testing.d.ts",
       "default": "./src/seed/testing.ts"
     }
   },
   "scripts": {
+    "build:types": "tsc -p tsconfig.build.json --noCheck",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

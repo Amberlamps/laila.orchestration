@@ -101,6 +101,7 @@ export {
   type CreateStoryData,
   type UpdateStoryData,
   type FindByEpicOptions,
+  type StoryTaskValidationInfo,
 } from './story-repository';
 
 export {

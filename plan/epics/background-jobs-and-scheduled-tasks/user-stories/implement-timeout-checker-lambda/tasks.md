@@ -4,18 +4,18 @@
 
 - **Title:** Implement Timeout Checker Lambda
 - **Description:** Create a standalone Lambda function that periodically scans all in-progress user stories across all projects, identifies stories where the assigned worker has exceeded the project-specific timeout duration, and reclaims them. Reclamation involves clearing the assigned worker, resetting the story status based on DAG state, logging the previous attempt with a "timeout" reason, and writing an audit event to DynamoDB.
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [Background Jobs & Scheduled Tasks](../../user-stories.md)
 - **Total Tasks:** 3
 - **Dependencies:** None (within this epic)
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Create Timeout Checker Handler](./create-timeout-checker-handler.md) | Lambda handler that queries in-progress stories, checks timeouts, and reclaims timed-out assignments | Not Started | backend-developer | None |
-| [Configure Timeout Checker Build](./configure-timeout-checker-build.md) | tsup build configuration for ARM64 Lambda deployment | Not Started | backend-developer | Create Timeout Checker Handler |
-| [Write Timeout Checker Tests](./write-timeout-checker-tests.md) | Unit tests for timeout detection, reclamation, race conditions, and audit logging | Not Started | qa-expert | Create Timeout Checker Handler |
+| Task                                                                    | Description                                                                                          | Status   | Assigned Agent    | Dependencies                   |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------- | ----------------- | ------------------------------ |
+| [Create Timeout Checker Handler](./create-timeout-checker-handler.md)   | Lambda handler that queries in-progress stories, checks timeouts, and reclaims timed-out assignments | Complete | backend-developer | None                           |
+| [Configure Timeout Checker Build](./configure-timeout-checker-build.md) | tsup build configuration for ARM64 Lambda deployment                                                 | Complete | backend-developer | Create Timeout Checker Handler |
+| [Write Timeout Checker Tests](./write-timeout-checker-tests.md)         | Unit tests for timeout detection, reclamation, race conditions, and audit logging                    | Complete | qa-expert         | Create Timeout Checker Handler |
 
 ## Dependency Graph
 

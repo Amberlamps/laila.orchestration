@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Timeout Checker Tests
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Timeout Checker Lambda](./tasks.md)
 - **Parent Epic:** [Background Jobs & Scheduled Tasks](../../user-stories.md)
@@ -20,41 +20,41 @@ Write comprehensive unit tests for the timeout checker Lambda handler. Tests sho
 // Unit tests for the timeout checker Lambda handler.
 // Uses vitest with mocked database and DynamoDB clients.
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { ScheduledEvent, Context } from "aws-lambda";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ScheduledEvent, Context } from 'aws-lambda';
 
 // Mock the database module to control query results
-vi.mock("../db");
+vi.mock('../db');
 // Mock the audit module to verify audit event writes
-vi.mock("../audit");
+vi.mock('../audit');
 
-describe("timeout-checker handler", () => {
-  describe("timeout detection", () => {
-    it("should identify stories where elapsed time exceeds project timeout_duration", async () => {
+describe('timeout-checker handler', () => {
+  describe('timeout detection', () => {
+    it('should identify stories where elapsed time exceeds project timeout_duration', async () => {
       // Setup: story with last_activity 2 hours ago, project timeout 1 hour
       // Assert: story is identified as timed out
     });
 
-    it("should not reclaim stories within the timeout window", async () => {
+    it('should not reclaim stories within the timeout window', async () => {
       // Setup: story with last_activity 30 minutes ago, project timeout 1 hour
       // Assert: story is NOT reclaimed
     });
 
-    it("should respect per-project timeout durations", async () => {
+    it('should respect per-project timeout durations', async () => {
       // Setup: two stories in different projects with different timeouts
       // Project A: timeout 30min, story last active 45min ago (timed out)
       // Project B: timeout 2hr, story last active 45min ago (NOT timed out)
       // Assert: only Project A's story is reclaimed
     });
 
-    it("should use assigned_at as fallback when last_activity_at is null", async () => {
+    it('should use assigned_at as fallback when last_activity_at is null', async () => {
       // Setup: story with null last_activity_at, assigned 2 hours ago
       // Assert: uses assigned_at for elapsed time calculation
     });
   });
 
-  describe("reclamation", () => {
-    it("should clear assigned_worker and assigned_at on timed-out stories", async () => {
+  describe('reclamation', () => {
+    it('should clear assigned_worker and assigned_at on timed-out stories', async () => {
       // Assert: story.assigned_worker = null, story.assigned_at = null
     });
 
@@ -69,54 +69,54 @@ describe("timeout-checker handler", () => {
     });
   });
 
-  describe("previous attempt logging", () => {
+  describe('previous attempt logging', () => {
     it("should create a previous_attempt record with reason 'timeout'", async () => {
       // Assert: previous_attempt record includes worker_id, started_at, ended_at, reason: "timeout"
     });
 
-    it("should record the correct worker ID and timestamps", async () => {
+    it('should record the correct worker ID and timestamps', async () => {
       // Assert: worker_id matches the cleared assigned_worker
       // Assert: started_at matches the original assigned_at
       // Assert: ended_at is approximately now
     });
   });
 
-  describe("audit events", () => {
-    it("should write an audit event to DynamoDB for each reclamation", async () => {
+  describe('audit events', () => {
+    it('should write an audit event to DynamoDB for each reclamation', async () => {
       // Assert: writeAuditEvent called once per reclaimed story
     });
 
-    it("should include story_id, project_id, and worker_id in audit event", async () => {
+    it('should include story_id, project_id, and worker_id in audit event', async () => {
       // Assert: audit event contains all required fields
     });
   });
 
-  describe("race conditions", () => {
-    it("should not reclaim a story that was completed between query and reclamation", async () => {
+  describe('race conditions', () => {
+    it('should not reclaim a story that was completed between query and reclamation', async () => {
       // Setup: story appears timed out in initial query
       // But: story status changed to "complete" before reclamation executes
       // Assert: reclamation is skipped (optimistic check prevents overwrite)
     });
 
-    it("should not reclaim a story that was reassigned between query and reclamation", async () => {
+    it('should not reclaim a story that was reassigned between query and reclamation', async () => {
       // Setup: story appears timed out with worker A
       // But: story was reclaimed and reassigned to worker B before reclamation executes
       // Assert: reclamation is skipped (worker ID mismatch)
     });
   });
 
-  describe("edge cases", () => {
-    it("should handle zero in-progress stories gracefully", async () => {
+  describe('edge cases', () => {
+    it('should handle zero in-progress stories gracefully', async () => {
       // Setup: no in-progress stories
       // Assert: returns { checked: 0, reclaimed: 0 }, no errors
     });
 
-    it("should handle multiple timed-out stories in a single invocation", async () => {
+    it('should handle multiple timed-out stories in a single invocation', async () => {
       // Setup: 5 timed-out stories across 3 projects
       // Assert: all 5 are reclaimed, summary is correct
     });
 
-    it("should return correct summary counts", async () => {
+    it('should return correct summary counts', async () => {
       // Setup: 10 in-progress stories, 3 timed out
       // Assert: returns { checked: 10, reclaimed: 3 }
     });
