@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Write Installation and Development Guide
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** technical-writer
 - **Parent User Story:** [Generate Comprehensive README.md](./tasks.md)
 - **Parent Epic:** [Documentation & Validation](../../user-stories.md)
@@ -73,6 +73,7 @@ For feature development, create a Neon branch to avoid modifying the shared data
 ### Hot Reload
 
 Next.js provides automatic hot reload for:
+
 - Page components (`pages/`)
 - API routes (`pages/api/`)
 - Shared packages (`packages/`) — via workspace linking
@@ -90,6 +91,7 @@ Changes to Lambda functions (`functions/`) require a rebuild: `pnpm --filter @la
 pnpm build:all
 
 This runs in sequence:
+
 1. `pnpm build:next` — Builds the Next.js application
 2. `pnpm build:open-next` — Transforms Next.js output for Lambda deployment
 3. `pnpm build:lambdas` — Builds all Lambda function bundles
@@ -97,20 +99,23 @@ This runs in sequence:
 ### Build Individual Packages
 
 # Build just the Next.js application
+
 pnpm build:next
 
 # Build a specific Lambda function
+
 pnpm --filter @laila/timeout-checker build
 
 # Build all shared packages
-pnpm --filter './packages/*' build
+
+pnpm --filter './packages/\*' build
 
 ### Verify Build Output
 
 After building, verify the expected artifacts exist:
 
-ls -la .open-next/           # OpenNext output
-ls -la functions/*/dist/     # Lambda function bundles
+ls -la .open-next/ # OpenNext output
+ls -la functions/\*/dist/ # Lambda function bundles
 ```
 
 ## Acceptance Criteria
