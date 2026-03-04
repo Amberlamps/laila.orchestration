@@ -17,6 +17,7 @@
 import {
   createWorkerRepository,
   getDb,
+  writeAuditEventFireAndForget,
   type FindWorkersOptions,
   type Worker,
 } from '@laila/database';
@@ -77,6 +78,21 @@ const handleCreate = withErrorHandler(
         const { worker, rawApiKey } = await workerRepo.create(tenantId, {
           name: body.name,
           description: body.description ?? undefined,
+        });
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'worker',
+          entityId: worker.id,
+          action: 'created',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          details: `Worker "${body.name}" created`,
+          changes: {
+            after: { name: body.name, description: body.description ?? null },
+          },
+          metadata: { workerName: body.name },
         });
 
         // Return the sanitized worker WITH the one-time plaintext API key

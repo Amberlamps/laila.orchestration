@@ -151,6 +151,9 @@ vi.mock('@laila/database', () => ({
     resetInProgressTasksByStory: mockTaskRepoResetInProgressTasksByStory,
     withTransaction: mockTaskRepoWithTransaction,
     getProjectIdForStory: mockTaskRepoGetProjectIdForStory,
+    getDependents: vi.fn().mockResolvedValue([]),
+    getDependencies: vi.fn().mockResolvedValue([]),
+    bulkUpdateStatus: vi.fn().mockResolvedValue(0),
   })),
   createEpicRepository: vi.fn(() => ({
     computeDerivedStatus: mockEpicRepoComputeDerivedStatus,
@@ -160,6 +163,7 @@ vi.mock('@laila/database', () => ({
     updateWorkStatus: mockProjectRepoUpdateWorkStatus,
   })),
   writeAuditEvent: (...args: unknown[]) => mockWriteAuditEvent(...args),
+  writeAuditEventFireAndForget: (...args: unknown[]) => mockWriteAuditEvent(...args),
   userStoriesTable: {
     id: 'id',
     tenantId: 'tenant_id',
@@ -556,14 +560,14 @@ describe('Timeout Checking', () => {
 
       await checkAndReclaimTimedOutStories({} as never);
 
-      expect(mockWriteAuditEvent).toHaveBeenCalledTimes(1);
+      expect(mockWriteAuditEvent).toHaveBeenCalled();
       const auditCall = mockWriteAuditEvent.mock.calls[0] as [Record<string, unknown>];
       const auditEvent = auditCall[0];
       expect(auditEvent.entityType).toBe('user_story');
       expect(auditEvent.entityId).toBe(STORY_UUID);
-      expect(auditEvent.action).toBe('timed_out');
+      expect(auditEvent.action).toBe('timeout_reclaimed');
       expect(auditEvent.actorType).toBe('system');
-      expect(auditEvent.actorId).toBe('timeout-checker');
+      expect(auditEvent.actorId).toBe('system');
       expect(auditEvent.tenantId).toBe(TENANT_UUID);
     });
   });

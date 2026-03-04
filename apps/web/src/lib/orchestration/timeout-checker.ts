@@ -25,14 +25,18 @@ import {
   createTaskRepository,
   createEpicRepository,
   createProjectRepository,
+  createWorkerRepository,
   userStoriesTable,
   attemptHistoryTable,
-  writeAuditEvent,
+  writeAuditEventFireAndForget,
   type DrizzleDb,
   type Database,
   type PoolDatabase,
 } from '@laila/database';
 import { eq, and, sql } from 'drizzle-orm';
+
+import { triggerBlockingCascade } from '@/lib/api/cascading-reevaluation';
+import { logStoryStatusReset, logTasksBlocked } from '@/lib/audit/system-events';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -198,8 +202,21 @@ const reclaimTimedOutStory = async (
     // Step 3: Capture task status snapshot BEFORE resetting tasks
     const taskSnapshot = await txTaskRepo.getTaskStatusSnapshot(tenantId, storyId, tx);
 
+    // Identify in-progress task IDs that will be reset (for blocking cascade)
+    const resetTaskIds = Object.entries(taskSnapshot)
+      .filter(([, status]) => status === 'in_progress')
+      .map(([taskId]) => taskId);
+
     // Step 4: Reset in-progress tasks (preserve completed tasks)
     await txTaskRepo.resetInProgressTasksByStory(tenantId, storyId, tx);
+
+    // Step 4b: Blocking cascade — check if any downstream dependents of
+    //          the reset tasks should transition from 'pending' to 'blocked'
+    //          (inverse of the unblocking cascade in task completion).
+    let cascadeBlockedTasks: Array<{ id: string; name: string }> = [];
+    if (resetTaskIds.length > 0) {
+      cascadeBlockedTasks = await triggerBlockingCascade(tenantId, resetTaskIds, tx);
+    }
 
     // Step 5: Clear worker assignment and reset story status
     const now = new Date();
@@ -281,29 +298,78 @@ const reclaimTimedOutStory = async (
       workerId: assignedWorkerId,
       newStatus: targetDbStatus,
       timedOutAfterMinutes: Math.round(minutesSinceActivity),
-    } satisfies ReclaimedStorySummary;
+      projectId: projectId ?? undefined,
+      blockedTasks: cascadeBlockedTasks,
+      resetTaskNames: Object.fromEntries(
+        resetTaskIds.map((tid) => [tid, taskSnapshot[tid] ?? 'unknown']),
+      ),
+    } as ReclaimedStorySummary & {
+      projectId?: string;
+      blockedTasks: Array<{ id: string; name: string }>;
+      resetTaskNames: Record<string, string>;
+    };
   });
 
   // Log audit event AFTER the transaction commits (same pattern as complete/fail)
   if (result) {
-    await writeAuditEvent({
+    // Look up worker name for richer audit metadata (best-effort, non-blocking)
+    let workerName: string | undefined;
+    try {
+      const workerRepo = createWorkerRepository(db);
+      const worker = await workerRepo.findById(tenantId, assignedWorkerId);
+      workerName = worker?.name ?? undefined;
+    } catch {
+      // Non-critical — proceed without the worker name
+    }
+
+    writeAuditEventFireAndForget({
       entityType: 'user_story',
       entityId: storyId,
-      action: 'timed_out',
+      action: 'timeout_reclaimed',
       actorType: 'system',
-      actorId: 'timeout-checker',
+      actorId: 'system',
       tenantId,
+      ...(result.projectId ? { projectId: result.projectId } : {}),
+      details: `Story "${storyTitle}" reclaimed due to worker inactivity timeout`,
       changes: {
         before: { workStatus: 'in_progress', assignedWorkerId },
         after: { workStatus: result.newStatus, assignedWorkerId: null },
       },
       metadata: {
+        story_name: storyTitle,
+        workerId: assignedWorkerId,
+        workerName,
         timed_out_after_minutes: result.timedOutAfterMinutes,
         timeout_limit_minutes: projectTimeoutMinutes,
         previous_worker_id: assignedWorkerId,
         attempt_number: attempts,
       },
     });
+
+    // Log a separate status_changed event for the story status reset.
+    // This is distinct from the timed_out event above: that event records
+    // the reclamation act, this event records the resulting status change.
+    logStoryStatusReset({
+      storyId,
+      storyName: storyTitle,
+      newStatus: result.newStatus,
+      workerId: assignedWorkerId,
+      timedOutAfterMinutes: result.timedOutAfterMinutes,
+      tenantId,
+      ...(result.projectId ? { projectId: result.projectId } : {}),
+    });
+
+    // Log dependency-failure events for any downstream tasks that were
+    // blocked as a result of the reset tasks losing their in-progress status.
+    if (result.blockedTasks.length > 0) {
+      logTasksBlocked({
+        triggerTaskId: storyId,
+        triggerTaskName: storyTitle,
+        blockedTasks: result.blockedTasks,
+        tenantId,
+        ...(result.projectId ? { projectId: result.projectId } : {}),
+      });
+    }
   }
 
   return result;

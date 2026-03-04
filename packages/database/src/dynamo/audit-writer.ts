@@ -18,7 +18,7 @@ import { randomUUID } from 'node:crypto';
 import { PutCommand, BatchWriteCommand, type BatchWriteCommandOutput } from '@aws-sdk/lib-dynamodb';
 
 import { createDynamoClient } from './client';
-import { AUDIT_TABLE_NAME, type AuditEventItem } from './schema';
+import { AUDIT_TABLE_NAME, CROSS_PROJECT_PK_VALUE, type AuditEventItem } from './schema';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -63,6 +63,12 @@ export interface AuditEventInput {
 
   /** Tenant ID for multi-tenant access control */
   tenantId: string;
+
+  /** Project ID for project-scoped queries — all entity events within a project share this */
+  projectId?: string;
+
+  /** Human-readable description of the event */
+  details?: string;
 
   /** Before/after state for change tracking */
   changes?: { before?: Record<string, unknown>; after?: Record<string, unknown> };
@@ -134,6 +140,9 @@ const buildAuditItem = (input: AuditEventInput): AuditEventItem => {
     action: input.action,
     actorType: input.actorType,
     tenantId: input.tenantId,
+    gsi1pk: CROSS_PROJECT_PK_VALUE,
+    ...(input.projectId !== undefined ? { projectId: input.projectId } : {}),
+    ...(input.details !== undefined ? { details: input.details } : {}),
     ...(input.changes !== undefined ? { changes: input.changes } : {}),
     ...(input.metadata !== undefined ? { metadata: input.metadata } : {}),
     expiresAt: Math.floor(Date.now() / 1000) + retentionDays * 86400,
@@ -275,4 +284,26 @@ export const writeAuditEventBatch = async (inputs: AuditEventInput[]): Promise<n
   }
 
   return written;
+};
+
+// ---------------------------------------------------------------------------
+// Fire-and-forget wrapper
+// ---------------------------------------------------------------------------
+
+/**
+ * Writes an audit event without blocking the caller.
+ *
+ * This is the recommended entry point for audit logging during API request
+ * handling. It calls `writeAuditEvent` internally but catches any errors
+ * and logs them to stderr instead of propagating. The returned promise
+ * resolves to `void` immediately from the caller's perspective (use
+ * `void writeAuditEventFireAndForget(input)` to invoke without awaiting).
+ *
+ * @param input - The audit event input (without computed fields)
+ */
+export const writeAuditEventFireAndForget = (input: AuditEventInput): void => {
+  writeAuditEvent(input).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : 'Unknown audit write error';
+    console.error(`[audit] Failed to write audit event (non-blocking): ${message}`);
+  });
 };

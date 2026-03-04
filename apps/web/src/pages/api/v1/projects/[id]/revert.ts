@@ -22,7 +22,12 @@
  * Requires human authentication via Better Auth session.
  */
 
-import { createProjectRepository, createStoryRepository, getDb } from '@laila/database';
+import {
+  createProjectRepository,
+  createStoryRepository,
+  getDb,
+  writeAuditEventFireAndForget,
+} from '@laila/database';
 import { validateTransition, PROJECT_TRANSITIONS, type ProjectStatus } from '@laila/domain';
 import { NotFoundError, ConflictError, DomainErrorCode } from '@laila/shared';
 import { z } from 'zod';
@@ -114,6 +119,27 @@ const handleRevert = withErrorHandler(
           { lifecycleStatus: 'draft' },
           currentVersion,
         );
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'project',
+          entityId: id,
+          action: 'status_changed',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          projectId: id,
+          details: `Project "${String(project.name)}" reverted (${currentStatus} → draft)`,
+          changes: {
+            before: { lifecycleStatus: currentStatus },
+            after: { lifecycleStatus: 'draft' },
+          },
+          metadata: {
+            oldStatus: currentStatus,
+            newStatus: 'draft',
+            projectName: project.name,
+          },
+        });
 
         res.status(200).json({ data: updated });
       },

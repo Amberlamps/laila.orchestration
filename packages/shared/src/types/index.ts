@@ -32,3 +32,15 @@ export type {
   TaskPersonaInfo,
   AssignedEpicInfo,
 } from './orchestration';
+
+// Audit event types (derived from Zod schemas)
+export type {
+  AuditAction,
+  AuditActorType,
+  AuditChangeDiff,
+  AuditEvent,
+  AuditEntityType,
+  AuditEventActor,
+  AuditEventTarget,
+  CreateAuditEventInput,
+} from './audit';

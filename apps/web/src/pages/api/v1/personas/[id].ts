@@ -17,6 +17,7 @@
 import {
   createPersonaRepository,
   getDb,
+  writeAuditEventFireAndForget,
   tasksTable,
   userStoriesTable,
   epicsTable,
@@ -170,6 +171,24 @@ const handleUpdate = withErrorHandler(
             );
           }
 
+          const auth = (req as AuthenticatedRequest).auth;
+          const changedFields = Object.keys(updateData);
+          const updatedProjectId = updated.projectId as string | null;
+          writeAuditEventFireAndForget({
+            entityType: 'persona',
+            entityId: id,
+            action: 'updated',
+            actorType: auth.type === 'human' ? 'user' : 'worker',
+            actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+            tenantId,
+            ...(updatedProjectId ? { projectId: updatedProjectId } : {}),
+            details: `Persona "${updated.name}" updated (${changedFields.join(', ')})`,
+            metadata: {
+              changedFields,
+              personaName: updated.name,
+            },
+          });
+
           res.status(200).json({ data: updated });
         } catch (error: unknown) {
           // Re-throw NotFoundError as-is (it's already an HTTP error)
@@ -226,6 +245,24 @@ const handleDelete = withErrorHandler(
 
         try {
           await personaRepo.delete(tenantId, id);
+
+          const auth = (req as AuthenticatedRequest).auth;
+          const existingProjectId = existing.projectId as string | null;
+          writeAuditEventFireAndForget({
+            entityType: 'persona',
+            entityId: id,
+            action: 'deleted',
+            actorType: auth.type === 'human' ? 'user' : 'worker',
+            actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+            tenantId,
+            ...(existingProjectId ? { projectId: existingProjectId } : {}),
+            details: `Persona "${existing.name}" deleted`,
+            changes: {
+              before: { name: existing.name },
+            },
+            metadata: { personaName: existing.name },
+          });
+
           res.status(204).end();
         } catch (error: unknown) {
           // The repository throws a ValidationError when active tasks block deletion.

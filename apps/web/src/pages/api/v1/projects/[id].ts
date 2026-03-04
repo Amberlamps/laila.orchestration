@@ -9,7 +9,7 @@
  * Uses the standard middleware composition: withErrorHandler > withAuth > withValidation.
  */
 
-import { createProjectRepository, getDb } from '@laila/database';
+import { createProjectRepository, getDb, writeAuditEventFireAndForget } from '@laila/database';
 import { updateProjectSchema, NotFoundError, ConflictError, DomainErrorCode } from '@laila/shared';
 import { z } from 'zod';
 
@@ -144,6 +144,24 @@ const handleUpdate = withErrorHandler(
 
         try {
           const updated = await projectRepo.update(tenantId, id, updateData, version);
+
+          const auth = (req as AuthenticatedRequest).auth;
+          const changedFields = Object.keys(updateData);
+          writeAuditEventFireAndForget({
+            entityType: 'project',
+            entityId: id,
+            action: 'updated',
+            actorType: auth.type === 'human' ? 'user' : 'worker',
+            actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+            tenantId,
+            projectId: id,
+            details: `Project "${updated.name}" updated (${changedFields.join(', ')})`,
+            metadata: {
+              changedFields,
+              projectName: updated.name,
+            },
+          });
+
           res.status(200).json({ data: updated });
         } catch (error: unknown) {
           // Map repository ConflictError to HTTP ConflictError with domain code
@@ -182,8 +200,37 @@ const handleDelete = withErrorHandler(
         const db = getDb();
         const projectRepo = createProjectRepository(db);
 
+        // Fetch project before deletion to capture details for audit
+        const existing = await projectRepo.findById(tenantId, id);
+        if (!existing) {
+          throw new NotFoundError(
+            DomainErrorCode.PROJECT_NOT_FOUND,
+            `Project with id ${id} not found`,
+          );
+        }
+
         try {
           await projectRepo.hardDeleteCascade(tenantId, id);
+
+          const auth = (req as AuthenticatedRequest).auth;
+          writeAuditEventFireAndForget({
+            entityType: 'project',
+            entityId: id,
+            action: 'deleted',
+            actorType: auth.type === 'human' ? 'user' : 'worker',
+            actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+            tenantId,
+            projectId: id,
+            details: `Project "${String(existing.name)}" deleted`,
+            changes: {
+              before: {
+                name: existing.name,
+                lifecycleStatus: existing.lifecycleStatus,
+              },
+            },
+            metadata: { projectName: existing.name },
+          });
+
           res.status(204).end();
         } catch (error: unknown) {
           // Map repository NotFoundError to HTTP NotFoundError with domain code

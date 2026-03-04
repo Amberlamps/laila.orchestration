@@ -90,6 +90,9 @@ export const AUDIT_TABLE_NAME = process.env['DYNAMODB_AUDIT_TABLE_NAME'] ?? 'aud
 /** GSI for querying audit events by actor (who performed the action) */
 export const ACTOR_INDEX_NAME = 'actorId-timestamp-index';
 
+/** GSI for querying audit events across all projects (newest first) */
+export const CROSS_PROJECT_INDEX_NAME = 'CrossProjectIndex';
+
 // ---------------------------------------------------------------------------
 // Key attribute name constants
 // ---------------------------------------------------------------------------
@@ -105,6 +108,15 @@ export const GSI_PARTITION_KEY = 'actorId' as const;
 
 /** GSI sort key: ISO timestamp for actor timeline ordering */
 export const GSI_SORT_KEY = 'timestamp' as const;
+
+/** CrossProjectIndex partition key: fixed value "ALL" for cross-project queries */
+export const CROSS_PROJECT_PK = 'gsi1pk' as const;
+
+/** CrossProjectIndex sort key: same as table sort key for chronological ordering */
+export const CROSS_PROJECT_SK = 'timestamp#eventId' as const;
+
+/** The fixed partition key value used in the CrossProjectIndex */
+export const CROSS_PROJECT_PK_VALUE = 'ALL' as const;
 
 /** TTL attribute: Unix epoch seconds for automatic item expiration */
 export const TTL_ATTRIBUTE = 'expiresAt' as const;
@@ -124,6 +136,11 @@ export const AUDIT_TABLE_KEY_SCHEMA = {
     [ACTOR_INDEX_NAME]: {
       partitionKey: { name: GSI_PARTITION_KEY, type: 'S' },
       sortKey: { name: GSI_SORT_KEY, type: 'S' },
+      projectionType: 'ALL',
+    },
+    [CROSS_PROJECT_INDEX_NAME]: {
+      partitionKey: { name: CROSS_PROJECT_PK, type: 'S' },
+      sortKey: { name: CROSS_PROJECT_SK, type: 'S' },
       projectionType: 'ALL',
     },
   },
@@ -168,14 +185,29 @@ export interface AuditEventItem {
   /** Type of entity: project, epic, user_story, task, worker, persona */
   entityType: string;
 
+  /** Display name of the target entity */
+  entityName?: string;
+
   /** Action performed: created, updated, deleted, status_changed, assigned, completed */
   action: string;
 
   /** Type of actor: user, worker, system */
   actorType: string;
 
+  /** Display name of the actor */
+  actorName?: string;
+
   /** Tenant ID for access control validation */
   tenantId: string;
+
+  /** Project ID for project-scoped queries */
+  projectId?: string;
+
+  /** CrossProjectIndex partition key: fixed value "ALL" for cross-project queries */
+  gsi1pk?: string;
+
+  /** Human-readable description of what changed */
+  details?: string;
 
   /** Before/after state for change tracking */
   changes?: {

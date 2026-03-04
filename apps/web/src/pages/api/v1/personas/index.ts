@@ -16,6 +16,7 @@ import {
   createPersonaRepository,
   createProjectRepository,
   getDb,
+  writeAuditEventFireAndForget,
   type PersonaListOptions,
 } from '@laila/database';
 import {
@@ -76,6 +77,21 @@ const handleCreate = withErrorHandler(
             description: body.description ?? null,
             systemPrompt: body.systemPrompt,
             projectId: body.projectId,
+          });
+
+          const auth = (req as AuthenticatedRequest).auth;
+          writeAuditEventFireAndForget({
+            entityType: 'persona',
+            entityId: persona.id,
+            action: 'created',
+            actorType: auth.type === 'human' ? 'user' : 'worker',
+            actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+            tenantId,
+            details: `Persona "${body.name}" created`,
+            changes: {
+              after: { name: body.name, description: body.description ?? null },
+            },
+            metadata: { personaName: body.name, projectId: body.projectId },
           });
 
           res.status(201).json({ data: persona });

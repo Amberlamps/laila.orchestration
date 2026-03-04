@@ -17,7 +17,12 @@
  * Soft-delete and edge cleanup also happen within a single transaction.
  */
 
-import { createTaskRepository, getDb, type UpdateTaskData } from '@laila/database';
+import {
+  createTaskRepository,
+  getDb,
+  writeAuditEventFireAndForget,
+  type UpdateTaskData,
+} from '@laila/database';
 import { updateTaskSchema, NotFoundError, ConflictError, DomainErrorCode } from '@laila/shared';
 import { z } from 'zod';
 
@@ -211,6 +216,28 @@ const handleUpdate = withErrorHandler(
             return taskRepo.updateInTx(tenantId, id, updateData, version, tx);
           });
 
+          const auth = (req as AuthenticatedRequest).auth;
+          const changedFields = Object.keys(updateData);
+          if (dependencyIds !== undefined) {
+            changedFields.push('dependencyIds');
+          }
+          const auditProjectId =
+            resolvedProjectId || (await taskRepo.getProjectIdForTask(tenantId, id));
+          writeAuditEventFireAndForget({
+            entityType: 'task',
+            entityId: id,
+            action: 'updated',
+            actorType: auth.type === 'human' ? 'user' : 'worker',
+            actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+            tenantId,
+            ...(auditProjectId ? { projectId: auditProjectId } : {}),
+            details: `Task "${updated.title}" updated (${changedFields.join(', ')})`,
+            metadata: {
+              changedFields,
+              taskTitle: updated.title,
+            },
+          });
+
           res.status(200).json({ data: updated });
         } catch (error: unknown) {
           if (error instanceof Error && error.name === 'ConflictError') {
@@ -273,6 +300,23 @@ const handleDelete = withErrorHandler(
         await taskRepo.withTransaction(async (tx) =>
           cleanupAndSoftDelete(tenantId, id, taskRepo, tx),
         );
+
+        const auth = (req as AuthenticatedRequest).auth;
+        const deleteProjectId = await taskRepo.getProjectIdForTask(tenantId, id);
+        writeAuditEventFireAndForget({
+          entityType: 'task',
+          entityId: id,
+          action: 'deleted',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          ...(deleteProjectId ? { projectId: deleteProjectId } : {}),
+          details: `Task "${String(existing.title)}" deleted`,
+          changes: {
+            before: { title: existing.title },
+          },
+          metadata: { taskTitle: existing.title },
+        });
 
         res.status(204).end();
       },

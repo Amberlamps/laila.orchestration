@@ -12,6 +12,7 @@ import {
   createEpicRepository,
   createProjectRepository,
   getDb,
+  writeAuditEventFireAndForget,
   type FindByProjectOptions,
 } from '@laila/database';
 import {
@@ -94,6 +95,22 @@ const handleCreate = withErrorHandler(
           createData.sortOrder = body.sortOrder;
         }
         const epic = await epicRepo.create(tenantId, projectId, createData);
+
+        const auth = (req as AuthenticatedRequest).auth;
+        writeAuditEventFireAndForget({
+          entityType: 'epic',
+          entityId: epic.id,
+          action: 'created',
+          actorType: auth.type === 'human' ? 'user' : 'worker',
+          actorId: auth.type === 'human' ? auth.userId : auth.workerId,
+          tenantId,
+          projectId,
+          details: `Epic "${body.name}" created in project ${projectId}`,
+          changes: {
+            after: { name: body.name, description: body.description ?? null },
+          },
+          metadata: { epicName: body.name, projectId },
+        });
 
         res.status(201).json({ data: epic });
       },

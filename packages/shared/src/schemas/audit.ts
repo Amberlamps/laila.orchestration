@@ -144,3 +144,92 @@ export const auditEventSchema = z.object({
 
 /** Inferred TypeScript type for a complete audit event */
 export type AuditEvent = z.infer<typeof auditEventSchema>;
+
+// ---------------------------------------------------------------------------
+// Audit entity type enum
+// ---------------------------------------------------------------------------
+
+/**
+ * The set of entity types that can be the target of an audit event.
+ *
+ * Covers all first-class domain entities in the system.
+ */
+export const auditEntityTypeSchema = z.enum([
+  'project',
+  'epic',
+  'story',
+  'task',
+  'worker',
+  'persona',
+]);
+
+/** Inferred TypeScript type for audit entity types */
+export type AuditEntityType = z.infer<typeof auditEntityTypeSchema>;
+
+// ---------------------------------------------------------------------------
+// Nested actor / target types for API layer
+// ---------------------------------------------------------------------------
+
+/**
+ * Schema for the actor (who) in an audit event.
+ *
+ * Provides a structured representation grouping the actor's type,
+ * identifier, and display name together for API responses.
+ */
+export const auditEventActorSchema = z.object({
+  /** The type of principal that performed the action */
+  type: auditActorTypeSchema,
+  /** Unique identifier of the actor (user ID, worker ID, or "system") */
+  id: z.string().min(1).max(255),
+  /** Human-readable display name (user name, worker name, or "System") */
+  name: z.string().min(1).max(255),
+});
+
+/** Structured actor type for audit events */
+export type AuditEventActor = z.infer<typeof auditEventActorSchema>;
+
+/**
+ * Schema for the target entity (what) in an audit event.
+ *
+ * Provides a structured representation grouping the entity's type,
+ * identifier, and display name together for API responses.
+ */
+export const auditEventTargetSchema = z.object({
+  /** The type of entity that was acted upon */
+  type: auditEntityTypeSchema,
+  /** Unique identifier of the target entity */
+  id: z.string().min(1).max(255),
+  /** Human-readable display name of the target entity */
+  name: z.string().min(1).max(255),
+});
+
+/** Structured target entity type for audit events */
+export type AuditEventTarget = z.infer<typeof auditEventTargetSchema>;
+
+// ---------------------------------------------------------------------------
+// Create audit event input (API-facing)
+// ---------------------------------------------------------------------------
+
+/**
+ * Input schema for creating an audit event via the service layer.
+ *
+ * This is the high-level input shape used by callers. The service
+ * generates computed fields (eventId, timestamp, sort key, TTL).
+ */
+export const createAuditEventInputSchema = z.object({
+  /** Project scope for the event */
+  projectId: z.string().min(1).max(255),
+  /** Who performed the action */
+  actor: auditEventActorSchema,
+  /** What action was performed */
+  action: z.string().min(1).max(100),
+  /** Which entity was acted upon */
+  targetEntity: auditEventTargetSchema,
+  /** Human-readable description of what changed */
+  details: z.string().min(1).max(2000),
+  /** Optional additional context metadata */
+  metadata: z.record(z.string(), z.string()).optional(),
+});
+
+/** Input type for creating an audit event */
+export type CreateAuditEventInput = z.infer<typeof createAuditEventInputSchema>;

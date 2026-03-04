@@ -78,4 +78,12 @@ export {
   type AuditChangeDiff,
   auditEventSchema,
   type AuditEvent,
+  auditEntityTypeSchema,
+  type AuditEntityType,
+  auditEventActorSchema,
+  type AuditEventActor,
+  auditEventTargetSchema,
+  type AuditEventTarget,
+  createAuditEventInputSchema,
+  type CreateAuditEventInput,
 } from './audit';

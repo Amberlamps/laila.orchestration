@@ -260,6 +260,7 @@ vi.mock('@/lib/middleware/api-key-validator', () => ({
  */
 vi.mock('@laila/database', () => ({
   getDb: vi.fn(() => ({})),
+  writeAuditEventFireAndForget: vi.fn(),
   createProjectRepository: vi.fn(() => ({
     findById: mockProjectRepoFindById,
   })),
