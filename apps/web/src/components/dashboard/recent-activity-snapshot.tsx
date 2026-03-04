@@ -14,7 +14,7 @@
 import { Activity, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-import { AuditEntryRow } from '@/components/audit/audit-entry-row';
+import { AuditEntry } from '@/components/audit/audit-entry';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardActivity } from '@/lib/query-hooks';
 
@@ -97,7 +97,7 @@ export function RecentActivitySnapshot() {
           {!isLoading && events.length > 0 && (
             <div className="divide-y divide-zinc-100">
               {events.map((event) => (
-                <AuditEntryRow key={event.eventId} event={event} />
+                <AuditEntry key={event.eventId} event={event} showProject />
               ))}
             </div>
           )}

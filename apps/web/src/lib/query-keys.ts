@@ -109,6 +109,9 @@ export const queryKeys = {
       [...queryKeys.projects.all(), 'costTracking', projectId] as const,
     /** Matches the activity feed query for a specific project. */
     activity: (projectId: string) => [...queryKeys.projects.all(), 'activity', projectId] as const,
+    /** Matches the paginated audit events query for a specific project. */
+    auditEvents: (projectId: string) =>
+      [...queryKeys.projects.all(), 'auditEvents', projectId] as const,
   },
 
   // ---------------------------------------------------------------------------

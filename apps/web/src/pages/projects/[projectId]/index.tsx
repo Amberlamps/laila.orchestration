@@ -27,6 +27,7 @@ import { OverviewActivityFeed } from '@/components/project/overview/overview-act
 import { OverviewSummaryStatCards } from '@/components/project/overview/overview-summary-stat-cards';
 import { TaskCompletionRateChart } from '@/components/project/overview/task-completion-rate-chart';
 import { WorkerThroughputChart } from '@/components/project/overview/worker-throughput-chart';
+import { ProjectActivityTab } from '@/components/project/tabs/project-activity-tab';
 import { DeleteProjectButton, DeleteProjectFlow } from '@/components/projects/delete-project-flow';
 import { ProjectSettingsTab } from '@/components/projects/project-settings-tab';
 import { PublishProjectFlow } from '@/components/projects/publish-project-flow';
@@ -745,7 +746,7 @@ const ProjectDetailPage: NextPageWithLayout = () => {
         </TabsContent>
 
         <TabsContent value="activity">
-          <PlaceholderTabContent tabLabel="Activity" />
+          <ProjectActivityTab projectId={project.id} />
         </TabsContent>
 
         <TabsContent value="settings">

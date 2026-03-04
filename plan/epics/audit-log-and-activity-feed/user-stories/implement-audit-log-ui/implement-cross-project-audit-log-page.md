@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Cross-Project Audit Log Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Audit Log UI](./tasks.md)
 - **Parent Epic:** [Audit Log & Activity Feed](../../user-stories.md)
@@ -20,15 +20,15 @@ Implement the Audit Log page that displays all audit events across all projects 
 // Cross-project audit log page.
 // Displays all audit events across all projects, newest first.
 
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { AuditEntry } from "@/components/audit/audit-entry";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/layout/page-header";
-import { auditKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { ScrollText, Download } from "lucide-react";
-import type { AuditEvent } from "@laila/shared";
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { AuditEntry } from '@/components/audit/audit-entry';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { PageHeader } from '@/components/layout/page-header';
+import { auditKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { ScrollText, Download } from 'lucide-react';
+import type { AuditEvent } from '@laila/shared';
 
 /**
  * AuditLogPage renders:
@@ -72,7 +72,7 @@ const useAuditEvents = () => {
   return useInfiniteQuery({
     queryKey: auditKeys.all(),
     queryFn: ({ pageParam }) =>
-      apiClient.get("/api/v1/audit-events", {
+      apiClient.get('/api/v1/audit-events', {
         params: {
           limit: 50,
           cursor: pageParam,
