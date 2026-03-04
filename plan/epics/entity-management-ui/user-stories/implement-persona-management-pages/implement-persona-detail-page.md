@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Persona Detail Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Persona Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -34,14 +34,14 @@ Build the persona detail page at `/personas/{personaId}` that displays the perso
 ```tsx
 // apps/web/src/pages/personas/[personaId].tsx
 // Persona detail page with rendered description and active task assignments list.
-import { useRouter } from "next/router";
-import { UserCircle, Pencil, Trash2 } from "lucide-react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { MarkdownRenderer } from "@/components/domain/markdown-renderer";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { usePersona, useDeletePersona } from "@/hooks/use-personas";
+import { useRouter } from 'next/router';
+import { UserCircle, Pencil, Trash2 } from 'lucide-react';
+import { AppLayout } from '@/components/layout/app-layout';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { MarkdownRenderer } from '@/components/domain/markdown-renderer';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { usePersona, useDeletePersona } from '@/hooks/use-personas';
 ```
 
 ## Acceptance Criteria

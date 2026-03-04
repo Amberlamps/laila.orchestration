@@ -4,20 +4,20 @@
 
 - **Title:** Entity Management UI
 - **Description:** CRUD pages, modals, and flows for managing all core entities: projects, epics, user stories, tasks, workers, and personas. Includes list pages, detail pages, create/edit modals, publish/delete lifecycle flows, and entity-specific features like task dependency picking and worker API key management.
-- **Status:** In Progress (laila-agent-3)
+- **Status:** Complete
 - **Total User Stories:** 6
 - **Dependencies:** Epic 6 (Core CRUD API), Epic 8 (UI Foundation & Design System)
 
 ## User Stories
 
-| User Story                                                                                        | Description                                                                                             | Status                      | Tasks   | Dependencies                          |
-| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------- | ------- | ------------------------------------- |
-| [Implement Project Management Pages](./user-stories/implement-project-management-pages/tasks.md)  | Project list page, create modal, detail page with tabs, settings tab, and publish/delete flows          | Complete                    | 5 tasks | None                                  |
-| [Implement Epic Management Pages](./user-stories/implement-epic-management-pages/tasks.md)        | Epic detail page, create/edit modal, and publish/delete lifecycle flows                                 | Complete                    | 3 tasks | Implement Project Management Pages    |
-| [Implement User Story Management Pages](./user-stories/implement-story-management-pages/tasks.md) | Story detail page with tabs, tasks sub-tab, attempt history, create/edit modal, and action flows        | Complete                    | 5 tasks | Implement Epic Management Pages       |
-| [Implement Task Management Pages](./user-stories/implement-task-management-pages/tasks.md)        | Task detail page, create/edit modal, and dependency picker component                                    | Complete                    | 3 tasks | Implement User Story Management Pages |
-| [Implement Worker Management Pages](./user-stories/implement-worker-management-pages/tasks.md)    | Worker list page, detail page, two-step create modal with API key reveal, and project access management | Complete                    | 4 tasks | None                                  |
-| [Implement Persona Management Pages](./user-stories/implement-persona-management-pages/tasks.md)  | Persona list page, create/edit modal, and detail page with active task assignments                      | In Progress (laila-agent-3) | 3 tasks | None                                  |
+| User Story                                                                                        | Description                                                                                             | Status   | Tasks   | Dependencies                          |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------- | ------- | ------------------------------------- |
+| [Implement Project Management Pages](./user-stories/implement-project-management-pages/tasks.md)  | Project list page, create modal, detail page with tabs, settings tab, and publish/delete flows          | Complete | 5 tasks | None                                  |
+| [Implement Epic Management Pages](./user-stories/implement-epic-management-pages/tasks.md)        | Epic detail page, create/edit modal, and publish/delete lifecycle flows                                 | Complete | 3 tasks | Implement Project Management Pages    |
+| [Implement User Story Management Pages](./user-stories/implement-story-management-pages/tasks.md) | Story detail page with tabs, tasks sub-tab, attempt history, create/edit modal, and action flows        | Complete | 5 tasks | Implement Epic Management Pages       |
+| [Implement Task Management Pages](./user-stories/implement-task-management-pages/tasks.md)        | Task detail page, create/edit modal, and dependency picker component                                    | Complete | 3 tasks | Implement User Story Management Pages |
+| [Implement Worker Management Pages](./user-stories/implement-worker-management-pages/tasks.md)    | Worker list page, detail page, two-step create modal with API key reveal, and project access management | Complete | 4 tasks | None                                  |
+| [Implement Persona Management Pages](./user-stories/implement-persona-management-pages/tasks.md)  | Persona list page, create/edit modal, and detail page with active task assignments                      | Complete | 3 tasks | None                                  |
 
 ## Dependency Graph
 

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Persona List Page
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Persona Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -22,6 +22,7 @@ Build the persona list page at `/personas` that displays all personas owned by t
 ### Persona Card Structure
 
 Each persona card includes:
+
 1. **Title** — Persona title (H3, e.g., "Senior Frontend Developer"), clickable to detail page
 2. **Description Preview** — First 2 lines of the Markdown description, truncated with ellipsis
 3. **Usage Count** — Badge showing "X active tasks" referencing this persona
@@ -31,13 +32,13 @@ Each persona card includes:
 // apps/web/src/pages/personas/index.tsx
 // Persona list page with card grid layout.
 // Shows each persona's title, description preview, and active task usage count.
-import { UserCircle, Plus } from "lucide-react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
-import { usePersonas } from "@/hooks/use-personas";
+import { UserCircle, Plus } from 'lucide-react';
+import { AppLayout } from '@/components/layout/app-layout';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { usePersonas } from '@/hooks/use-personas';
 ```
 
 ## Acceptance Criteria

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Create Edit Persona Modal
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Persona Management Pages](./tasks.md)
 - **Parent Epic:** [Entity Management UI](../../user-stories.md)
@@ -27,14 +27,20 @@ Build a modal dialog for creating and editing personas. The modal contains a tit
 // apps/web/src/components/personas/persona-form-modal.tsx
 // Create/edit persona modal with title input and Markdown description editor.
 // Uses React Hook Form + Zod for validation, shared schema from @laila/shared.
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { personaSchema } from "@laila/shared/schemas";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { MarkdownEditor } from "@/components/domain/markdown-editor";
-import { Button } from "@/components/ui/button";
-import { useCreatePersona, useUpdatePersona } from "@/hooks/use-personas";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { personaSchema } from '@laila/shared/schemas';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { MarkdownEditor } from '@/components/domain/markdown-editor';
+import { Button } from '@/components/ui/button';
+import { useCreatePersona, useUpdatePersona } from '@/hooks/use-personas';
 ```
 
 ## Acceptance Criteria
