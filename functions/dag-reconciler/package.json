@@ -1,22 +1,28 @@
 {
   "name": "@laila/dag-reconciler",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "description": "Lambda function that validates DAG consistency and reconciles derived statuses",
   "main": "dist/handler.js",
   "scripts": {
-    "build": "esbuild src/handler.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm --sourcemap",
-    "typecheck": "tsc --noEmit"
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@laila/database": "workspace:*",
     "@laila/shared": "workspace:*",
-    "@laila/database": "workspace:*"
+    "drizzle-orm": "^0.45.1",
+    "pino": "^9.6.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",
     "@types/node": "^22.0.0",
-    "esbuild": "^0.25.0",
-    "typescript": "^5.9.3"
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^2.0.0"
   }
 }

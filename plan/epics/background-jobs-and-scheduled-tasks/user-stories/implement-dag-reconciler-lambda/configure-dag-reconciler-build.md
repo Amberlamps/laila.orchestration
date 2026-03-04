@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure DAG Reconciler Build
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement DAG Reconciler Lambda](./tasks.md)
 - **Parent Epic:** [Background Jobs & Scheduled Tasks](../../user-stories.md)
@@ -53,14 +53,14 @@ Configure the tsup build for the DAG reconciler Lambda function. The build must 
 // tsup build configuration for Lambda deployment.
 // Same pattern as timeout-checker: single ESM bundle, Node.js 22, ARM64.
 
-import { defineConfig } from "tsup";
+import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ["src/handler.ts"],
-  format: ["esm"],
-  target: "node22",
-  platform: "node",
-  outDir: "dist",
+  entry: ['src/handler.ts'],
+  format: ['esm'],
+  target: 'node22',
+  platform: 'node',
+  outDir: 'dist',
   clean: true,
   bundle: true,
   treeshake: true,
