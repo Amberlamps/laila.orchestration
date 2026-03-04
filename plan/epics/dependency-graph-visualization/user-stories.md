@@ -14,7 +14,7 @@
 | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | --------------------------- | ------- | ------------------------------------ |
 | [Implement ReactFlow Graph Foundation](./user-stories/implement-reactflow-graph-foundation/tasks.md)   | Set up ReactFlow with Dagre layout, custom node components, edge styling, and canvas controls           | Complete                    | 4 tasks | None                                 |
 | [Implement Graph Interactivity](./user-stories/implement-graph-interactivity/tasks.md)                 | Node click navigation, hover tooltips, status filter chips, view level toggle, and epic filter dropdown | In Progress (laila-agent-2) | 5 tasks | Implement ReactFlow Graph Foundation |
-| [Implement Graph Performance & Extras](./user-stories/implement-graph-performance-and-extras/tasks.md) | Web Worker Dagre layout for large graphs, minimap, fullscreen mode, and graph legend                    | Not Started                 | 4 tasks | Implement ReactFlow Graph Foundation |
+| [Implement Graph Performance & Extras](./user-stories/implement-graph-performance-and-extras/tasks.md) | Web Worker Dagre layout for large graphs, minimap, fullscreen mode, and graph legend                    | In Progress (laila-agent-3) | 4 tasks | Implement ReactFlow Graph Foundation |
 
 ## Dependency Graph
 
