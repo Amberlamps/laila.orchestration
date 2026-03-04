@@ -487,7 +487,7 @@ describe('computeCascadingChanges', () => {
         emptyEpics,
       );
 
-      expect(result[0].reason).toContain('task-2');
+      expect(result[0]!.reason).toContain('task-2');
     });
   });
 
@@ -690,7 +690,7 @@ describe('computeCascadingChanges', () => {
 
       // Only task-2 should be unblocked, not task-3.
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('task-2');
+      expect(result[0]!.id).toBe('task-2');
     });
   });
 

@@ -30,6 +30,7 @@
     }
   },
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "build:types": "tsc -p tsconfig.build.json --noCheck"
   },
   "dependencies": {

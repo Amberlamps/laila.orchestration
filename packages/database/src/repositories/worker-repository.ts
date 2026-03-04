@@ -194,12 +194,12 @@ export const createWorkerRepository = (db: DatabaseClient) => {
   // -----------------------------------------------------------------------
 
   const resolveColumn = (fieldName: string): SQL => {
-    const columns = workersTable as Record<string, unknown>;
+    const columns = workersTable as unknown as Record<string, unknown>;
     const column = columns[fieldName];
     if (column && typeof column === 'object' && 'sql' in column) {
-      return column as SQL;
+      return column as unknown as SQL;
     }
-    return workersTable.createdAt;
+    return workersTable.createdAt as unknown as SQL;
   };
 
   // -----------------------------------------------------------------------
@@ -247,7 +247,7 @@ export const createWorkerRepository = (db: DatabaseClient) => {
       .where(and(eq(workersTable.id, id), eq(workersTable.tenantId, tenantId)))
       .limit(1);
 
-    return results[0] as Worker | undefined;
+    return (results[0] as Worker | undefined) ?? null;
   };
 
   /**
@@ -791,7 +791,7 @@ export const createWorkerRepository = (db: DatabaseClient) => {
       )
       .returning();
 
-    return results[0] as WorkerProjectAccess | undefined;
+    return (results[0] as WorkerProjectAccess | undefined) ?? null;
   };
 
   /**

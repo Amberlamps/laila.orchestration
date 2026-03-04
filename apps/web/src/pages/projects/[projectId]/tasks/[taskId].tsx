@@ -637,13 +637,17 @@ const TaskDetailPage: NextPageWithLayout = () => {
         task={{
           id: task.id,
           title: task.title,
-          description: task.description ?? undefined,
+          ...(task.description ? { description: task.description } : {}),
           acceptanceCriteria: task.acceptanceCriteria.join('\n'),
-          technicalNotes: task.technicalNotes ?? undefined,
-          references: task.references
-            .map((ref) => `- [${ref.title}](${ref.url}) (${ref.type})`)
-            .join('\n'),
-          personaId: task.personaId ?? undefined,
+          ...(task.technicalNotes ? { technicalNotes: task.technicalNotes } : {}),
+          ...(task.references.length > 0
+            ? {
+                references: task.references
+                  .map((ref) => `- [${ref.title}](${ref.url}) (${ref.type})`)
+                  .join('\n'),
+              }
+            : {}),
+          ...(task.personaId ? { personaId: task.personaId } : {}),
           dependencyIds: dependencies.map((d) => d.id),
           version: task.version,
         }}

@@ -48,12 +48,15 @@ import {
   ConflictError,
   NotFoundError,
   ValidationError,
+  type BaseTable,
   type DrizzleDb,
+  type FindManyOptions,
   type PaginatedResult,
 } from './base-repository';
 
 import type { Database, PoolDatabase } from '../client';
 import type { PaginationQuery } from '@laila/shared';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -222,7 +225,7 @@ type DatabaseClient = Database | PoolDatabase;
  * ```
  */
 export const createStoryRepository = (db: DatabaseClient) => {
-  const base = createBaseRepository(userStoriesTable, db);
+  const base = createBaseRepository(userStoriesTable as unknown as BaseTable, db);
   const typedDb = asDrizzle(db);
 
   // -------------------------------------------------------------------------
@@ -306,7 +309,7 @@ export const createStoryRepository = (db: DatabaseClient) => {
     }
 
     // Delegate to base repository for optimistic locking update
-    return base.update(tenantId, id, data, expectedVersion);
+    return base.update(tenantId, id, data, expectedVersion) as Promise<UserStory>;
   };
 
   // -------------------------------------------------------------------------
@@ -346,7 +349,7 @@ export const createStoryRepository = (db: DatabaseClient) => {
     return base.findMany(tenantId, {
       pagination: options.pagination,
       filters: combinedFilters,
-    });
+    }) as Promise<PaginatedResult<UserStory>>;
   };
 
   // -------------------------------------------------------------------------
@@ -900,7 +903,7 @@ export const createStoryRepository = (db: DatabaseClient) => {
         return sortOrder === 'asc' ? asc(priorityOrderExpression) : desc(priorityOrderExpression);
       }
       const columns = userStoriesTable as unknown as Record<string, unknown>;
-      const col = columns[sortBy] ?? userStoriesTable.createdAt;
+      const col = (columns[sortBy] ?? userStoriesTable.createdAt) as AnyPgColumn;
       return sortOrder === 'asc' ? asc(col) : desc(col);
     };
 
@@ -1453,8 +1456,22 @@ export const createStoryRepository = (db: DatabaseClient) => {
   // -------------------------------------------------------------------------
 
   return {
-    // Base repository methods (findById, findMany, softDelete, hardDelete)
-    ...base,
+    // Base repository methods — explicitly typed to ensure correct .d.ts emission with --noCheck.
+    // The `as` casts are needed because the generic SelectModel inside createBaseRepository
+    // resolves to `{ [x: string]: unknown }` due to Drizzle's complex mapped types.
+    findById: (tenantId: string, id: string): Promise<UserStory | null> =>
+      base.findById(tenantId, id) as Promise<UserStory | null>,
+    findMany: (tenantId: string, options?: FindManyOptions): Promise<PaginatedResult<UserStory>> =>
+      base.findMany(tenantId, options) as Promise<PaginatedResult<UserStory>>,
+    softDelete: (tenantId: string, id: string): Promise<UserStory | null> =>
+      base.softDelete(tenantId, id) as Promise<UserStory | null>,
+    hardDelete: (tenantId: string, id: string): Promise<UserStory | null> =>
+      base.hardDelete(tenantId, id) as Promise<UserStory | null>,
+    table: base.table,
+    entityName: base.entityName,
+    db: base.db,
+    tenantScope: base.tenantScope,
+    computePaginationMeta: base.computePaginationMeta,
 
     // Override create and update with story-specific logic
     create,

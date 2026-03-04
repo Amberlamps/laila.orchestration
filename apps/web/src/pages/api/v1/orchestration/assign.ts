@@ -156,7 +156,7 @@ const handleAssign = withErrorHandler(
         ) {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
-            `Project is in "${String(projectRecord.lifecycleStatus)}" status. ` +
+            `Project is in "${projectRecord.lifecycleStatus}" status. ` +
               'Work assignment requires the project to be in "ready" or "in-progress" status.',
           );
         }
@@ -272,7 +272,7 @@ const handleAssign = withErrorHandler(
             if (completedStories.length === totalStories) {
               return {
                 response: buildAllCompleteResponse(
-                  { id: projectId, name: projectRecord.name as string },
+                  { id: projectId, name: projectRecord.name },
                   completedStories.length,
                   totalStories,
                 ),

@@ -195,7 +195,7 @@ export const triggerCascadingReevaluation = async (
     // Read current epic status BEFORE re-derivation so callers can detect
     // auto-complete transitions (e.g. in_progress -> done).
     const epicBefore = await epicRepo.findById(tenantId, parentStory.epicId);
-    previousEpicStatus = (epicBefore?.workStatus as string | undefined) ?? null;
+    previousEpicStatus = epicBefore?.workStatus ?? null;
 
     epicStatus = await epicRepo.computeDerivedStatus(tenantId, parentStory.epicId);
   }
@@ -215,7 +215,7 @@ export const triggerCascadingReevaluation = async (
       // Read current project status BEFORE re-derivation so callers can
       // detect auto-complete transitions (e.g. in_progress -> done).
       const projectBefore = await projectRepo.findById(tenantId, resolvedProjectId);
-      previousProjectStatus = (projectBefore?.workStatus as string | undefined) ?? null;
+      previousProjectStatus = projectBefore?.workStatus ?? null;
 
       const derivedProjectStatus = deriveProjectWorkStatus(
         await epicRepo.findAllByProject(tenantId, resolvedProjectId),

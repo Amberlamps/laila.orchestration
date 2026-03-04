@@ -111,7 +111,7 @@ const handleFail = withErrorHandler(
         if (story.workStatus !== 'in_progress') {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
-            `Cannot fail story in "${String(story.workStatus)}" status. Story must be in "in_progress" status to fail.`,
+            `Cannot fail story in "${story.workStatus}" status. Story must be in "in_progress" status to fail.`,
           );
         }
 

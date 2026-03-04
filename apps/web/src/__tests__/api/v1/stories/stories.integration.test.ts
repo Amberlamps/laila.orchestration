@@ -1923,7 +1923,7 @@ describe('Story API Integration Tests', () => {
         1,
       );
       // Verify the repo was NOT called with cost fields
-      const updateCall = mockStoryRepoUpdate.mock.calls[0];
+      const updateCall = mockStoryRepoUpdate.mock.calls[0]!;
       expect(updateCall).toBeDefined();
       const updateData = updateCall[2];
       expect(updateData).not.toHaveProperty('costEstimate');

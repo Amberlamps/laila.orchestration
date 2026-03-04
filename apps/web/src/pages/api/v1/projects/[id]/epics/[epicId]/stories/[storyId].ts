@@ -152,7 +152,7 @@ const handleUpdate = withErrorHandler(
         }
 
         // Enforce read-only constraint for in-progress or completed stories
-        assertStoryEditable(existing.workStatus as string);
+        assertStoryEditable(existing.workStatus);
 
         // Build the update payload, only including fields that were provided
         const { version } = body;
@@ -268,7 +268,7 @@ const handleDelete = withErrorHandler(
           actorId: auth.type === 'human' ? auth.userId : auth.workerId,
           tenantId,
           projectId,
-          details: `Story "${String(existing.title)}" deleted`,
+          details: `Story "${existing.title}" deleted`,
           changes: {
             before: { title: existing.title },
           },

@@ -103,10 +103,14 @@ const upsertTestUser = async (db: ReturnType<typeof getDb>): Promise<string> => 
 // Seed personas
 // ---------------------------------------------------------------------------
 
-const seedPersonas = async (db: ReturnType<typeof getDb>, tenantId: string): Promise<string[]> => {
+const seedPersonas = async (
+  db: ReturnType<typeof getDb>,
+  tenantId: string,
+  projectId: string,
+): Promise<string[]> => {
   const results = await db
     .insert(schema.personasTable)
-    .values(PERSONA_DEFINITIONS.map((p) => ({ ...p, tenantId })))
+    .values(PERSONA_DEFINITIONS.map((p) => ({ ...p, tenantId, projectId })))
     .returning({ id: schema.personasTable.id });
 
   return results.map((r) => r.id);
@@ -467,15 +471,32 @@ const seed = async () => {
   const tenantId = await upsertTestUser(db);
   console.log(`Tenant (test user): ${tenantId}`);
 
-  // 3. Create personas
-  const personaIds = await seedPersonas(db, tenantId);
+  // 3. Create first project (needed for persona seeding)
+  const projectIds: string[] = [];
+  const firstPc = PROJECT_CONFIGS[0];
+  if (!firstPc) throw new Error('No project configs defined');
+  const firstInserted = await db
+    .insert(schema.projectsTable)
+    .values({
+      tenantId,
+      name: firstPc.name,
+      description: firstPc.description,
+      lifecycleStatus: firstPc.lifecycleStatus,
+      workStatus: firstPc.workStatus,
+    })
+    .returning({ id: schema.projectsTable.id });
+  const firstProjectId = getFirstId(firstInserted, 'project');
+  projectIds.push(firstProjectId);
+
+  // 4. Create personas (scoped to first project)
+  const personaIds = await seedPersonas(db, tenantId, firstProjectId);
   console.log(`Created ${String(personaIds.length)} personas`);
 
-  // 4. Create workers
+  // 5. Create workers
   const { workerIds, workerKeys } = await seedWorkers(db, tenantId);
   console.log(`Created ${String(workerIds.length)} workers`);
 
-  // 5. Seed project hierarchy
+  // 6. Seed project hierarchy
   const ctx: SeedContext = {
     tenantId,
     personaIds,
@@ -485,7 +506,7 @@ const seed = async () => {
   };
 
   const summary: SeedSummary = {
-    projects: 0,
+    projects: 1,
     epics: 0,
     stories: 0,
     tasks: 0,
@@ -496,9 +517,14 @@ const seed = async () => {
     workerKeys,
   };
 
-  const projectIds: string[] = [];
+  // Seed epics/stories/tasks for first project
+  const firstResult = await seedEpics(db, tenantId, firstProjectId, firstPc.epics, ctx, 0);
+  summary.epics += firstResult.epicCount;
+  summary.stories += firstResult.storyCount;
+  summary.tasks += firstResult.taskCount;
 
-  for (let pi = 0; pi < PROJECT_CONFIGS.length; pi++) {
+  // Seed remaining projects
+  for (let pi = 1; pi < PROJECT_CONFIGS.length; pi++) {
     const pc = PROJECT_CONFIGS[pi];
     if (!pc) continue;
     const inserted = await db

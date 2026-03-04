@@ -88,7 +88,7 @@ const handleReset = withErrorHandler(
         if (story.workStatus !== 'failed') {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
-            `Cannot reset story: current status is '${String(story.workStatus)}', expected 'failed'`,
+            `Cannot reset story: current status is '${story.workStatus}', expected 'failed'`,
           );
         }
 

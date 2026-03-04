@@ -117,7 +117,7 @@ const REQUIRED_FIELDS = [
 /** Validates that all required fields are non-empty, non-whitespace strings. */
 const validateInput = (input: AuditEventInput): void => {
   for (const field of REQUIRED_FIELDS) {
-    const value = (input as Record<string, unknown>)[field];
+    const value = (input as unknown as Record<string, unknown>)[field];
     if (typeof value !== 'string' || value.trim() === '') {
       throw new AuditWriteError(`Missing required field: ${field}`);
     }

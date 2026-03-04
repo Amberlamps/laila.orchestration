@@ -42,7 +42,8 @@ export interface ColumnDef<T> {
 
 export interface RowAction<T> {
   label: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon?: React.ComponentType<any>;
   onClick: (row: T) => void;
   /** If true, renders in red text (for destructive actions like Delete) */
   destructive?: boolean;

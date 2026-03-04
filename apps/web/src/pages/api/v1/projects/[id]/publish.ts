@@ -94,7 +94,7 @@ const handlePublish = withErrorHandler(
         }
 
         // 2. Validate the domain transition: draft -> ready
-        const currentStatus = String(project.lifecycleStatus);
+        const currentStatus = project.lifecycleStatus;
         if (!(currentStatus in PROJECT_TRANSITIONS)) {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
@@ -139,7 +139,7 @@ const handlePublish = withErrorHandler(
         }
 
         // 6. Update project lifecycle status to 'ready'
-        const currentVersion = project.version as number;
+        const currentVersion = project.version;
         const updated = await projectRepo.update(
           tenantId,
           id,
@@ -156,7 +156,7 @@ const handlePublish = withErrorHandler(
           actorId: auth.type === 'human' ? auth.userId : auth.workerId,
           tenantId,
           projectId: id,
-          details: `Project "${String(project.name)}" published (${currentStatus} → ready)`,
+          details: `Project "${project.name}" published (${currentStatus} → ready)`,
           changes: {
             before: { lifecycleStatus: currentStatus },
             after: { lifecycleStatus: 'ready' },

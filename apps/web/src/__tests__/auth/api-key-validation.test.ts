@@ -562,7 +562,7 @@ describe('validateApiKey', () => {
     expect(mockUpdateSet).toHaveBeenCalledTimes(1);
 
     // Verify the set call received a lastUsedAt Date
-    const setArg = mockUpdateSet.mock.calls[0][0] as { lastUsedAt: Date };
+    const setArg = mockUpdateSet.mock.calls[0]![0] as { lastUsedAt: Date };
     expect(setArg.lastUsedAt).toBeInstanceOf(Date);
   });
 

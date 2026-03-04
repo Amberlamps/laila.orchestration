@@ -582,8 +582,8 @@ describe('Persona API Integration Tests', () => {
         pagination: { page: number; limit: number; total: number };
       };
       expect(body.data).toHaveLength(2);
-      expect(body.data[0].usageCount).toBe(3);
-      expect(body.data[1].usageCount).toBe(0);
+      expect(body.data[0]!.usageCount).toBe(3);
+      expect(body.data[1]!.usageCount).toBe(0);
       expect(body.pagination.total).toBe(2);
     });
 

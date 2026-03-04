@@ -63,10 +63,8 @@ interface PropsResult<P> {
 // ---------------------------------------------------------------------------
 
 /** Mock for auth.api.getSession. */
-const mockGetSession = vi.fn<
-  [params: { headers: Record<string, string> }],
-  Promise<MockSession | null>
->();
+const mockGetSession =
+  vi.fn<(params: { headers: Record<string, string> }) => Promise<MockSession | null>>();
 
 vi.mock('@/lib/auth', () => ({
   auth: {
@@ -269,7 +267,7 @@ describe('withProtectedPage', () => {
       const session = createMockSession();
       mockGetSession.mockResolvedValue(session);
 
-      interface ExtraProps {
+      interface ExtraProps extends Record<string, unknown> {
         projectCount: number;
         recentActivity: string[];
       }
@@ -312,8 +310,10 @@ describe('withProtectedPage', () => {
 
       const callbackSpy = vi
         .fn<
-          [GetServerSidePropsContext, ProtectedPageProps['user']],
-          Promise<GetServerSidePropsResult<Record<string, never>>>
+          (
+            ctx: GetServerSidePropsContext,
+            user: ProtectedPageProps['user'],
+          ) => Promise<GetServerSidePropsResult<Record<string, never>>>
         >()
         .mockResolvedValue({ props: {} });
 
@@ -323,7 +323,7 @@ describe('withProtectedPage', () => {
       await getServerSideProps(ctx);
 
       expect(callbackSpy).toHaveBeenCalledTimes(1);
-      const receivedUser = callbackSpy.mock.calls[0][1];
+      const receivedUser = callbackSpy.mock.calls[0]![1];
       expect(receivedUser.id).toBe('callback-user-id');
       expect(receivedUser.email).toBe('callback@example.com');
       expect(receivedUser.name).toBe('Callback User');

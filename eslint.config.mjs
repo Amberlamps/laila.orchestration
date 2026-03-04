@@ -42,7 +42,9 @@ export default tseslint.config(
     files: ["**/*.{ts,tsx,mts,cts}"],
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          noWarnOnMultipleProjects: true,
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },

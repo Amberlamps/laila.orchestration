@@ -78,22 +78,23 @@ interface MockSession {
 interface MockResponseTracker {
   statusCode: number | null;
   jsonBody: unknown;
-  statusFn: ReturnType<typeof vi.fn>;
-  jsonFn: ReturnType<typeof vi.fn>;
+  statusFn: ReturnType<typeof vi.fn<(code: number) => void>>;
+  jsonFn: ReturnType<typeof vi.fn<(body: unknown) => void>>;
 }
 
 // ---------------------------------------------------------------------------
 // Mock setup
 // ---------------------------------------------------------------------------
 
+/** Handler function signature matching AuthenticatedHandler from with-auth.ts */
+type HandlerFn = (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void> | void;
+
 /** Mock for auth.api.getSession -- controls session resolution. */
-const mockGetSession = vi.fn<
-  [params: { headers: Record<string, string> }],
-  Promise<MockSession | null>
->();
+const mockGetSession =
+  vi.fn<(params: { headers: Record<string, string> }) => Promise<MockSession | null>>();
 
 /** Mock for validateApiKey -- controls API key resolution. */
-const mockValidateApiKey = vi.fn<[req: NextApiRequest], Promise<WorkerAuthContext | null>>();
+const mockValidateApiKey = vi.fn<(req: NextApiRequest) => Promise<WorkerAuthContext | null>>();
 
 // Mock Better Auth so withAuth uses our controlled getSession.
 vi.mock('@/lib/auth', () => ({
@@ -127,8 +128,8 @@ const createMockResponse = (): { res: NextApiResponse; tracker: MockResponseTrac
   const tracker: MockResponseTracker = {
     statusCode: null,
     jsonBody: undefined,
-    statusFn: vi.fn(),
-    jsonFn: vi.fn(),
+    statusFn: vi.fn<(code: number) => void>(),
+    jsonFn: vi.fn<(body: unknown) => void>(),
   };
 
   const res = {
@@ -200,7 +201,7 @@ describe('withAuth', () => {
       const session = createMockSession();
       mockGetSession.mockResolvedValue(session);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('human', handler);
 
       const req = createMockRequest({ cookie: 'better-auth.session_token=valid-token' });
@@ -210,7 +211,7 @@ describe('withAuth', () => {
 
       expect(handler).toHaveBeenCalledTimes(1);
 
-      const receivedReq = handler.mock.calls[0][0] as AuthenticatedRequest;
+      const receivedReq = handler.mock.calls[0]![0];
       const authContext = receivedReq.auth as HumanAuthContext;
 
       expect(authContext.type).toBe('human');
@@ -225,7 +226,7 @@ describe('withAuth', () => {
       const session = createMockSession({ id: 'custom-user-id' });
       mockGetSession.mockResolvedValue(session);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('human', handler);
 
       const req = createMockRequest({ cookie: 'session=abc' });
@@ -233,7 +234,7 @@ describe('withAuth', () => {
 
       await wrappedHandler(req, res);
 
-      const receivedReq = handler.mock.calls[0][0] as AuthenticatedRequest;
+      const receivedReq = handler.mock.calls[0]![0];
       const authContext = receivedReq.auth as HumanAuthContext;
 
       expect(authContext.tenantId).toBe(authContext.userId);
@@ -244,7 +245,7 @@ describe('withAuth', () => {
       const session = createMockSession({ image: null });
       mockGetSession.mockResolvedValue(session);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('human', handler);
 
       const req = createMockRequest({ cookie: 'session=abc' });
@@ -252,7 +253,7 @@ describe('withAuth', () => {
 
       await wrappedHandler(req, res);
 
-      const receivedReq = handler.mock.calls[0][0] as AuthenticatedRequest;
+      const receivedReq = handler.mock.calls[0]![0];
       const authContext = receivedReq.auth as HumanAuthContext;
 
       expect(authContext.image).toBeNull();
@@ -263,7 +264,7 @@ describe('withAuth', () => {
       mockGetSession.mockResolvedValue(null);
       mockValidateApiKey.mockResolvedValue(createMockWorkerContext());
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('human', handler);
 
       const req = createMockRequest({ authorization: 'Bearer lw_valid_api_key' });
@@ -283,7 +284,7 @@ describe('withAuth', () => {
       mockGetSession.mockResolvedValue(null);
       mockValidateApiKey.mockResolvedValue(null);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('human', handler);
 
       const req = createMockRequest();
@@ -304,7 +305,7 @@ describe('withAuth', () => {
       mockGetSession.mockResolvedValue(null);
       mockValidateApiKey.mockResolvedValue(null);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('human', handler);
 
       const req = createMockRequest({ cookie: 'better-auth.session_token=expired-token' });
@@ -330,7 +331,7 @@ describe('withAuth', () => {
       const workerContext = createMockWorkerContext();
       mockValidateApiKey.mockResolvedValue(workerContext);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('agent', handler);
 
       const req = createMockRequest({ authorization: 'Bearer lw_valid_api_key_hex' });
@@ -340,7 +341,7 @@ describe('withAuth', () => {
 
       expect(handler).toHaveBeenCalledTimes(1);
 
-      const receivedReq = handler.mock.calls[0][0] as AuthenticatedRequest;
+      const receivedReq = handler.mock.calls[0]![0];
       const authContext = receivedReq.auth as WorkerAuthContext;
 
       expect(authContext.type).toBe('agent');
@@ -356,7 +357,7 @@ describe('withAuth', () => {
       mockGetSession.mockResolvedValue(session);
       mockValidateApiKey.mockResolvedValue(null);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('agent', handler);
 
       const req = createMockRequest({ cookie: 'better-auth.session_token=valid-token' });
@@ -376,7 +377,7 @@ describe('withAuth', () => {
       mockGetSession.mockResolvedValue(null);
       mockValidateApiKey.mockResolvedValue(null);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('agent', handler);
 
       const req = createMockRequest({ authorization: 'Bearer lw_invalid_key' });
@@ -402,7 +403,7 @@ describe('withAuth', () => {
       const session = createMockSession();
       mockGetSession.mockResolvedValue(session);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('both', handler);
 
       const req = createMockRequest({ cookie: 'better-auth.session_token=valid-token' });
@@ -412,7 +413,7 @@ describe('withAuth', () => {
 
       expect(handler).toHaveBeenCalledTimes(1);
 
-      const receivedReq = handler.mock.calls[0][0] as AuthenticatedRequest;
+      const receivedReq = handler.mock.calls[0]![0];
       expect(receivedReq.auth.type).toBe('human');
     });
 
@@ -421,7 +422,7 @@ describe('withAuth', () => {
       mockGetSession.mockResolvedValue(null);
       mockValidateApiKey.mockResolvedValue(workerContext);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('both', handler);
 
       const req = createMockRequest({ authorization: 'Bearer lw_valid_api_key_hex' });
@@ -431,7 +432,7 @@ describe('withAuth', () => {
 
       expect(handler).toHaveBeenCalledTimes(1);
 
-      const receivedReq = handler.mock.calls[0][0] as AuthenticatedRequest;
+      const receivedReq = handler.mock.calls[0]![0];
       expect(receivedReq.auth.type).toBe('agent');
     });
 
@@ -442,7 +443,7 @@ describe('withAuth', () => {
       const workerContext = createMockWorkerContext();
       mockValidateApiKey.mockResolvedValue(workerContext);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('both', handler);
 
       const req = createMockRequest({
@@ -456,7 +457,7 @@ describe('withAuth', () => {
       expect(handler).toHaveBeenCalledTimes(1);
 
       // Session takes priority -- auth context should be HumanAuthContext
-      const receivedReq = handler.mock.calls[0][0] as AuthenticatedRequest;
+      const receivedReq = handler.mock.calls[0]![0];
       const authContext = receivedReq.auth as HumanAuthContext;
 
       expect(authContext.type).toBe('human');
@@ -471,7 +472,7 @@ describe('withAuth', () => {
       mockGetSession.mockResolvedValue(null);
       mockValidateApiKey.mockResolvedValue(null);
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('both', handler);
 
       const req = createMockRequest({
@@ -496,7 +497,7 @@ describe('withAuth', () => {
 
   describe('error response format', () => {
     it('should return 401 with standard error format { error: { code, message } }', async () => {
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('human', handler);
 
       const req = createMockRequest();
@@ -515,7 +516,7 @@ describe('withAuth', () => {
     it('should return 403 with standard error format { error: { code, message } }', async () => {
       mockValidateApiKey.mockResolvedValue(createMockWorkerContext());
 
-      const handler = vi.fn();
+      const handler = vi.fn<HandlerFn>();
       const wrappedHandler = withAuth('human', handler);
 
       const req = createMockRequest({ authorization: 'Bearer lw_valid' });

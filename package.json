@@ -22,7 +22,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run --config vitest.workspace.ts",
     "test:coverage": "vitest run --config vitest.workspace.ts --coverage",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "pnpm -r run typecheck",
     "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf {} + && find . -name 'dist' -type d -prune -exec rm -rf {} +",
     "prepare": "husky"
   },

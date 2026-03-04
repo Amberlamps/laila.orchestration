@@ -91,7 +91,7 @@ const handleValidate = withErrorHandler(
           issues.push({
             entityType: 'Epic',
             entityName: epic.name,
-            issue: `Epic is in "${String(epic.workStatus)}" status. Only Draft epics can be published.`,
+            issue: `Epic is in "${epic.workStatus}" status. Only Draft epics can be published.`,
           });
           // Return early — other checks are not relevant if not in draft
           res.status(200).json({ valid: false, issues });
@@ -103,8 +103,8 @@ const handleValidate = withErrorHandler(
         if (project && project.lifecycleStatus !== 'draft') {
           issues.push({
             entityType: 'Project',
-            entityName: String(project.name),
-            issue: `Parent project is in "${String(project.lifecycleStatus)}" status. Epic can only be published when project is in Draft status.`,
+            entityName: project.name,
+            issue: `Parent project is in "${project.lifecycleStatus}" status. Epic can only be published when project is in Draft status.`,
           });
         }
 

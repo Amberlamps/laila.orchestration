@@ -129,7 +129,7 @@ const handlePublish = withErrorHandler(
         if (story.workStatus !== 'pending') {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
-            `Cannot publish story: current status is '${String(story.workStatus)}', expected 'pending' (Draft)`,
+            `Cannot publish story: current status is '${story.workStatus}', expected 'pending' (Draft)`,
           );
         }
 
@@ -168,7 +168,7 @@ const handlePublish = withErrorHandler(
           actorId: auth.type === 'human' ? auth.userId : auth.workerId,
           tenantId,
           projectId,
-          details: `Story "${String(story.title)}" published (pending → ready)`,
+          details: `Story "${story.title}" published (pending → ready)`,
           changes: {
             before: { workStatus: 'pending' },
             after: { workStatus: 'ready' },

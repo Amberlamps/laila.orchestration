@@ -152,16 +152,26 @@ export const makeWorkerData = (overrides: Partial<TestWorkerData> = {}): TestWor
 // Persona fixtures
 // ---------------------------------------------------------------------------
 
+/** Default project ID used by persona fixtures when no real project is seeded. */
+const DEFAULT_PERSONA_PROJECT_ID = '00000000-0000-0000-0000-000000000001';
+
 export interface TestPersonaData {
-  title: string;
-  description: string;
+  name: string;
+  projectId: string;
+  systemPrompt: string;
+  description: string | null;
 }
 
 /**
  * Generates test data for creating a persona.
  * Does NOT insert into the database -- pass to `personaRepo.create()`.
+ *
+ * Note: `projectId` defaults to a placeholder UUID. Integration tests that
+ * enforce FK constraints should override it with a real project ID.
  */
 export const makePersonaData = (overrides: Partial<TestPersonaData> = {}): TestPersonaData => ({
-  title: overrides.title ?? `Test Persona ${randomUUID().slice(0, 8)}`,
+  name: overrides.name ?? `Test Persona ${randomUUID().slice(0, 8)}`,
+  projectId: overrides.projectId ?? DEFAULT_PERSONA_PROJECT_ID,
+  systemPrompt: overrides.systemPrompt ?? 'You are a helpful test persona.',
   description: overrides.description ?? 'Integration test persona description',
 });

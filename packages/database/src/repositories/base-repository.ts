@@ -43,11 +43,15 @@ import {
   type SQL,
   type InferSelectModel,
   type InferInsertModel,
+  type Table,
+  ColumnBaseConfig,
+  ColumnDataType,
 } from 'drizzle-orm';
 
 import type { Database, PoolDatabase } from '../client';
 import type { PaginationQuery, PaginationMeta } from '@laila/shared';
 import type {
+  PgColumn,
   PgDatabase,
   PgQueryResultHKT,
   PgTableWithColumns,
@@ -170,7 +174,7 @@ export type BaseTableColumns = {
  * A Drizzle PgTable that contains at minimum the standard audit columns
  * required by the base repository.
  */
-export type BaseTable = PgTableWithColumns<TableConfig & { columns: BaseTableColumns }>;
+export type BaseTable = PgTableWithColumns<TableConfig> & BaseTableColumns;
 
 // ---------------------------------------------------------------------------
 // Paginated response shape
@@ -266,6 +270,19 @@ export const createBaseRepository = <TTable extends BaseTable>(
   type SelectModel = InferSelectModel<TTable>;
   type InsertModel = InferInsertModel<TTable>;
 
+  // Cast table columns to PgColumn for drizzle query builder compatibility.
+  // BaseTableColumns uses `unknown` to keep the constraint loose, but the
+  // columns are always PgColumn instances at runtime.
+  type Col = PgColumn<ColumnBaseConfig<ColumnDataType, string>, object, object>;
+  const col = {
+    id: table.id as Col,
+    tenantId: table.tenantId as Col,
+    version: table.version as Col,
+    createdAt: table.createdAt as Col,
+    updatedAt: table.updatedAt as Col,
+    deletedAt: table.deletedAt as Col,
+  };
+
   // -------------------------------------------------------------------------
   // Internal helpers
   // -------------------------------------------------------------------------
@@ -279,7 +296,7 @@ export const createBaseRepository = <TTable extends BaseTable>(
    */
   const tenantScope = (tenantId: string): SQL => {
     // and() with 2+ conditions always returns a defined SQL — safe to assert
-    const clause = and(eq(table.tenantId, tenantId), isNull(table.deletedAt));
+    const clause = and(eq(col.tenantId, tenantId), isNull(col.deletedAt));
     return clause as SQL;
   };
 
@@ -308,9 +325,9 @@ export const createBaseRepository = <TTable extends BaseTable>(
    * into the corresponding column object for ORDER BY clauses.
    * Falls back to `createdAt` if the field name does not match any column.
    */
-  const resolveColumn = (fieldName: string) => {
+  const resolveColumn = (fieldName: string): Col => {
     const columns = table as unknown as Record<string, unknown>;
-    return columns[fieldName] ?? table.createdAt;
+    return (columns[fieldName] ?? col.createdAt) as Col;
   };
 
   // -------------------------------------------------------------------------
@@ -331,8 +348,8 @@ export const createBaseRepository = <TTable extends BaseTable>(
   const findById = async (tenantId: string, id: string): Promise<SelectModel | null> => {
     const results: SelectModel[] = (await typedDb
       .select()
-      .from(table)
-      .where(and(eq(table.id, id), tenantScope(tenantId)))
+      .from(table as Table)
+      .where(and(eq(col.id, id), tenantScope(tenantId)))
       .limit(1)) as SelectModel[];
 
     return results[0] ?? null;
@@ -381,16 +398,17 @@ export const createBaseRepository = <TTable extends BaseTable>(
 
     // Execute count and data queries in parallel for efficiency
     const [countResult, data] = await Promise.all([
-      typedDb.select({ total: count() }).from(table).where(whereClause) as Promise<
-        { total: number }[]
-      >,
+      typedDb
+        .select({ total: count() })
+        .from(table as Table)
+        .where(whereClause) as Promise<{ total: number }[]>,
       typedDb
         .select()
-        .from(table)
+        .from(table as Table)
         .where(whereClause)
         .orderBy(orderDirection)
         .limit(limit)
-        .offset(offset) as Promise<SelectModel[]>,
+        .offset(offset) as unknown as Promise<SelectModel[]>,
     ]);
 
     const total = countResult[0]?.total ?? 0;
@@ -418,7 +436,7 @@ export const createBaseRepository = <TTable extends BaseTable>(
     >,
   ): Promise<SelectModel> => {
     const results: SelectModel[] = (await typedDb
-      .insert(table)
+      .insert(table as Table)
       .values({
         ...data,
         tenantId,
@@ -461,15 +479,15 @@ export const createBaseRepository = <TTable extends BaseTable>(
       .update(table)
       .set({
         ...data,
-        version: sql`${table.version} + 1`,
+        version: sql`${col.version} + 1`,
         updatedAt: new Date(),
       } as InsertModel)
       .where(
         and(
-          eq(table.id, id),
-          eq(table.tenantId, tenantId),
-          eq(table.version, expectedVersion),
-          isNull(table.deletedAt),
+          eq(col.id, id),
+          eq(col.tenantId, tenantId),
+          eq(col.version, expectedVersion),
+          isNull(col.deletedAt),
         ),
       )
       .returning()) as SelectModel[];
@@ -502,10 +520,10 @@ export const createBaseRepository = <TTable extends BaseTable>(
       .update(table)
       .set({
         deletedAt: new Date(),
-        version: sql`${table.version} + 1`,
+        version: sql`${col.version} + 1`,
         updatedAt: new Date(),
       } as InsertModel)
-      .where(and(eq(table.id, id), eq(table.tenantId, tenantId), isNull(table.deletedAt)))
+      .where(and(eq(col.id, id), eq(col.tenantId, tenantId), isNull(col.deletedAt)))
       .returning()) as SelectModel[];
 
     return results[0] ?? null;
@@ -530,7 +548,7 @@ export const createBaseRepository = <TTable extends BaseTable>(
   const hardDelete = async (tenantId: string, id: string): Promise<SelectModel | null> => {
     const results: SelectModel[] = (await typedDb
       .delete(table)
-      .where(and(eq(table.id, id), eq(table.tenantId, tenantId)))
+      .where(and(eq(col.id, id), eq(col.tenantId, tenantId)))
       .returning()) as SelectModel[];
 
     return results[0] ?? null;

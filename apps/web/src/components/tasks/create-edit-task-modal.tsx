@@ -259,7 +259,6 @@ export function CreateEditTaskModal({
             technicalNotes: data.technicalNotes ?? null,
             ...(data.personaId ? { personaId: data.personaId } : { personaId: null }),
             references: parsedReferences,
-            dependencyIds: data.dependencyIds,
             version: task.version,
           },
           {
@@ -282,7 +281,6 @@ export function CreateEditTaskModal({
             ...(data.technicalNotes ? { technicalNotes: data.technicalNotes } : {}),
             ...(data.personaId ? { personaId: data.personaId } : {}),
             references: parsedReferences,
-            dependencyIds: data.dependencyIds,
           },
           {
             onSuccess: () => {

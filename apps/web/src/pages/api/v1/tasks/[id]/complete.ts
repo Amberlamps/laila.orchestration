@@ -118,7 +118,7 @@ const handleComplete = withErrorHandler(
         if (task.workStatus !== 'in_progress') {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
-            `Cannot complete task in "${String(task.workStatus)}" status. Task must be in "in_progress" status to complete.`,
+            `Cannot complete task in "${task.workStatus}" status. Task must be in "in_progress" status to complete.`,
           );
         }
 
@@ -189,7 +189,7 @@ const handleComplete = withErrorHandler(
           actorId: workerId,
           tenantId,
           ...(completeProjectId ? { projectId: completeProjectId } : {}),
-          details: `Task "${String(task.title)}" completed`,
+          details: `Task "${task.title}" completed`,
           changes: {
             before: { workStatus: 'in_progress' },
             after: { workStatus: 'done', completedAt: updated.completedAt?.toISOString() },
@@ -206,10 +206,10 @@ const handleComplete = withErrorHandler(
         if (cascadeResult.unblockedTasks.length > 0) {
           logTasksUnblocked({
             triggerTaskId: id,
-            triggerTaskName: task.title as string,
+            triggerTaskName: task.title,
             unblockedTasks: cascadeResult.unblockedTasks,
             tenantId,
-            projectId: completeProjectId,
+            ...(completeProjectId ? { projectId: completeProjectId } : {}),
           });
         }
 
@@ -222,7 +222,7 @@ const handleComplete = withErrorHandler(
             epicId: cascadeResult.epicId,
             previousStatus: cascadeResult.previousEpicStatus ?? 'unknown',
             tenantId,
-            projectId: completeProjectId,
+            ...(completeProjectId ? { projectId: completeProjectId } : {}),
           });
         }
 

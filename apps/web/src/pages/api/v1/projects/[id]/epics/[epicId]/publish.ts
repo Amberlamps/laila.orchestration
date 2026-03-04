@@ -103,7 +103,7 @@ const handlePublish = withErrorHandler(
         }
 
         // 2. Validate the domain transition: pending (Draft) -> ready (Ready)
-        const currentStatus = String(epic.workStatus);
+        const currentStatus = epic.workStatus;
         if (!(currentStatus in EPIC_LIFECYCLE_TRANSITIONS)) {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
@@ -136,7 +136,7 @@ const handlePublish = withErrorHandler(
         if (project.lifecycleStatus !== 'draft') {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
-            `Cannot publish epic: parent project is in '${String(project.lifecycleStatus)}' status, expected 'draft'`,
+            `Cannot publish epic: parent project is in '${project.lifecycleStatus}' status, expected 'draft'`,
           );
         }
 
@@ -167,7 +167,7 @@ const handlePublish = withErrorHandler(
         //    The workStatus is derived at read time from child story statuses,
         //    so we do not set it directly here. Since all stories are 'ready',
         //    the derived workStatus will be 'ready'.
-        const currentVersion = epic.version as number;
+        const currentVersion = epic.version;
         const updated = await epicRepo.update(tenantId, epicId, {}, currentVersion);
 
         const auth = (req as AuthenticatedRequest).auth;
@@ -179,7 +179,7 @@ const handlePublish = withErrorHandler(
           actorId: auth.type === 'human' ? auth.userId : auth.workerId,
           tenantId,
           projectId,
-          details: `Epic "${String(epic.name)}" published (${currentStatus} → ready)`,
+          details: `Epic "${epic.name}" published (${currentStatus} → ready)`,
           changes: {
             before: { workStatus: currentStatus },
             after: { workStatus: 'ready' },

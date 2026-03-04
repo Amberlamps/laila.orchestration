@@ -409,7 +409,7 @@ describe('getAllowedTransitions', () => {
 describe('Structural integrity', () => {
   it('all task transition targets are valid TaskStatus values', () => {
     const allStatuses = new Set(Object.keys(TASK_TRANSITIONS));
-    for (const targets of Object.values(TASK_TRANSITIONS) as readonly TaskStatus[][]) {
+    for (const targets of Object.values(TASK_TRANSITIONS) as readonly (readonly TaskStatus[])[]) {
       for (const target of targets) {
         expect(allStatuses.has(target)).toBe(true);
       }
@@ -418,7 +418,9 @@ describe('Structural integrity', () => {
 
   it('all user story transition targets are valid UserStoryStatus values', () => {
     const allStatuses = new Set(Object.keys(USER_STORY_TRANSITIONS));
-    for (const targets of Object.values(USER_STORY_TRANSITIONS) as readonly UserStoryStatus[][]) {
+    for (const targets of Object.values(
+      USER_STORY_TRANSITIONS,
+    ) as readonly (readonly UserStoryStatus[])[]) {
       for (const target of targets) {
         expect(allStatuses.has(target)).toBe(true);
       }
@@ -427,7 +429,9 @@ describe('Structural integrity', () => {
 
   it('all project transition targets are valid ProjectStatus values', () => {
     const allStatuses = new Set(Object.keys(PROJECT_TRANSITIONS));
-    for (const targets of Object.values(PROJECT_TRANSITIONS) as readonly ProjectStatus[][]) {
+    for (const targets of Object.values(
+      PROJECT_TRANSITIONS,
+    ) as readonly (readonly ProjectStatus[])[]) {
       for (const target of targets) {
         expect(allStatuses.has(target)).toBe(true);
       }

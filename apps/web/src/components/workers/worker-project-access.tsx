@@ -485,7 +485,7 @@ export function WorkerProjectAccess({ workerId }: WorkerProjectAccessProps) {
           title={`Remove access to "${removeConfirm.projectName}"?`}
           description={
             removeConfirm.stories.length === 1
-              ? `This worker is currently working on "${removeConfirm.stories[0].title}" in this project. Removing access will unassign the story and revoke project access.`
+              ? `This worker is currently working on "${removeConfirm.stories[0]?.title ?? ''}" in this project. Removing access will unassign the story and revoke project access.`
               : `This worker has ${String(removeConfirm.stories.length)} active story assignments in this project. Removing access will unassign all stories and revoke project access.`
           }
           confirmLabel="Remove Access"

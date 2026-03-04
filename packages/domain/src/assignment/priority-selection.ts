@@ -95,7 +95,13 @@ export const selectStoryForAssignment = (
     return a.createdAt.getTime() - b.createdAt.getTime();
   });
 
+  // sorted is non-empty because eligibleWithInfo.length === 0 is guarded above,
+  // but TypeScript infers sorted[0] as potentially undefined — use nullish
+  // coalescing with an early return to satisfy the type checker without !.
   const selected = sorted[0];
+  if (!selected) {
+    return { selected: false, reason: 'No eligible stories after sort (unexpected)' };
+  }
   return {
     selected: true,
     storyId: selected.id,

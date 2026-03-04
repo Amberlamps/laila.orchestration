@@ -11,6 +11,9 @@
     "./validation": "./src/validation/index.ts",
     "./assignment": "./src/assignment/index.ts"
   },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@laila/shared": "workspace:*"
   },

@@ -36,12 +36,12 @@ const getSetupCallback = (): ((
   const calls = mockSetEventListener.mock.calls as [
     (handleFocus: (focused?: boolean) => void) => (() => void) | undefined,
   ][];
-  return calls[0][0];
+  return calls[0]![0];
 };
 
 /** Helper: find the visibilitychange handler registered via addEventListener. */
 const getVisibilityHandler = (addSpy: ReturnType<typeof vi.spyOn>): (() => void) => {
-  const call = addSpy.mock.calls.find((c) => c[0] === 'visibilitychange');
+  const call = addSpy.mock.calls.find((c: [string, ...unknown[]]) => c[0] === 'visibilitychange');
   return call?.[1] as () => void;
 };
 
@@ -150,7 +150,7 @@ describe('setupVisibilityIntegration', () => {
     const handleFocus = vi.fn();
     getSetupCallback()(handleFocus);
 
-    const eventNames = addSpy.mock.calls.map((call) => call[0]);
+    const eventNames = addSpy.mock.calls.map((call: [string, ...unknown[]]) => call[0]);
     expect(eventNames).toContain('visibilitychange');
     expect(eventNames).not.toContain('focus');
     expect(eventNames).not.toContain('blur');

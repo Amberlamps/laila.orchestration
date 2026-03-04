@@ -28,7 +28,7 @@ import { z } from 'zod';
 const { MockValidationError } = vi.hoisted(() => {
   class MockValidationError extends Error {
     code: string;
-    details?: Record<string, unknown>;
+    details: Record<string, unknown> | undefined;
 
     constructor(code: string, message: string, details?: Record<string, unknown>) {
       super(message);
@@ -207,7 +207,7 @@ describe('withValidation', () => {
       await wrapped(req, res);
 
       expect(handler).toHaveBeenCalledOnce();
-      const data = handler.mock.calls[0][2];
+      const data = handler.mock.calls[0]![2];
       expect(data.body).toEqual({ name: 'Test', email: 'a@b.com' });
       expect(data.query).toEqual({ page: 1, limit: 10 });
       expect(data.params).toEqual({ id: uuid });
@@ -374,7 +374,7 @@ describe('withValidation', () => {
         expect.fail('Expected ValidationError');
       } catch (err) {
         expect(err).toBeInstanceOf(MockValidationError);
-        const validationErr = err as MockValidationError;
+        const validationErr = err as InstanceType<typeof MockValidationError>;
         const fieldErrors = validationErr.details?.fieldErrors as Record<string, string[]>;
         expect(fieldErrors).toHaveProperty('body.name');
         expect(fieldErrors).toHaveProperty('body.email');
@@ -400,7 +400,7 @@ describe('withValidation', () => {
         expect.fail('Expected ValidationError');
       } catch (err) {
         expect(err).toBeInstanceOf(MockValidationError);
-        const validationErr = err as MockValidationError;
+        const validationErr = err as InstanceType<typeof MockValidationError>;
         const fieldErrors = validationErr.details?.fieldErrors as Record<string, string[]>;
 
         // Body errors
@@ -443,7 +443,7 @@ describe('withValidation', () => {
         expect.fail('Expected ValidationError');
       } catch (err) {
         expect(err).toBeInstanceOf(MockValidationError);
-        const validationErr = err as MockValidationError;
+        const validationErr = err as InstanceType<typeof MockValidationError>;
         const fieldErrors = validationErr.details?.fieldErrors as Record<string, string[]>;
         expect(fieldErrors).toHaveProperty('body.user.profile.firstName');
         expect(fieldErrors).toHaveProperty('body.user.profile.lastName');
@@ -468,7 +468,7 @@ describe('withValidation', () => {
       await wrapped(req, res);
 
       expect(handler).toHaveBeenCalledOnce();
-      expect(handler.mock.calls[0][2].body).toEqual({
+      expect(handler.mock.calls[0]![2].body).toEqual({
         user: { profile: { firstName: 'Jane', lastName: 'Doe' } },
       });
     });
@@ -493,7 +493,7 @@ describe('withValidation', () => {
         expect.fail('Expected ValidationError');
       } catch (err) {
         expect(err).toBeInstanceOf(MockValidationError);
-        const validationErr = err as MockValidationError;
+        const validationErr = err as InstanceType<typeof MockValidationError>;
         const fieldErrors = validationErr.details?.fieldErrors as Record<string, string[]>;
         // Array index should appear in the path: body.tags.1
         expect(fieldErrors).toHaveProperty('body.tags.1');
@@ -514,7 +514,7 @@ describe('withValidation', () => {
         expect.fail('Expected ValidationError');
       } catch (err) {
         expect(err).toBeInstanceOf(MockValidationError);
-        const validationErr = err as MockValidationError;
+        const validationErr = err as InstanceType<typeof MockValidationError>;
         const fieldErrors = validationErr.details?.fieldErrors as Record<string, string[]>;
         expect(fieldErrors).toHaveProperty('body.tags');
       }
@@ -531,7 +531,7 @@ describe('withValidation', () => {
       await wrapped(req, res);
 
       expect(handler).toHaveBeenCalledOnce();
-      expect(handler.mock.calls[0][2].body).toEqual({ tags: ['api', 'backend'] });
+      expect(handler.mock.calls[0]![2].body).toEqual({ tags: ['api', 'backend'] });
     });
   });
 
@@ -550,7 +550,7 @@ describe('withValidation', () => {
       const wrapped = withValidation({ query: querySchema })(handler);
       await wrapped(req, res);
 
-      const data = handler.mock.calls[0][2];
+      const data = handler.mock.calls[0]![2];
       expect(data.query.page).toBe(3);
       expect(typeof data.query.page).toBe('number');
       expect(data.query.limit).toBe(25);
@@ -567,7 +567,7 @@ describe('withValidation', () => {
       const wrapped = withValidation({ body: coercionSchema })(handler);
       await wrapped(req, res);
 
-      const data = handler.mock.calls[0][2];
+      const data = handler.mock.calls[0]![2];
       expect(data.body.count).toBe(42);
       expect(typeof data.body.count).toBe('number');
       expect(data.body.active).toBe(true);
@@ -584,7 +584,7 @@ describe('withValidation', () => {
       const wrapped = withValidation({ body: coercionSchema })(handler);
       await wrapped(req, res);
 
-      const data = handler.mock.calls[0][2];
+      const data = handler.mock.calls[0]![2];
       expect(data.body.count).toBe(0);
       // Note: z.coerce.boolean() coerces non-empty strings to true.
       // "false" is a non-empty string, so it coerces to true.
@@ -608,7 +608,7 @@ describe('withValidation', () => {
       const wrapped = withValidation({ query: defaultsSchema })(handler);
       await wrapped(req, res);
 
-      const data = handler.mock.calls[0][2];
+      const data = handler.mock.calls[0]![2];
       expect(data.query.page).toBe(1);
       expect(data.query.sortOrder).toBe('asc');
       expect(data.query.filter).toBeUndefined();
@@ -624,7 +624,7 @@ describe('withValidation', () => {
       const wrapped = withValidation({ query: defaultsSchema })(handler);
       await wrapped(req, res);
 
-      const data = handler.mock.calls[0][2];
+      const data = handler.mock.calls[0]![2];
       expect(data.query.page).toBe(5);
       expect(data.query.sortOrder).toBe('desc');
       expect(data.query.filter).toBe('active');
@@ -645,7 +645,7 @@ describe('withValidation', () => {
       const wrapped = withValidation({ body: schemaWithDefaults })(handler);
       await wrapped(req, res);
 
-      const data = handler.mock.calls[0][2];
+      const data = handler.mock.calls[0]![2];
       expect(data.body.title).toBe('My Task');
       expect(data.body.priority).toBe('medium');
     });
@@ -668,7 +668,7 @@ describe('withValidation', () => {
         expect.fail('Expected ValidationError');
       } catch (err) {
         expect(err).toBeInstanceOf(MockValidationError);
-        const validationErr = err as MockValidationError;
+        const validationErr = err as InstanceType<typeof MockValidationError>;
         expect(validationErr.code).toBe('VALIDATION_FAILED');
         expect(validationErr.message).toBe('Request validation failed');
         expect(validationErr.details).toBeDefined();
@@ -689,7 +689,7 @@ describe('withValidation', () => {
         await wrapped(req, res);
         expect.fail('Expected ValidationError');
       } catch (err) {
-        const validationErr = err as MockValidationError;
+        const validationErr = err as InstanceType<typeof MockValidationError>;
         const fieldErrors = validationErr.details?.fieldErrors as Record<string, string[]>;
 
         for (const messages of Object.values(fieldErrors)) {

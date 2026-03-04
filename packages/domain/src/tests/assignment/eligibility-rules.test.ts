@@ -55,25 +55,25 @@ describe('evaluateEligibility', () => {
       const results = evaluateEligibility(stories, epics, project);
 
       expect(results).toHaveLength(1);
-      expect(results[0].eligible).toBe(true);
-      expect(results[0].disqualificationReasons).toHaveLength(0);
-      expect(results[0].storyId).toBe('story-1');
+      expect(results[0]!.eligible).toBe(true);
+      expect(results[0]!.disqualificationReasons).toHaveLength(0);
+      expect(results[0]!.storyId).toBe('story-1');
     });
 
     it('should mark story as eligible when project is in-progress', () => {
       const project = createTestProject({ status: 'in-progress' });
       const results = evaluateEligibility([createTestStory()], defaultEpics(), project);
 
-      expect(results[0].eligible).toBe(true);
-      expect(results[0].disqualificationReasons).toHaveLength(0);
+      expect(results[0]!.eligible).toBe(true);
+      expect(results[0]!.disqualificationReasons).toHaveLength(0);
     });
 
     it('should mark story as eligible when parent epic is in-progress', () => {
       const epics = new Map([['epic-1', createTestEpic({ status: 'in-progress' })]]);
       const results = evaluateEligibility([createTestStory()], epics, createTestProject());
 
-      expect(results[0].eligible).toBe(true);
-      expect(results[0].disqualificationReasons).toHaveLength(0);
+      expect(results[0]!.eligible).toBe(true);
+      expect(results[0]!.disqualificationReasons).toHaveLength(0);
     });
 
     it('should mark multiple stories as eligible independently', () => {
@@ -81,8 +81,8 @@ describe('evaluateEligibility', () => {
       const results = evaluateEligibility(stories, defaultEpics(), createTestProject());
 
       expect(results).toHaveLength(2);
-      expect(results[0].eligible).toBe(true);
-      expect(results[1].eligible).toBe(true);
+      expect(results[0]!.eligible).toBe(true);
+      expect(results[1]!.eligible).toBe(true);
     });
   });
 
@@ -94,32 +94,32 @@ describe('evaluateEligibility', () => {
       const project = createTestProject({ status: 'draft' });
       const results = evaluateEligibility([createTestStory()], defaultEpics(), project);
 
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons).toHaveLength(1);
-      expect(results[0].disqualificationReasons[0]).toContain('draft');
+      expect(results[0]!.eligible).toBe(false);
+      expect(results[0]!.disqualificationReasons).toHaveLength(1);
+      expect(results[0]!.disqualificationReasons[0]).toContain('draft');
     });
 
     it('should disqualify when project is complete', () => {
       const project = createTestProject({ status: 'complete' });
       const results = evaluateEligibility([createTestStory()], defaultEpics(), project);
 
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons).toHaveLength(1);
-      expect(results[0].disqualificationReasons[0]).toContain('complete');
+      expect(results[0]!.eligible).toBe(false);
+      expect(results[0]!.disqualificationReasons).toHaveLength(1);
+      expect(results[0]!.disqualificationReasons[0]).toContain('complete');
     });
 
     it('should allow when project is ready', () => {
       const project = createTestProject({ status: 'ready' });
       const results = evaluateEligibility([createTestStory()], defaultEpics(), project);
 
-      expect(results[0].eligible).toBe(true);
+      expect(results[0]!.eligible).toBe(true);
     });
 
     it('should allow when project is in-progress', () => {
       const project = createTestProject({ status: 'in-progress' });
       const results = evaluateEligibility([createTestStory()], defaultEpics(), project);
 
-      expect(results[0].eligible).toBe(true);
+      expect(results[0]!.eligible).toBe(true);
     });
 
     it('should disqualify all stories when project state is invalid', () => {
@@ -147,16 +147,16 @@ describe('evaluateEligibility', () => {
       const story = createTestStory({ status });
       const results = evaluateEligibility([story], defaultEpics(), createTestProject());
 
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons).toHaveLength(1);
-      expect(results[0].disqualificationReasons[0]).toContain(status);
+      expect(results[0]!.eligible).toBe(false);
+      expect(results[0]!.disqualificationReasons).toHaveLength(1);
+      expect(results[0]!.disqualificationReasons[0]).toContain(status);
     });
 
     it('should allow stories in "not-started" status', () => {
       const story = createTestStory({ status: 'not-started' });
       const results = evaluateEligibility([story], defaultEpics(), createTestProject());
 
-      expect(results[0].eligible).toBe(true);
+      expect(results[0]!.eligible).toBe(true);
     });
   });
 
@@ -168,47 +168,47 @@ describe('evaluateEligibility', () => {
       const epics = new Map([['epic-1', createTestEpic({ status: 'blocked' })]]);
       const results = evaluateEligibility([createTestStory()], epics, createTestProject());
 
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons).toHaveLength(1);
-      expect(results[0].disqualificationReasons[0]).toContain('blocked');
+      expect(results[0]!.eligible).toBe(false);
+      expect(results[0]!.disqualificationReasons).toHaveLength(1);
+      expect(results[0]!.disqualificationReasons[0]).toContain('blocked');
     });
 
     it('should disqualify when parent epic is failed', () => {
       const epics = new Map([['epic-1', createTestEpic({ status: 'failed' })]]);
       const results = evaluateEligibility([createTestStory()], epics, createTestProject());
 
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons[0]).toContain('failed');
+      expect(results[0]!.eligible).toBe(false);
+      expect(results[0]!.disqualificationReasons[0]).toContain('failed');
     });
 
     it('should disqualify when parent epic is complete', () => {
       const epics = new Map([['epic-1', createTestEpic({ status: 'complete' })]]);
       const results = evaluateEligibility([createTestStory()], epics, createTestProject());
 
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons[0]).toContain('complete');
+      expect(results[0]!.eligible).toBe(false);
+      expect(results[0]!.disqualificationReasons[0]).toContain('complete');
     });
 
     it('should allow when parent epic is not-started', () => {
       const epics = new Map([['epic-1', createTestEpic({ status: 'not-started' })]]);
       const results = evaluateEligibility([createTestStory()], epics, createTestProject());
 
-      expect(results[0].eligible).toBe(true);
+      expect(results[0]!.eligible).toBe(true);
     });
 
     it('should allow when parent epic is in-progress', () => {
       const epics = new Map([['epic-1', createTestEpic({ status: 'in-progress' })]]);
       const results = evaluateEligibility([createTestStory()], epics, createTestProject());
 
-      expect(results[0].eligible).toBe(true);
+      expect(results[0]!.eligible).toBe(true);
     });
 
     it('should disqualify when parent epic is missing', () => {
       const epics = new Map<string, EpicInfo>();
       const results = evaluateEligibility([createTestStory()], epics, createTestProject());
 
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons[0]).toContain('not found');
+      expect(results[0]!.eligible).toBe(false);
+      expect(results[0]!.disqualificationReasons[0]).toContain('not found');
     });
 
     it('should evaluate stories with different parent epics independently', () => {
@@ -223,8 +223,8 @@ describe('evaluateEligibility', () => {
 
       const results = evaluateEligibility(stories, epics, createTestProject());
 
-      expect(results[0].eligible).toBe(true);
-      expect(results[1].eligible).toBe(false);
+      expect(results[0]!.eligible).toBe(true);
+      expect(results[1]!.eligible).toBe(false);
     });
   });
 
@@ -236,16 +236,16 @@ describe('evaluateEligibility', () => {
       const story = createTestStory({ crossStoryDepsSatisfied: false });
       const results = evaluateEligibility([story], defaultEpics(), createTestProject());
 
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons).toHaveLength(1);
-      expect(results[0].disqualificationReasons[0]).toContain('dependencies');
+      expect(results[0]!.eligible).toBe(false);
+      expect(results[0]!.disqualificationReasons).toHaveLength(1);
+      expect(results[0]!.disqualificationReasons[0]).toContain('dependencies');
     });
 
     it('should allow when cross-story deps are satisfied', () => {
       const story = createTestStory({ crossStoryDepsSatisfied: true });
       const results = evaluateEligibility([story], defaultEpics(), createTestProject());
 
-      expect(results[0].eligible).toBe(true);
+      expect(results[0]!.eligible).toBe(true);
     });
   });
 
@@ -263,13 +263,13 @@ describe('evaluateEligibility', () => {
 
       const results = evaluateEligibility([story], epics, project);
 
-      expect(results[0].eligible).toBe(false);
+      expect(results[0]!.eligible).toBe(false);
       // All four criteria should fail:
       // 1. Project in draft state
       // 2. Story in in-progress status
       // 3. Epic is blocked
       // 4. Cross-story deps not satisfied
-      expect(results[0].disqualificationReasons).toHaveLength(4);
+      expect(results[0]!.disqualificationReasons).toHaveLength(4);
     });
 
     it('should collect exactly two reasons when two criteria fail', () => {
@@ -278,8 +278,8 @@ describe('evaluateEligibility', () => {
 
       const results = evaluateEligibility([story], defaultEpics(), project);
 
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons).toHaveLength(2);
+      expect(results[0]!.eligible).toBe(false);
+      expect(results[0]!.disqualificationReasons).toHaveLength(2);
     });
 
     it('should collect three reasons when project, story, and deps fail', () => {
@@ -291,8 +291,8 @@ describe('evaluateEligibility', () => {
 
       const results = evaluateEligibility([story], defaultEpics(), project);
 
-      expect(results[0].eligible).toBe(false);
-      expect(results[0].disqualificationReasons).toHaveLength(3);
+      expect(results[0]!.eligible).toBe(false);
+      expect(results[0]!.disqualificationReasons).toHaveLength(3);
     });
   });
 
@@ -319,9 +319,9 @@ describe('evaluateEligibility', () => {
 
       const results = evaluateEligibility(stories, defaultEpics(), createTestProject());
 
-      expect(results[0].eligible).toBe(true);
-      expect(results[1].eligible).toBe(false);
-      expect(results[2].eligible).toBe(false);
+      expect(results[0]!.eligible).toBe(true);
+      expect(results[1]!.eligible).toBe(false);
+      expect(results[2]!.eligible).toBe(false);
     });
   });
 });

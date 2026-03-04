@@ -112,8 +112,8 @@ describe('Assignment Pipeline Integration', () => {
 
     // --- Step 1: Evaluate eligibility ---
     const eligibilityResults = evaluateEligibility(eligibilityStories, epics, project);
-    expect(eligibilityResults[0].eligible).toBe(true);
-    expect(eligibilityResults[1].eligible).toBe(false);
+    expect(eligibilityResults[0]!.eligible).toBe(true);
+    expect(eligibilityResults[1]!.eligible).toBe(false);
 
     const eligibleIds = getEligibleStoryIds(eligibilityStories, epics, project);
     expect(eligibleIds).toEqual(['story-1']);

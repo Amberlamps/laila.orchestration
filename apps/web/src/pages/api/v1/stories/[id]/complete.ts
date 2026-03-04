@@ -144,8 +144,8 @@ const handleComplete = withErrorHandler(
             DomainErrorCode.WORKER_NOT_ASSIGNED,
             `Worker ${workerId} is not assigned to this story. ` +
               `The story may have been reclaimed due to timeout or manual unassignment. ` +
-              `Current story status: ${String(story.workStatus)}.`,
-            { storyId: story.id, currentStatus: String(story.workStatus) },
+              `Current story status: ${story.workStatus}.`,
+            { storyId: story.id, currentStatus: story.workStatus },
           );
         }
 
@@ -153,7 +153,7 @@ const handleComplete = withErrorHandler(
         if (story.workStatus !== 'in_progress') {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
-            `Cannot complete story in "${String(story.workStatus)}" status. Story must be in "in_progress" status to complete.`,
+            `Cannot complete story in "${story.workStatus}" status. Story must be in "in_progress" status to complete.`,
           );
         }
 
@@ -184,16 +184,16 @@ const handleComplete = withErrorHandler(
         //     transaction so we can detect auto-complete transitions
         //     and log system audit events after the transaction commits.
         const epicRepo = createEpicRepository(db);
-        const storyEpicId = story.epicId as string;
+        const storyEpicId = story.epicId;
         const epicBefore = await epicRepo.findById(tenantId, storyEpicId);
-        const previousEpicStatus = (epicBefore?.workStatus as string | undefined) ?? null;
+        const previousEpicStatus = epicBefore?.workStatus ?? null;
 
         const projectIdForAudit = await taskRepo.getProjectIdForStory(tenantId, id);
         let previousProjectStatus: string | null = null;
         if (projectIdForAudit) {
           const projectRepo = createProjectRepository(db);
           const projectBefore = await projectRepo.findById(tenantId, projectIdForAudit);
-          previousProjectStatus = (projectBefore?.workStatus as string | undefined) ?? null;
+          previousProjectStatus = projectBefore?.workStatus ?? null;
         }
 
         // 6. Single atomic transaction: story completion + attempt history +
@@ -310,12 +310,10 @@ const handleComplete = withErrorHandler(
         //    updatedAt on the returned record is the completion timestamp.
         const completedAt =
           updated.updatedAt instanceof Date ? updated.updatedAt : new Date(updated.updatedAt);
-        const startedAt =
-          story.assignedAt instanceof Date
-            ? story.assignedAt
-            : story.assignedAt
-              ? new Date(story.assignedAt as unknown as string)
-              : null;
+        // assignedAt is typed as Date; the instanceof guard handles runtime
+        // values that arrive pre-serialised (e.g. from JSON), but if the
+        // check fails the value is not a valid Date so we fall back to null.
+        const startedAt = story.assignedAt instanceof Date ? story.assignedAt : null;
         const durationSeconds = startedAt
           ? Math.floor((completedAt.getTime() - startedAt.getTime()) / 1000)
           : 0;
@@ -332,7 +330,7 @@ const handleComplete = withErrorHandler(
           actorId: workerId,
           tenantId,
           ...(storyCompleteProjectId ? { projectId: storyCompleteProjectId } : {}),
-          details: `Story "${String(story.title)}" completed`,
+          details: `Story "${story.title}" completed`,
           changes: {
             before: { workStatus: 'in_progress' },
             after: { workStatus: 'done', completedAt: completedAt.toISOString() },
@@ -356,7 +354,7 @@ const handleComplete = withErrorHandler(
             epicId: storyEpicId,
             previousStatus: previousEpicStatus ?? 'unknown',
             tenantId,
-            projectId: storyCompleteProjectId,
+            ...(storyCompleteProjectId ? { projectId: storyCompleteProjectId } : {}),
           });
         }
 

@@ -113,8 +113,8 @@ export const guardWorkerStillAssigned = async (
       DomainErrorCode.WORKER_NOT_ASSIGNED,
       'You are no longer assigned to this story. ' +
         'The story may have been reclaimed due to timeout or manual unassignment. ' +
-        `Current story status: ${String(story.workStatus)}.`,
-      { storyId, currentStatus: String(story.workStatus), currentAssignee: story.assignedWorkerId },
+        `Current story status: ${story.workStatus}.`,
+      { storyId, currentStatus: story.workStatus, currentAssignee: story.assignedWorkerId },
     );
   }
 
@@ -125,9 +125,9 @@ export const guardWorkerStillAssigned = async (
   if (story.workStatus !== 'in_progress') {
     throw new ConflictError(
       DomainErrorCode.INVALID_STATUS_TRANSITION,
-      `Story is no longer in-progress (current status: ${String(story.workStatus)}). ` +
+      `Story is no longer in-progress (current status: ${story.workStatus}). ` +
         'The completion attempt cannot proceed.',
-      { storyId, currentStatus: String(story.workStatus) },
+      { storyId, currentStatus: story.workStatus },
     );
   }
 

@@ -36,7 +36,9 @@ import {
   ConflictError,
   ValidationError,
   NotFoundError,
+  type BaseTable,
   type DrizzleDb,
+  type FindManyOptions,
   type PaginatedResult,
 } from './base-repository';
 
@@ -163,7 +165,7 @@ const validateLifecycleTransition = (current: string, next: string): void => {
  * ```
  */
 export const createProjectRepository = (db: DatabaseClient) => {
-  const base = createBaseRepository(projectsTable, db);
+  const base = createBaseRepository(projectsTable as unknown as BaseTable, db);
   const typedDb = asDrizzle(db);
 
   // -------------------------------------------------------------------------
@@ -190,7 +192,7 @@ export const createProjectRepository = (db: DatabaseClient) => {
       ...(data.workerInactivityTimeoutMinutes !== undefined && {
         workerInactivityTimeoutMinutes: data.workerInactivityTimeoutMinutes,
       }),
-    });
+    }) as Promise<ProjectRecord>;
   };
 
   // -------------------------------------------------------------------------
@@ -225,10 +227,10 @@ export const createProjectRepository = (db: DatabaseClient) => {
       if (!existing) {
         throw new NotFoundError(base.entityName, id);
       }
-      validateLifecycleTransition(existing.lifecycleStatus, data.lifecycleStatus);
+      validateLifecycleTransition(existing.lifecycleStatus as string, data.lifecycleStatus);
     }
 
-    return base.update(tenantId, id, data, expectedVersion);
+    return base.update(tenantId, id, data, expectedVersion) as Promise<ProjectRecord>;
   };
 
   // -------------------------------------------------------------------------
@@ -262,7 +264,9 @@ export const createProjectRepository = (db: DatabaseClient) => {
 
     const filters = filterConditions.length > 0 ? and(...filterConditions) : undefined;
 
-    return base.findMany(tenantId, { pagination, filters });
+    return base.findMany(tenantId, { pagination, filters }) as Promise<
+      PaginatedResult<ProjectRecord>
+    >;
   };
 
   // -------------------------------------------------------------------------
@@ -443,7 +447,7 @@ export const createProjectRepository = (db: DatabaseClient) => {
     );
 
     return {
-      ...project,
+      ...(project as ProjectRecord),
       epicCounts,
     };
   };
@@ -531,7 +535,7 @@ export const createProjectRepository = (db: DatabaseClient) => {
       totalStories > 0 ? Math.round((completedStories / totalStories) * 10000) / 100 : 0;
 
     return {
-      ...project,
+      ...(project as ProjectRecord),
       epicCounts,
       storyCounts,
       totalEpics,
@@ -677,7 +681,12 @@ export const createProjectRepository = (db: DatabaseClient) => {
       throw new NotFoundError(base.entityName, id);
     }
 
-    return base.update(tenantId, id, { workStatus: newStatus }, existing.version);
+    return base.update(
+      tenantId,
+      id,
+      { workStatus: newStatus },
+      existing.version as number,
+    ) as Promise<ProjectRecord>;
   };
 
   // -------------------------------------------------------------------------
@@ -685,10 +694,15 @@ export const createProjectRepository = (db: DatabaseClient) => {
   // -------------------------------------------------------------------------
 
   return {
-    /** Find a project by ID within a tenant scope */
-    findById: base.findById,
-    /** Find multiple projects with pagination (base, no status filters) */
-    findMany: base.findMany,
+    /** Find a project by ID within a tenant scope — explicitly typed for correct .d.ts emission */
+    findById: (tenantId: string, id: string): Promise<ProjectRecord | null> =>
+      base.findById(tenantId, id) as Promise<ProjectRecord | null>,
+    /** Find multiple projects with pagination (base, no status filters) — explicitly typed */
+    findMany: (
+      tenantId: string,
+      options?: FindManyOptions,
+    ): Promise<PaginatedResult<ProjectRecord>> =>
+      base.findMany(tenantId, options) as Promise<PaginatedResult<ProjectRecord>>,
     /** Create a new project with draft/pending defaults */
     create,
     /** Update a project with lifecycle status validation */
@@ -703,8 +717,9 @@ export const createProjectRepository = (db: DatabaseClient) => {
     findWithStats,
     /** Update the derived work status */
     updateWorkStatus,
-    /** Hard-delete for testing/cleanup (from base) */
-    hardDelete: base.hardDelete,
+    /** Hard-delete for testing/cleanup — explicitly typed for correct .d.ts emission */
+    hardDelete: (tenantId: string, id: string): Promise<ProjectRecord | null> =>
+      base.hardDelete(tenantId, id) as Promise<ProjectRecord | null>,
     /** Cascade hard-delete project and all children in a transaction */
     hardDeleteCascade,
     /** The underlying database client */

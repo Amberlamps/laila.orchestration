@@ -747,7 +747,7 @@ describe('Worker API', () => {
       const details = errorObj.details as Record<string, unknown>;
       const stories = details.inProgressStories as Array<Record<string, unknown>>;
       expect(stories).toHaveLength(2);
-      expect(stories[0].id).toBe('story-001');
+      expect(stories[0]!.id).toBe('story-001');
     });
 
     it('allows forced deletion with force=true and unassigns stories', async () => {
@@ -1081,7 +1081,7 @@ describe('Worker API', () => {
       const details = errorObj.details as Record<string, unknown>;
       const stories = details.inProgressStories as Array<Record<string, unknown>>;
       expect(stories).toHaveLength(1);
-      expect(stories[0].id).toBe('story-001');
+      expect(stories[0]!.id).toBe('story-001');
 
       expect(mockWorkerRepo.revokeProjectAccess).not.toHaveBeenCalled();
     });

@@ -55,6 +55,7 @@ interface WorkerData {
   lastSeenAt: string | null;
   createdAt: string;
   updatedAt: string;
+  version: number;
   currentAssignment?: {
     storyId: string;
     storyTitle: string;
@@ -192,7 +193,15 @@ const WorkerNotFound = () => {
  * Click to switch from display to input mode. Press Enter or blur to save.
  * Press Escape to cancel. Uses the `useUpdateWorker` mutation.
  */
-const InlineEditableName = ({ name, workerId }: { name: string; workerId: string }) => {
+const InlineEditableName = ({
+  name,
+  workerId,
+  version,
+}: {
+  name: string;
+  workerId: string;
+  version: number;
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(name);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -214,12 +223,12 @@ const InlineEditableName = ({ name, workerId }: { name: string; workerId: string
   const handleSave = useCallback(() => {
     const trimmed = editValue.trim();
     if (trimmed && trimmed !== name) {
-      updateWorker.mutate({ name: trimmed });
+      updateWorker.mutate({ name: trimmed, version });
     } else {
       setEditValue(name);
     }
     setIsEditing(false);
-  }, [editValue, name, updateWorker]);
+  }, [editValue, name, updateWorker, version]);
 
   const handleCancel = useCallback(() => {
     setEditValue(name);
@@ -467,9 +476,7 @@ const WorkerDetailPage: NextPageWithLayout = () => {
   }
 
   // Extract current assignment from worker data
-  const workerRecord = worker as Record<string, unknown>;
-  const currentAssignment = (workerRecord.currentAssignment ??
-    null) as WorkerData['currentAssignment'];
+  const currentAssignment = worker.currentAssignment ?? null;
 
   const breadcrumbItems = [{ label: 'Workers', href: '/workers' }, { label: worker.name }];
 
@@ -480,7 +487,7 @@ const WorkerDetailPage: NextPageWithLayout = () => {
 
       {/* Header: Inline-editable name + Worker ID */}
       <div>
-        <InlineEditableName name={worker.name} workerId={worker.id} />
+        <InlineEditableName name={worker.name} workerId={worker.id} version={worker.version} />
         <p className="mt-1 font-mono text-[13px] text-zinc-400" aria-label="Worker ID">
           {worker.id}
         </p>

@@ -213,10 +213,7 @@ export async function buildAssignedResponse(
   // -----------------------------------------------------------------------
   const storyRecord = await storyRepo.findById(tenantId, storyId);
   if (!storyRecord) {
-    throw new NotFoundError(
-      DomainErrorCode.STORY_NOT_FOUND,
-      `Story ${storyId} not found`,
-    );
+    throw new NotFoundError(DomainErrorCode.STORY_NOT_FOUND, `Story ${storyId} not found`);
   }
 
   // Type-narrow the DB record for clean access below
@@ -227,10 +224,7 @@ export async function buildAssignedResponse(
   // -----------------------------------------------------------------------
   const epicRecord = await epicRepo.findById(tenantId, story.epicId);
   if (!epicRecord) {
-    throw new NotFoundError(
-      DomainErrorCode.EPIC_NOT_FOUND,
-      `Epic ${story.epicId} not found`,
-    );
+    throw new NotFoundError(DomainErrorCode.EPIC_NOT_FOUND, `Epic ${story.epicId} not found`);
   }
 
   // -----------------------------------------------------------------------
@@ -268,21 +262,13 @@ export async function buildAssignedResponse(
   // -----------------------------------------------------------------------
   // Step 6: Compute recommended task execution order
   // -----------------------------------------------------------------------
-  const recommendedOrder = computeRecommendedTaskOrder(
-    storyTaskIds,
-    taskStatuses,
-    adjacencyList,
-  );
+  const recommendedOrder = computeRecommendedTaskOrder(storyTaskIds, taskStatuses, adjacencyList);
 
   // -----------------------------------------------------------------------
   // Step 7: Load personas for all tasks that have a personaId
   // -----------------------------------------------------------------------
   const personaIds = [
-    ...new Set(
-      storyTasks
-        .map((t) => t.personaId)
-        .filter((id): id is string => id !== null),
-    ),
+    ...new Set(storyTasks.map((t) => t.personaId).filter((id): id is string => id !== null)),
   ];
   const personaMap = new Map<string, { id: string; name: string; systemPrompt: string }>();
 
@@ -304,10 +290,7 @@ export async function buildAssignedResponse(
   // tasks. External dependencies are resolved from the full project task
   // graph so workers can see the status of blocking tasks in other stories.
   // -----------------------------------------------------------------------
-  const dependencyMap = new Map<
-    string,
-    Array<{ id: string; name: string; status: string }>
-  >();
+  const dependencyMap = new Map<string, Array<{ id: string; name: string; status: string }>>();
   for (const task of storyTasks) {
     const deps = adjacencyList.get(task.id) ?? new Set<string>();
     const depDetails: Array<{ id: string; name: string; status: string }> = [];
@@ -329,7 +312,7 @@ export async function buildAssignedResponse(
   // Step 9: Assemble the task detail array
   // -----------------------------------------------------------------------
   const tasks: AssignedTaskDetail[] = storyTasks.map((task) => {
-    const persona = task.personaId ? personaMap.get(task.personaId) ?? null : null;
+    const persona = task.personaId ? (personaMap.get(task.personaId) ?? null) : null;
     const deps = dependencyMap.get(task.id) ?? [];
     const refs = Array.isArray(task.references)
       ? (task.references as Array<{ type: string; url: string; title: string }>).map(
@@ -348,9 +331,7 @@ export async function buildAssignedResponse(
             system_prompt: persona.systemPrompt,
           }
         : null,
-      acceptance_criteria: Array.isArray(task.acceptanceCriteria)
-        ? task.acceptanceCriteria
-        : [],
+      acceptance_criteria: Array.isArray(task.acceptanceCriteria) ? task.acceptanceCriteria : [],
       technical_notes: task.technicalNotes,
       references: refs,
       dependencies: deps,
@@ -367,8 +348,8 @@ export async function buildAssignedResponse(
     description: story.description,
     priority: story.priority,
     epic: {
-      id: epicRecord.id as string,
-      name: epicRecord.name as string,
+      id: epicRecord.id,
+      name: epicRecord.name,
     },
     tasks,
     recommended_task_order: recommendedOrder.orderedTasks,
@@ -384,9 +365,7 @@ export async function buildAssignedResponse(
  * @param blockingInfos - Array of stories causing the block
  * @returns A typed `AssignResponse` with `type: 'blocked'`
  */
-export function buildBlockedResponse(
-  blockingInfos: BlockingStoryInfo[],
-): AssignResponse {
+export function buildBlockedResponse(blockingInfos: BlockingStoryInfo[]): AssignResponse {
   return {
     type: 'blocked',
     blocking_stories: blockingInfos,

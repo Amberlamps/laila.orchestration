@@ -19,6 +19,5 @@ export default defineProject({
     environment: 'jsdom',
     include: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/.next/**', '**/e2e/**'],
-    passWithNoTests: true,
   },
 });

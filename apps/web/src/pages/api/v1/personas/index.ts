@@ -143,7 +143,7 @@ const handleList = withErrorHandler(
             sortBy: query.sortBy,
             sortOrder: query.sortOrder,
           },
-          projectId: query.projectId,
+          ...(query.projectId ? { projectId: query.projectId } : {}),
         };
 
         const result = await personaRepo.findByTenantWithUsageCount(tenantId, options);

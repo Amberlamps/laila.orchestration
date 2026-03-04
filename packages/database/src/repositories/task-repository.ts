@@ -45,6 +45,7 @@ import {
   ConflictError,
   ValidationError,
   NotFoundError,
+  type BaseTable,
   type DrizzleDb,
   type FindManyOptions,
   type PaginatedResult,
@@ -127,7 +128,7 @@ export interface TaskWithDependencyIds extends Task {
  * @returns A task repository with all CRUD and graph methods
  */
 export const createTaskRepository = (db: Database | PoolDatabase) => {
-  const base = createBaseRepository(tasksTable, db);
+  const base = createBaseRepository(tasksTable as unknown as BaseTable, db);
   const typedDb = asDrizzle(db);
 
   // -------------------------------------------------------------------------
@@ -156,7 +157,7 @@ export const createTaskRepository = (db: Database | PoolDatabase) => {
       personaId: data.personaId ?? null,
       workStatus: 'pending',
       references: data.references ?? [],
-    });
+    }) as Promise<Task>;
   };
 
   // -------------------------------------------------------------------------
@@ -179,7 +180,7 @@ export const createTaskRepository = (db: Database | PoolDatabase) => {
     data: UpdateTaskData,
     expectedVersion: number,
   ): Promise<Task> => {
-    return base.update(tenantId, id, data, expectedVersion);
+    return base.update(tenantId, id, data, expectedVersion) as Promise<Task>;
   };
 
   // -------------------------------------------------------------------------
@@ -194,13 +195,17 @@ export const createTaskRepository = (db: Database | PoolDatabase) => {
    * @param options  - Pagination and sorting options
    * @returns Paginated result with tasks and metadata
    */
-  const findByStory = async (tenantId: string, storyId: string, options: FindManyOptions = {}) => {
+  const findByStory = async (
+    tenantId: string,
+    storyId: string,
+    options: FindManyOptions = {},
+  ): Promise<PaginatedResult<Task>> => {
     return base.findMany(tenantId, {
       ...options,
       filters: options.filters
         ? and(eq(tasksTable.userStoryId, storyId), options.filters)
         : eq(tasksTable.userStoryId, storyId),
-    });
+    }) as Promise<PaginatedResult<Task>>;
   };
 
   // -------------------------------------------------------------------------
@@ -1361,8 +1366,22 @@ export const createTaskRepository = (db: Database | PoolDatabase) => {
   };
 
   return {
-    // Base repository methods (passthrough)
-    ...base,
+    // Base repository methods — explicitly typed to ensure correct .d.ts emission with --noCheck.
+    // The `as` casts are needed because the generic SelectModel inside createBaseRepository
+    // resolves to `{ [x: string]: unknown }` due to Drizzle's complex mapped types.
+    findById: (tenantId: string, id: string): Promise<Task | null> =>
+      base.findById(tenantId, id) as Promise<Task | null>,
+    findMany: (tenantId: string, options?: FindManyOptions): Promise<PaginatedResult<Task>> =>
+      base.findMany(tenantId, options) as Promise<PaginatedResult<Task>>,
+    softDelete: (tenantId: string, id: string): Promise<Task | null> =>
+      base.softDelete(tenantId, id) as Promise<Task | null>,
+    hardDelete: (tenantId: string, id: string): Promise<Task | null> =>
+      base.hardDelete(tenantId, id) as Promise<Task | null>,
+    table: base.table,
+    entityName: base.entityName,
+    db: base.db,
+    tenantScope: base.tenantScope,
+    computePaginationMeta: base.computePaginationMeta,
     // Task-specific methods (overrides and extensions)
     create,
     update,

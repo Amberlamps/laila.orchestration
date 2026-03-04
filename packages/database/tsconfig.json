@@ -1,8 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
     "paths": {
       "@laila/shared": ["../shared/src"],
       "@laila/shared/*": ["../shared/src/*"]

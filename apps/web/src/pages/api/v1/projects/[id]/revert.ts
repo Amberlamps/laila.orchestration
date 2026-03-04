@@ -73,7 +73,7 @@ const handleRevert = withErrorHandler(
         }
 
         // 2. Validate the domain transition: ready -> draft
-        const currentStatus = String(project.lifecycleStatus);
+        const currentStatus = project.lifecycleStatus;
         if (!(currentStatus in PROJECT_TRANSITIONS)) {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
@@ -112,7 +112,7 @@ const handleRevert = withErrorHandler(
         }
 
         // 4. Update project lifecycle status back to 'draft'
-        const currentVersion = project.version as number;
+        const currentVersion = project.version;
         const updated = await projectRepo.update(
           tenantId,
           id,
@@ -129,7 +129,7 @@ const handleRevert = withErrorHandler(
           actorId: auth.type === 'human' ? auth.userId : auth.workerId,
           tenantId,
           projectId: id,
-          details: `Project "${String(project.name)}" reverted (${currentStatus} → draft)`,
+          details: `Project "${project.name}" reverted (${currentStatus} → draft)`,
           changes: {
             before: { lifecycleStatus: currentStatus },
             after: { lifecycleStatus: 'draft' },

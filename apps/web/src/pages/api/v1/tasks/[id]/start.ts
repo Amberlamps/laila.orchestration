@@ -91,7 +91,7 @@ const handleStart = withErrorHandler(
         if (task.workStatus !== 'pending') {
           throw new ConflictError(
             DomainErrorCode.INVALID_STATUS_TRANSITION,
-            `Cannot start task in "${String(task.workStatus)}" status. Task must be in "pending" status to start.`,
+            `Cannot start task in "${task.workStatus}" status. Task must be in "pending" status to start.`,
           );
         }
 
@@ -158,7 +158,7 @@ const handleStart = withErrorHandler(
           actorId: workerId,
           tenantId,
           ...(startProjectId ? { projectId: startProjectId } : {}),
-          details: `Task "${String(task.title)}" started`,
+          details: `Task "${task.title}" started`,
           changes: {
             before: { workStatus: 'pending' },
             after: { workStatus: 'in_progress' },

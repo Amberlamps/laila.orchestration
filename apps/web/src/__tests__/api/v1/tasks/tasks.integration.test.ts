@@ -40,6 +40,8 @@ import {
   TEST_TENANT_ID,
 } from '@/__tests__/helpers/mock-auth';
 
+import type { WorkerAuthContext } from '@/lib/middleware/api-key-validator';
+
 // ---------------------------------------------------------------------------
 // UUIDs for tests
 // ---------------------------------------------------------------------------
@@ -310,9 +312,9 @@ vi.mock('@/lib/auth', () => ({
  * Mock @/lib/middleware/api-key-validator -- defaults to null (no API key auth).
  * Override per-test to simulate worker auth.
  */
-const mockValidateApiKey = vi.fn(async () => null);
+const mockValidateApiKey = vi.fn<() => Promise<WorkerAuthContext | null>>(async () => null);
 vi.mock('@/lib/middleware/api-key-validator', () => ({
-  validateApiKey: (...args: unknown[]) => mockValidateApiKey(...args),
+  validateApiKey: () => mockValidateApiKey(),
 }));
 
 /**

@@ -211,7 +211,7 @@ export function CreateTaskModal({ open, onOpenChange, storyId }: CreateTaskModal
               control={form.control}
               name="personaId"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select value={field.value ?? ''} onValueChange={field.onChange}>
                   <SelectTrigger id="task-persona">
                     <SelectValue placeholder="Select a persona (optional)" />
                   </SelectTrigger>
@@ -233,28 +233,32 @@ export function CreateTaskModal({ open, onOpenChange, storyId }: CreateTaskModal
               Acceptance Criteria <span className="text-red-500">*</span>
             </Label>
             <div className="space-y-2">
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex items-start gap-2">
-                  <Input
-                    placeholder={`Criterion ${String(index + 1)}`}
-                    {...form.register(`acceptanceCriteria.${String(index)}.value` as const)}
-                    aria-invalid={!!form.formState.errors.acceptanceCriteria?.[index]?.value}
-                  />
-                  {fields.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        remove(index);
-                      }}
-                      aria-label={`Remove criterion ${String(index + 1)}`}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+              {fields.map((field, index) => {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- index must remain a number for react-hook-form path inference
+                const fieldName = `acceptanceCriteria.${index}.value` as const;
+                return (
+                  <div key={field.id} className="flex items-start gap-2">
+                    <Input
+                      placeholder={`Criterion ${String(index + 1)}`}
+                      {...form.register(fieldName)}
+                      aria-invalid={!!form.formState.errors.acceptanceCriteria?.[index]?.value}
+                    />
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          remove(index);
+                        }}
+                        aria-label={`Remove criterion ${String(index + 1)}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             {form.formState.errors.acceptanceCriteria && (
               <p className="text-xs text-red-600">

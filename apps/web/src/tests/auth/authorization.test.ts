@@ -291,15 +291,18 @@ describe('assertHumanAuth / assertAgentAuth', () => {
     it('should throw an error with code FORBIDDEN', () => {
       const workerContext = createWorkerContext();
 
+      let thrownError: unknown;
       try {
-        assertHumanAuth(workerContext);
+        const fn: (ctx: Parameters<typeof assertHumanAuth>[0]) => void = assertHumanAuth;
+        fn(workerContext);
         // Should not reach here
-        expect.unreachable('assertHumanAuth should have thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(AuthorizationError);
-        expect((error as AuthorizationError).code).toBe('FORBIDDEN');
-        expect((error as AuthorizationError).name).toBe('AuthorizationError');
+        expect.fail('assertHumanAuth should have thrown');
+      } catch (error: unknown) {
+        thrownError = error;
       }
+      expect(thrownError).toBeInstanceOf(AuthorizationError);
+      expect((thrownError as AuthorizationError).code).toBe('FORBIDDEN');
+      expect((thrownError as AuthorizationError).name).toBe('AuthorizationError');
     });
   });
 
@@ -322,14 +325,17 @@ describe('assertHumanAuth / assertAgentAuth', () => {
     it('should throw an error with code FORBIDDEN', () => {
       const humanContext = createHumanContext();
 
+      let thrownError: unknown;
       try {
-        assertAgentAuth(humanContext);
-        expect.unreachable('assertAgentAuth should have thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(AuthorizationError);
-        expect((error as AuthorizationError).code).toBe('FORBIDDEN');
-        expect((error as AuthorizationError).name).toBe('AuthorizationError');
+        const fn: (ctx: Parameters<typeof assertAgentAuth>[0]) => void = assertAgentAuth;
+        fn(humanContext);
+        expect.fail('assertAgentAuth should have thrown');
+      } catch (error: unknown) {
+        thrownError = error;
       }
+      expect(thrownError).toBeInstanceOf(AuthorizationError);
+      expect((thrownError as AuthorizationError).code).toBe('FORBIDDEN');
+      expect((thrownError as AuthorizationError).name).toBe('AuthorizationError');
     });
   });
 });

@@ -4,7 +4,7 @@
  * Covers:
  * - CRUD operations
  * - Deletion guard (prevent delete when active tasks reference persona)
- * - Title uniqueness per tenant
+ * - Name uniqueness per project
  * - Tenant isolation
  *
  * Note: PersonaRepository is a standalone repository (not extending base).
@@ -67,7 +67,7 @@ describe.skipIf(!HAS_DATABASE)('PersonaRepository', () => {
       expect(persona).toBeDefined();
       expect(persona.id).toBeDefined();
       expect(persona.tenantId).toBe(tenantId);
-      expect(persona.title).toBe(data.title);
+      expect(persona.name).toBe(data.name);
       expect(persona.description).toBe(data.description);
     });
 
@@ -97,11 +97,11 @@ describe.skipIf(!HAS_DATABASE)('PersonaRepository', () => {
       const persona = await personaRepo.create(tenantId, makePersonaData());
 
       const updated = await personaRepo.update(tenantId, persona.id, {
-        title: 'Updated Persona Title',
+        name: 'Updated Persona Name',
       });
 
       expect(updated).not.toBeNull();
-      expect(updated!.title).toBe('Updated Persona Title');
+      expect(updated!.name).toBe('Updated Persona Name');
     });
 
     it('should return null when updating a nonexistent persona', async () => {
@@ -109,7 +109,7 @@ describe.skipIf(!HAS_DATABASE)('PersonaRepository', () => {
       const { personaRepo } = getRepos();
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
-      const updated = await personaRepo.update(tenantId, fakeId, { title: 'New Title' });
+      const updated = await personaRepo.update(tenantId, fakeId, { name: 'New Name' });
       expect(updated).toBeNull();
     });
 
@@ -206,49 +206,49 @@ describe.skipIf(!HAS_DATABASE)('PersonaRepository', () => {
   });
 
   // -----------------------------------------------------------------------
-  // Title uniqueness per tenant
+  // Name uniqueness per project
   // -----------------------------------------------------------------------
 
-  describe('title uniqueness per tenant', () => {
-    it('should prevent duplicate titles within the same tenant', async () => {
+  describe('name uniqueness per project', () => {
+    it('should prevent duplicate names within the same project', async () => {
       const tenantId = await seedTenant(getTestDb());
       const { personaRepo } = getRepos();
 
-      const title = `Unique Persona ${String(Date.now())}`;
-      await personaRepo.create(tenantId, makePersonaData({ title }));
+      const name = `Unique Persona ${String(Date.now())}`;
+      await personaRepo.create(tenantId, makePersonaData({ name }));
 
-      await expect(personaRepo.create(tenantId, makePersonaData({ title }))).rejects.toThrow(
+      await expect(personaRepo.create(tenantId, makePersonaData({ name }))).rejects.toThrow(
         ValidationError,
       );
     });
 
-    it('should allow the same title in different tenants', async () => {
+    it('should allow the same name in different tenants', async () => {
       const tenantA = await seedTenant(getTestDb());
       const tenantB = await seedTenant(getTestDb());
       const { personaRepo } = getRepos();
 
-      const title = `Shared Persona Title ${String(Date.now())}`;
+      const name = `Shared Persona Name ${String(Date.now())}`;
 
-      const personaA = await personaRepo.create(tenantA, makePersonaData({ title }));
-      const personaB = await personaRepo.create(tenantB, makePersonaData({ title }));
+      const personaA = await personaRepo.create(tenantA, makePersonaData({ name }));
+      const personaB = await personaRepo.create(tenantB, makePersonaData({ name }));
 
-      expect(personaA.title).toBe(title);
-      expect(personaB.title).toBe(title);
+      expect(personaA.name).toBe(name);
+      expect(personaB.name).toBe(name);
       expect(personaA.tenantId).not.toBe(personaB.tenantId);
     });
 
-    it('should throw ValidationError when updating to a duplicate title', async () => {
+    it('should throw ValidationError when updating to a duplicate name', async () => {
       const tenantId = await seedTenant(getTestDb());
       const { personaRepo } = getRepos();
 
-      const title1 = `Persona One ${String(Date.now())}`;
-      const title2 = `Persona Two ${String(Date.now())}`;
+      const name1 = `Persona One ${String(Date.now())}`;
+      const name2 = `Persona Two ${String(Date.now())}`;
 
-      await personaRepo.create(tenantId, makePersonaData({ title: title1 }));
-      const persona2 = await personaRepo.create(tenantId, makePersonaData({ title: title2 }));
+      await personaRepo.create(tenantId, makePersonaData({ name: name1 }));
+      const persona2 = await personaRepo.create(tenantId, makePersonaData({ name: name2 }));
 
-      // Trying to update persona2's title to persona1's title
-      await expect(personaRepo.update(tenantId, persona2.id, { title: title1 })).rejects.toThrow(
+      // Trying to update persona2's name to persona1's name
+      await expect(personaRepo.update(tenantId, persona2.id, { name: name1 })).rejects.toThrow(
         ValidationError,
       );
     });

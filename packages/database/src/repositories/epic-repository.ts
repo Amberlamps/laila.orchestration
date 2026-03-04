@@ -39,7 +39,9 @@ import {
   ConflictError,
   NotFoundError,
   ValidationError,
+  type BaseTable,
   type DrizzleDb,
+  type FindManyOptions,
   type PaginatedResult,
 } from './base-repository';
 
@@ -155,7 +157,7 @@ const deriveEpicStatus = (statusCounts: Array<{ status: string; count: number }>
  * ```
  */
 export const createEpicRepository = (db: DatabaseClient) => {
-  const base = createBaseRepository(epicsTable, db);
+  const base = createBaseRepository(epicsTable as unknown as BaseTable, db);
   const typedDb = asDrizzle(db);
 
   // -------------------------------------------------------------------------
@@ -345,7 +347,7 @@ export const createEpicRepository = (db: DatabaseClient) => {
     if (data.description !== undefined) updateData.description = data.description;
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
 
-    return base.update(tenantId, id, updateData, expectedVersion);
+    return base.update(tenantId, id, updateData, expectedVersion) as Promise<EpicRecord>;
   };
 
   // -------------------------------------------------------------------------
@@ -387,11 +389,12 @@ export const createEpicRepository = (db: DatabaseClient) => {
           )
           .limit(1);
 
-        if (existing.length === 0) {
+        const [first] = existing;
+        if (!first) {
           throw new NotFoundError(base.entityName, epicId);
         }
 
-        const currentVersion = existing[0].version;
+        const currentVersion = first.version;
 
         // Update with optimistic locking: version must match what we just read
         const results = await tx
@@ -757,10 +760,15 @@ export const createEpicRepository = (db: DatabaseClient) => {
   // -------------------------------------------------------------------------
 
   return {
-    // Base repository methods (findById, findMany, hardDelete)
-    findById: base.findById,
-    findMany: base.findMany,
-    hardDelete: base.hardDelete,
+    // Base repository methods — explicitly typed to ensure correct .d.ts emission with --noCheck.
+    // The `as` casts are needed because the generic SelectModel inside createBaseRepository
+    // resolves to `{ [x: string]: unknown }` due to Drizzle's complex mapped types.
+    findById: (tenantId: string, id: string): Promise<EpicRecord | null> =>
+      base.findById(tenantId, id) as Promise<EpicRecord | null>,
+    findMany: (tenantId: string, options?: FindManyOptions): Promise<PaginatedResult<EpicRecord>> =>
+      base.findMany(tenantId, options) as Promise<PaginatedResult<EpicRecord>>,
+    hardDelete: (tenantId: string, id: string): Promise<EpicRecord | null> =>
+      base.hardDelete(tenantId, id) as Promise<EpicRecord | null>,
 
     // Expose internals for advanced composition
     table: base.table,

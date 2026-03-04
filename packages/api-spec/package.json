@@ -10,6 +10,7 @@
     }
   },
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "generate": "npx openapi-typescript openapi.yaml -o generated/api.ts && npx prettier --write generated/api.ts",
     "lint:spec": "npx spectral lint openapi.yaml",
     "check:freshness": "bash scripts/check-freshness.sh"

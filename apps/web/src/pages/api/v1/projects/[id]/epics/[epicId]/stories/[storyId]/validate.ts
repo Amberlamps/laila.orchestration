@@ -100,7 +100,7 @@ const handleValidate = withErrorHandler(
                 taskId: '',
                 taskTitle: 'Story Status',
                 issues: [
-                  `Story is in "${String(story.workStatus)}" status. Only Draft stories can be published.`,
+                  `Story is in "${story.workStatus}" status. Only Draft stories can be published.`,
                 ],
               },
             ],

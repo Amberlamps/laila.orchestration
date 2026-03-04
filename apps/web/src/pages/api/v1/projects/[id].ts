@@ -121,7 +121,7 @@ const handleUpdate = withErrorHandler(
         if (!isLifecycleOnly && existing.lifecycleStatus !== 'draft') {
           throw new ConflictError(
             DomainErrorCode.READ_ONLY_VIOLATION,
-            `Project cannot be modified in '${String(existing.lifecycleStatus)}' status. Only projects in 'draft' status can be updated.`,
+            `Project cannot be modified in '${existing.lifecycleStatus}' status. Only projects in 'draft' status can be updated.`,
           );
         }
 
@@ -221,7 +221,7 @@ const handleDelete = withErrorHandler(
             actorId: auth.type === 'human' ? auth.userId : auth.workerId,
             tenantId,
             projectId: id,
-            details: `Project "${String(existing.name)}" deleted`,
+            details: `Project "${existing.name}" deleted`,
             changes: {
               before: {
                 name: existing.name,

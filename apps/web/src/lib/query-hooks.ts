@@ -1163,6 +1163,7 @@ export const useAddWorkerProject = (workerId: string) => {
             workerId,
             projectId,
             grantedAt: new Date().toISOString(),
+            currentAssignment: null,
           };
           if (!old) return { data: [optimisticRecord] };
           return { data: [...old.data, optimisticRecord] };

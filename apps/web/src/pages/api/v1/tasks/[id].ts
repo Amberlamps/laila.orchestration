@@ -311,7 +311,7 @@ const handleDelete = withErrorHandler(
           actorId: auth.type === 'human' ? auth.userId : auth.workerId,
           tenantId,
           ...(deleteProjectId ? { projectId: deleteProjectId } : {}),
-          details: `Task "${String(existing.title)}" deleted`,
+          details: `Task "${existing.title}" deleted`,
           changes: {
             before: { title: existing.title },
           },

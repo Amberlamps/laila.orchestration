@@ -115,7 +115,7 @@ const handleUpdate = withErrorHandler(
         if (project.lifecycleStatus !== 'draft') {
           throw new ConflictError(
             DomainErrorCode.READ_ONLY_VIOLATION,
-            `Epic cannot be modified because parent project is in '${String(project.lifecycleStatus)}' status. Only projects in 'draft' status allow epic updates.`,
+            `Epic cannot be modified because parent project is in '${project.lifecycleStatus}' status. Only projects in 'draft' status allow epic updates.`,
           );
         }
 
@@ -224,7 +224,7 @@ const handleDelete = withErrorHandler(
           actorId: auth.type === 'human' ? auth.userId : auth.workerId,
           tenantId,
           projectId,
-          details: `Epic "${String(existing.name)}" deleted`,
+          details: `Epic "${existing.name}" deleted`,
           changes: {
             before: { name: existing.name },
           },

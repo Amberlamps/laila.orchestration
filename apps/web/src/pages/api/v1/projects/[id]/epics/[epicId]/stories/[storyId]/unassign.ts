@@ -90,7 +90,7 @@ const handleUnassign = withErrorHandler(
       if (story.workStatus !== 'in_progress') {
         throw new ConflictError(
           DomainErrorCode.INVALID_STATUS_TRANSITION,
-          `Cannot unassign story: current status is '${String(story.workStatus)}', expected 'in_progress'`,
+          `Cannot unassign story: current status is '${story.workStatus}', expected 'in_progress'`,
         );
       }
 

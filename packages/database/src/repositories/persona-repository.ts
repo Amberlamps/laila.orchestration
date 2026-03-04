@@ -126,7 +126,7 @@ const computePaginationMeta = (total: number, page: number, limit: number): Pagi
  * Falls back to `createdAt` if the field does not exist.
  */
 const resolveColumn = (fieldName: string): unknown => {
-  const columns = personasTable as Record<string, unknown>;
+  const columns = personasTable as unknown as Record<string, unknown>;
   return columns[fieldName] ?? personasTable.createdAt;
 };
 
