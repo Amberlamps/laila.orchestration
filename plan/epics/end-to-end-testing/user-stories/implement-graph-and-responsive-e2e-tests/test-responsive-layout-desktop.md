@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Responsive Layout Desktop
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** accessibility-tester
 - **Parent User Story:** [Implement DAG Graph & Responsive Layout E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -19,33 +19,31 @@ Implement E2E tests for the desktop responsive layout at 1440px viewport width. 
 // apps/web/e2e/graph-and-responsive/responsive-desktop.spec.ts
 // E2E tests for the desktop layout at 1440px viewport.
 // Verifies sidebar, grid layout, table columns, and full graph controls.
-import { test, expect } from "../fixtures";
-import { DashboardPage, ProjectListPage, GraphPage } from "../page-objects";
+import { test, expect } from '../fixtures';
+import { DashboardPage, ProjectListPage, GraphPage } from '../page-objects';
 
 // Configure this test file to use a desktop viewport.
 test.use({
   viewport: { width: 1440, height: 900 },
 });
 
-test.describe("Responsive Layout — Desktop (1440px)", () => {
-  test("sidebar navigation is visible and expanded", async ({
-    authenticatedPage: page,
-  }) => {
-    await page.goto("/dashboard");
+test.describe('Responsive Layout — Desktop (1440px)', () => {
+  test('sidebar navigation is visible and expanded', async ({ authenticatedPage: page }) => {
+    await page.goto('/dashboard');
 
     // Verify the sidebar is visible.
-    const sidebar = page.getByRole("navigation", { name: /main/i });
+    const sidebar = page.getByRole('navigation', { name: /main/i });
     await expect(sidebar).toBeVisible();
 
     // Verify the sidebar is expanded (shows text labels, not just icons).
     // Check that navigation link text is visible (not hidden behind icons).
-    const dashboardLink = sidebar.getByRole("link", { name: /dashboard/i });
+    const dashboardLink = sidebar.getByRole('link', { name: /dashboard/i });
     await expect(dashboardLink).toBeVisible();
 
-    const projectsLink = sidebar.getByRole("link", { name: /projects/i });
+    const projectsLink = sidebar.getByRole('link', { name: /projects/i });
     await expect(projectsLink).toBeVisible();
 
-    const workersLink = sidebar.getByRole("link", { name: /workers/i });
+    const workersLink = sidebar.getByRole('link', { name: /workers/i });
     await expect(workersLink).toBeVisible();
 
     // Verify sidebar text labels are rendered (not just icons).
@@ -54,10 +52,7 @@ test.describe("Responsive Layout — Desktop (1440px)", () => {
     expect(sidebarWidth).toBeGreaterThan(200); // Expanded sidebar > 200px
   });
 
-  test("project cards render in 3-column grid", async ({
-    authenticatedPage: page,
-    seedData,
-  }) => {
+  test('project cards render in 3-column grid', async ({ authenticatedPage: page, seedData }) => {
     // Seed 6 projects to fill two rows of the 3-column grid.
     seedData({});
 
@@ -65,19 +60,19 @@ test.describe("Responsive Layout — Desktop (1440px)", () => {
     await projectList.goto();
 
     // Verify the project cards container uses a grid layout.
-    const cardGrid = page.getByTestId("project-card-grid");
+    const cardGrid = page.getByTestId('project-card-grid');
     await expect(cardGrid).toBeVisible();
 
     // Verify the grid has 3 columns by checking CSS grid-template-columns.
     const gridColumns = await cardGrid.evaluate(
-      (el) => window.getComputedStyle(el).gridTemplateColumns
+      (el) => window.getComputedStyle(el).gridTemplateColumns,
     );
     // 3-column grid should have 3 column definitions.
-    const columnCount = gridColumns.split(" ").length;
+    const columnCount = gridColumns.split(' ').length;
     expect(columnCount).toBe(3);
   });
 
-  test("data tables display all columns without scrolling", async ({
+  test('data tables display all columns without scrolling', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -90,29 +85,27 @@ test.describe("Responsive Layout — Desktop (1440px)", () => {
     await expect(projectList.projectsTable).toBeVisible();
 
     // Verify key columns are visible: Name, Status, Epics, Stories, Updated.
-    const headerRow = projectList.projectsTable.getByRole("row").first();
-    await expect(headerRow.getByRole("columnheader", { name: /name/i })).toBeVisible();
-    await expect(headerRow.getByRole("columnheader", { name: /status/i })).toBeVisible();
-    await expect(headerRow.getByRole("columnheader", { name: /epics/i })).toBeVisible();
-    await expect(headerRow.getByRole("columnheader", { name: /stories/i })).toBeVisible();
-    await expect(headerRow.getByRole("columnheader", { name: /updated/i })).toBeVisible();
+    const headerRow = projectList.projectsTable.getByRole('row').first();
+    await expect(headerRow.getByRole('columnheader', { name: /name/i })).toBeVisible();
+    await expect(headerRow.getByRole('columnheader', { name: /status/i })).toBeVisible();
+    await expect(headerRow.getByRole('columnheader', { name: /epics/i })).toBeVisible();
+    await expect(headerRow.getByRole('columnheader', { name: /stories/i })).toBeVisible();
+    await expect(headerRow.getByRole('columnheader', { name: /updated/i })).toBeVisible();
 
     // Verify the table does not have horizontal scroll.
-    const tableContainer = page.getByTestId("table-container");
-    const scrollWidth = await tableContainer.evaluate(
-      (el) => el.scrollWidth > el.clientWidth
-    );
+    const tableContainer = page.getByTestId('table-container');
+    const scrollWidth = await tableContainer.evaluate((el) => el.scrollWidth > el.clientWidth);
     expect(scrollWidth).toBe(false);
   });
 
-  test("DAG graph shows full controls at desktop viewport", async ({
+  test('DAG graph shows full controls at desktop viewport', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     const graph = new GraphPage(page);
-    await graph.goto("seeded-project-id");
+    await graph.goto('seeded-project-id');
 
     // Verify all graph controls are visible at desktop width.
     await expect(graph.zoomInButton).toBeVisible();
@@ -123,24 +116,21 @@ test.describe("Responsive Layout — Desktop (1440px)", () => {
     await expect(graph.statusFilters).toBeVisible();
   });
 
-  test("12-column grid layout on dashboard", async ({
-    authenticatedPage: page,
-    seedData,
-  }) => {
+  test('12-column grid layout on dashboard', async ({ authenticatedPage: page, seedData }) => {
     seedData({});
 
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
 
     // Verify the main content area uses a 12-column grid.
-    const mainContent = page.getByRole("main");
+    const mainContent = page.getByRole('main');
     const gridColumns = await mainContent.evaluate(
-      (el) => window.getComputedStyle(el).gridTemplateColumns
+      (el) => window.getComputedStyle(el).gridTemplateColumns,
     );
 
     // 12-column grid should have 12 column definitions.
     // The exact values depend on the CSS grid implementation.
-    const columnCount = gridColumns.split(" ").length;
+    const columnCount = gridColumns.split(' ').length;
     expect(columnCount).toBe(12);
   });
 });

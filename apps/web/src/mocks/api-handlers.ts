@@ -1579,4 +1579,71 @@ export const apiHandlers: HttpHandler[] = [
     // and `data` (for useProjectActivity in query-hooks.ts which accesses `data?.data`).
     return HttpResponse.json({ events, data: events });
   }),
+
+  // ---- Project Graph (Dependency DAG) ----
+
+  http.get('/api/v1/projects/:projectId/graph', ({ params }) => {
+    const projectId = params.projectId as string;
+    const project = dataStore.projects.get(projectId);
+    if (!project) return new HttpResponse(null, { status: 404 });
+
+    // Map entity factory hyphenated statuses to graph-compatible underscore format
+    const mapGraphStatus = (status: string): string => status.replace(/-/g, '_');
+
+    // Collect all entities for this project
+    const projectEpics = Array.from(dataStore.epics.values()).filter(
+      (e) => e.projectId === projectId,
+    );
+    const epicIds = new Set(projectEpics.map((e) => e.id));
+    const projectStories = Array.from(dataStore.stories.values()).filter((s) =>
+      epicIds.has(s.epicId),
+    );
+    const storyIds = new Set(projectStories.map((s) => s.id));
+    const projectTasks = Array.from(dataStore.tasks.values()).filter((t) =>
+      storyIds.has(t.storyId),
+    );
+
+    // Build graph nodes for all entity types
+    const nodes = [
+      ...projectEpics.map((e) => ({
+        id: e.id,
+        label: e.title,
+        entityType: 'epic' as const,
+        status: mapGraphStatus(e.status),
+        parentName: project.name,
+      })),
+      ...projectStories.map((s) => {
+        const epic = projectEpics.find((e) => e.id === s.epicId);
+        return {
+          id: s.id,
+          label: s.title,
+          entityType: 'story' as const,
+          status: mapGraphStatus(s.status),
+          epicId: s.epicId,
+          epicName: epic?.title,
+        };
+      }),
+      ...projectTasks.map((t) => {
+        const story = projectStories.find((s) => s.id === t.storyId);
+        const epic = story ? projectEpics.find((e) => e.id === story.epicId) : undefined;
+        return {
+          id: t.id,
+          label: t.title,
+          entityType: 'task' as const,
+          status: mapGraphStatus(t.status),
+          storyId: t.storyId,
+          storyName: story?.title,
+          epicId: epic?.id,
+          epicName: epic?.title,
+        };
+      }),
+    ];
+
+    // Build edges from task dependency relationships
+    const edges = projectTasks.flatMap((t) =>
+      t.dependsOn.map((dep) => ({ source: dep, target: t.id })),
+    );
+
+    return HttpResponse.json({ nodes, edges });
+  }),
 ];

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test DAG Graph Interaction
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement DAG Graph & Responsive Layout E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,10 +20,10 @@ Implement E2E tests for the DAG graph interaction. Create a project with tasks a
 // E2E tests for the DAG graph visualization powered by ReactFlow.
 // Verifies node rendering, interaction controls (zoom, pan, fit),
 // node click navigation, minimap, view level toggle, and status filters.
-import { test, expect } from "../fixtures";
-import { GraphPage, ProjectDetailPage } from "../page-objects";
+import { test, expect } from '../fixtures';
+import { GraphPage, ProjectDetailPage } from '../page-objects';
 
-test.describe("DAG Graph Interaction", () => {
+test.describe('DAG Graph Interaction', () => {
   test.beforeEach(async ({ authenticatedPage: page, seedData }) => {
     // Seed a project with tasks and dependencies that form a DAG.
     // Project → Epic → Story → 3 Tasks (A→B→C linear chain).
@@ -31,11 +31,9 @@ test.describe("DAG Graph Interaction", () => {
     seedData({});
   });
 
-  test("graph renders nodes with correct status colors", async ({
-    authenticatedPage: page,
-  }) => {
+  test('graph renders nodes with correct status colors', async ({ authenticatedPage: page }) => {
     const graph = new GraphPage(page);
-    await graph.goto("seeded-project-id");
+    await graph.goto('seeded-project-id');
 
     // Verify the ReactFlow canvas is rendered.
     await expect(graph.canvas).toBeVisible();
@@ -46,22 +44,20 @@ test.describe("DAG Graph Interaction", () => {
 
     // Verify status colors on nodes.
     // "not-started" nodes should have a specific CSS class/color.
-    await graph.expectNodeStatus("Setup Database Schema", "status-not-started");
+    await graph.expectNodeStatus('Setup Database Schema', 'status-not-started');
     // "blocked" nodes should have a different CSS class/color.
-    await graph.expectNodeStatus("Implement API Endpoint", "status-blocked");
-    await graph.expectNodeStatus("Write Integration Tests", "status-blocked");
+    await graph.expectNodeStatus('Implement API Endpoint', 'status-blocked');
+    await graph.expectNodeStatus('Write Integration Tests', 'status-blocked');
   });
 
-  test("zoom in, zoom out, and fit-to-view controls", async ({
-    authenticatedPage: page,
-  }) => {
+  test('zoom in, zoom out, and fit-to-view controls', async ({ authenticatedPage: page }) => {
     const graph = new GraphPage(page);
-    await graph.goto("seeded-project-id");
+    await graph.goto('seeded-project-id');
 
     // Get the initial viewport transform for comparison.
     const initialTransform = await page.evaluate(() => {
-      const viewport = document.querySelector(".react-flow__viewport");
-      return viewport?.getAttribute("style") ?? "";
+      const viewport = document.querySelector('.react-flow__viewport');
+      return viewport?.getAttribute('style') ?? '';
     });
 
     // Zoom in twice.
@@ -69,8 +65,8 @@ test.describe("DAG Graph Interaction", () => {
 
     // Verify the viewport transform changed (zoom level increased).
     const zoomedInTransform = await page.evaluate(() => {
-      const viewport = document.querySelector(".react-flow__viewport");
-      return viewport?.getAttribute("style") ?? "";
+      const viewport = document.querySelector('.react-flow__viewport');
+      return viewport?.getAttribute('style') ?? '';
     });
     expect(zoomedInTransform).not.toBe(initialTransform);
 
@@ -86,16 +82,14 @@ test.describe("DAG Graph Interaction", () => {
     await expect(nodes.first()).toBeVisible();
   });
 
-  test("pan the graph canvas", async ({
-    authenticatedPage: page,
-  }) => {
+  test('pan the graph canvas', async ({ authenticatedPage: page }) => {
     const graph = new GraphPage(page);
-    await graph.goto("seeded-project-id");
+    await graph.goto('seeded-project-id');
 
     // Get initial viewport position.
     const initialTransform = await page.evaluate(() => {
-      const viewport = document.querySelector(".react-flow__viewport");
-      return viewport?.getAttribute("style") ?? "";
+      const viewport = document.querySelector('.react-flow__viewport');
+      return viewport?.getAttribute('style') ?? '';
     });
 
     // Pan the canvas 100px to the right and 50px down.
@@ -103,49 +97,45 @@ test.describe("DAG Graph Interaction", () => {
 
     // Verify the viewport position changed.
     const pannedTransform = await page.evaluate(() => {
-      const viewport = document.querySelector(".react-flow__viewport");
-      return viewport?.getAttribute("style") ?? "";
+      const viewport = document.querySelector('.react-flow__viewport');
+      return viewport?.getAttribute('style') ?? '';
     });
     expect(pannedTransform).not.toBe(initialTransform);
   });
 
-  test("click node navigates to entity detail page", async ({
-    authenticatedPage: page,
-  }) => {
+  test('click node navigates to entity detail page', async ({ authenticatedPage: page }) => {
     const graph = new GraphPage(page);
-    await graph.goto("seeded-project-id");
+    await graph.goto('seeded-project-id');
 
     // Click the "Setup Database Schema" node.
-    await graph.clickNode("Setup Database Schema");
+    await graph.clickNode('Setup Database Schema');
 
     // Verify navigation to the task detail page.
     await expect(page).toHaveURL(/\/tasks\//);
 
     // Verify the task detail page shows the correct title.
-    const heading = page.getByTestId("entity-heading");
-    await expect(heading).toContainText("Setup Database Schema");
+    const heading = page.getByTestId('entity-heading');
+    await expect(heading).toContainText('Setup Database Schema');
   });
 
-  test("minimap is visible and interactive", async ({
-    authenticatedPage: page,
-  }) => {
+  test('minimap is visible and interactive', async ({ authenticatedPage: page }) => {
     const graph = new GraphPage(page);
-    await graph.goto("seeded-project-id");
+    await graph.goto('seeded-project-id');
 
     // Verify the minimap is rendered.
     await expect(graph.minimap).toBeVisible();
 
     // Verify the minimap contains node representations.
-    const minimapNodes = graph.minimap.locator("rect");
+    const minimapNodes = graph.minimap.locator('rect');
     const count = await minimapNodes.count();
     expect(count).toBeGreaterThan(0);
   });
 
-  test("view level toggle switches between Task, Story, and Epic views", async ({
+  test('view level toggle switches between Task, Story, and Epic views', async ({
     authenticatedPage: page,
   }) => {
     const graph = new GraphPage(page);
-    await graph.goto("seeded-project-id");
+    await graph.goto('seeded-project-id');
 
     // Default view should show Task-level nodes.
     await expect(graph.viewLevelToggle).toBeVisible();
@@ -155,30 +145,28 @@ test.describe("DAG Graph Interaction", () => {
     await expect(nodes).toHaveCount(3);
 
     // Switch to Story view.
-    await graph.setViewLevel("story");
+    await graph.setViewLevel('story');
 
     // Verify Story view shows 1 node (one story).
     nodes = await graph.getNodes();
     await expect(nodes).toHaveCount(1);
 
     // Switch to Epic view.
-    await graph.setViewLevel("epic");
+    await graph.setViewLevel('epic');
 
     // Verify Epic view shows 1 node (one epic).
     nodes = await graph.getNodes();
     await expect(nodes).toHaveCount(1);
 
     // Switch back to Task view.
-    await graph.setViewLevel("task");
+    await graph.setViewLevel('task');
     nodes = await graph.getNodes();
     await expect(nodes).toHaveCount(3);
   });
 
-  test("status filter chips show and hide nodes by status", async ({
-    authenticatedPage: page,
-  }) => {
+  test('status filter chips show and hide nodes by status', async ({ authenticatedPage: page }) => {
     const graph = new GraphPage(page);
-    await graph.goto("seeded-project-id");
+    await graph.goto('seeded-project-id');
 
     // Verify all status filter chips are visible.
     await expect(graph.statusFilters).toBeVisible();
@@ -188,14 +176,14 @@ test.describe("DAG Graph Interaction", () => {
     await expect(nodes).toHaveCount(3);
 
     // Deselect "blocked" status filter.
-    await graph.toggleStatusFilter("blocked");
+    await graph.toggleStatusFilter('blocked');
 
     // Only "not-started" nodes should remain visible (1 node).
     nodes = await graph.getNodes();
     await expect(nodes).toHaveCount(1);
 
     // Re-enable "blocked" status filter.
-    await graph.toggleStatusFilter("blocked");
+    await graph.toggleStatusFilter('blocked');
 
     // All 3 nodes should be visible again.
     nodes = await graph.getNodes();
