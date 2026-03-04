@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Worker Throughput Chart
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Implement Project Overview Tab](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,7 +20,7 @@ Implement a line chart on the project overview tab showing stories completed ove
 // Recharts line chart showing stories completed per day over the project lifetime.
 // X-axis: dates, Y-axis: count of stories completed on that day.
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 import {
   LineChart,
   Line,
@@ -29,12 +29,12 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { projectKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { TrendingUp } from "lucide-react";
-import type { ThroughputDataPoint } from "@laila/shared";
+} from 'recharts';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { projectKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { TrendingUp } from 'lucide-react';
+import type { ThroughputDataPoint } from '@laila/shared';
 
 /**
  * WorkerThroughputChart renders:
@@ -82,8 +82,7 @@ import type { ThroughputDataPoint } from "@laila/shared";
 const useProjectThroughput = (projectId: string) => {
   return useQuery({
     queryKey: projectKeys.throughput(projectId),
-    queryFn: () =>
-      apiClient.get(`/api/v1/projects/${projectId}/metrics/throughput`),
+    queryFn: () => apiClient.get(`/api/v1/projects/${projectId}/metrics/throughput`),
     enabled: !!projectId,
   });
 };

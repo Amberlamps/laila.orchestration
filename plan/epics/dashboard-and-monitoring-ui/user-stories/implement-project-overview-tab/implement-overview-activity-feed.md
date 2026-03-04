@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Overview Activity Feed
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Project Overview Tab](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,15 +20,15 @@ Implement an activity feed section on the project overview tab that displays the
 // Displays the last 50 audit events scoped to a specific project.
 // Uses the project-scoped audit events API endpoint.
 
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { AuditEntryRow } from "@/components/audit/audit-entry-row";
-import { Skeleton } from "@/components/ui/skeleton";
-import { projectKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import Link from "next/link";
-import { Activity } from "lucide-react";
-import type { AuditEvent } from "@laila/shared";
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { AuditEntryRow } from '@/components/audit/audit-entry-row';
+import { Skeleton } from '@/components/ui/skeleton';
+import { projectKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import Link from 'next/link';
+import { Activity } from 'lucide-react';
+import type { AuditEvent } from '@laila/shared';
 
 /**
  * OverviewActivityFeed renders:
@@ -60,7 +60,7 @@ const useProjectActivity = (projectId: string) => {
     queryKey: projectKeys.activity(projectId),
     queryFn: () =>
       apiClient.get(`/api/v1/projects/${projectId}/audit-events`, {
-        params: { limit: 50, sort_order: "desc" },
+        params: { limit: 50, sort_order: 'desc' },
       }),
     enabled: !!projectId,
   });
