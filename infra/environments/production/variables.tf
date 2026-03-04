@@ -1,47 +1,41 @@
+# infra/environments/production/variables.tf
 # Input variables for the production environment.
 
 variable "aws_region" {
-  description = "Primary AWS region for resource deployment"
+  description = "AWS region for all resources"
   type        = string
   default     = "us-east-1"
 }
 
-variable "domain_name" {
-  description = "Primary domain name for the application (e.g., laila.works)"
-  type        = string
-  default     = "laila.works"
-}
-
-# --- Deployment Packages ---
-
-variable "nextjs_deployment_package" {
-  description = "Path to the Next.js Lambda deployment package (zip file)"
+variable "alarm_email" {
+  description = "Email address for CloudWatch alarm notifications (requires manual confirmation)"
   type        = string
 }
 
-variable "timeout_checker_package" {
-  description = "Path to the timeout-checker Lambda deployment package (zip file)"
+# ---------------------------------------------------------------------------
+# Lambda execution role names (for IAM policy attachments)
+# ---------------------------------------------------------------------------
+
+variable "timeout_checker_role_name" {
+  description = "IAM role name for the timeout-checker Lambda function"
   type        = string
+  default     = "laila-works-timeout-checker-role"
 }
 
-variable "dag_reconciler_package" {
-  description = "Path to the dag-reconciler Lambda deployment package (zip file)"
+variable "dag_reconciler_role_name" {
+  description = "IAM role name for the dag-reconciler Lambda function"
   type        = string
+  default     = "laila-works-dag-reconciler-role"
 }
 
-variable "audit_archiver_package" {
-  description = "Path to the audit-archiver Lambda deployment package (zip file)"
+variable "audit_archiver_role_name" {
+  description = "IAM role name for the audit-archiver Lambda function"
   type        = string
+  default     = "laila-works-audit-archiver-role"
 }
 
-variable "status_propagation_package" {
-  description = "Path to the status-propagation Lambda deployment package (zip file)"
+variable "nextjs_api_role_name" {
+  description = "IAM role name for the Next.js API Lambda function"
   type        = string
-}
-
-# --- Application Configuration ---
-
-variable "google_client_id" {
-  description = "Google OAuth client ID for authentication"
-  type        = string
+  default     = "laila-works-nextjs-role"
 }

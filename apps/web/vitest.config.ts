@@ -9,6 +9,8 @@ export default defineProject({
       '@laila/shared': path.resolve(__dirname, '../../packages/shared/src'),
       '@laila/domain': path.resolve(__dirname, '../../packages/domain/src'),
       '@laila/database': path.resolve(__dirname, '../../packages/database/src'),
+      '@laila/logger': path.resolve(__dirname, '../../packages/logger/src'),
+      '@laila/metrics': path.resolve(__dirname, '../../packages/metrics/src'),
       'drizzle-orm': path.resolve(__dirname, '../../packages/database/node_modules/drizzle-orm'),
     },
   },

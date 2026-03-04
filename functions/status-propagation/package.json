@@ -16,6 +16,7 @@
     "@aws-sdk/client-dynamodb": "^3.600.0",
     "@aws-sdk/lib-dynamodb": "^3.600.0",
     "@laila/database": "workspace:*",
+    "@laila/logger": "workspace:*",
     "@laila/shared": "workspace:*",
     "drizzle-orm": "^0.45.1",
     "pino": "^9.6.0",

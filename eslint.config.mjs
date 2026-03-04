@@ -21,6 +21,7 @@ export default tseslint.config(
       "**/*.generated.*",
       "**/*.gen.*",
       ".claude/**",
+      "infra/**",
     ],
   },
 
@@ -82,7 +83,7 @@ export default tseslint.config(
       "import-x/resolver-next": [
         createTypeScriptImportResolver({
           alwaysTryTypes: true,
-          project: ["apps/*/tsconfig.json", "packages/*/tsconfig.json"],
+          project: ["apps/*/tsconfig.json", "packages/*/tsconfig.json", "functions/*/tsconfig.json"],
         }),
       ],
     },

@@ -42,6 +42,13 @@ vi.mock('../logger', () => ({
   }),
 }));
 
+vi.mock('@laila/metrics', () => ({
+  recordCount: vi.fn(),
+  recordBytes: vi.fn(),
+  recordDuration: vi.fn(),
+  flushMetrics: vi.fn().mockResolvedValue(undefined),
+}));
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

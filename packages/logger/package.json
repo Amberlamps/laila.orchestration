@@ -1,0 +1,29 @@
+{
+  "name": "@laila/logger",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./lambda": {
+      "types": "./dist/lambda.d.ts",
+      "default": "./src/lambda.ts"
+    },
+    "./xray": {
+      "types": "./dist/xray.d.ts",
+      "default": "./src/xray.ts"
+    }
+  },
+  "scripts": {
+    "build:types": "tsc -p tsconfig.build.json --noCheck"
+  },
+  "dependencies": {
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.161"
+  }
+}

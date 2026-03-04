@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Enable X-Ray Tracing
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** sre-engineer
 - **Parent User Story:** [Configure Observability](./tasks.md)
 - **Parent Epic:** [AWS Infrastructure & Deployment](../../user-stories.md)

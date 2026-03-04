@@ -9,6 +9,8 @@
  * delegates to the `checkAndReclaimTimedOutStories` orchestration function.
  */
 
+import { recordCount, flushMetrics } from '@laila/metrics';
+
 import { createPoolClient } from './db';
 import { createInvocationLogger } from './logger';
 import { checkAndReclaimTimedOutStories, type TimeoutCheckResult } from './orchestration';
@@ -59,6 +61,11 @@ export const handler = async (
   if (result.reclaimed.length > 0) {
     log.info({ stories: result.reclaimed }, 'Reclaimed timed-out stories');
   }
+
+  // Publish custom CloudWatch metrics
+  recordCount('StoriesChecked', result.checked);
+  recordCount('TimeoutReclamations', result.reclaimed.length);
+  await flushMetrics();
 
   return {
     checked: result.checked,

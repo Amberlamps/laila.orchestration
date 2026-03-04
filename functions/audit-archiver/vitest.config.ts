@@ -7,6 +7,8 @@ export default defineProject({
     alias: {
       '@laila/shared': path.resolve(__dirname, '../../packages/shared/src'),
       '@laila/database': path.resolve(__dirname, '../../packages/database/src'),
+      '@laila/logger': path.resolve(__dirname, '../../packages/logger/src'),
+      '@laila/metrics': path.resolve(__dirname, '../../packages/metrics/src'),
     },
   },
   test: {

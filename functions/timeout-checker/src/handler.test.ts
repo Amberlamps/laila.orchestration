@@ -47,6 +47,13 @@ vi.mock('./logger', () => ({
   createInvocationLogger: mockCreateInvocationLogger,
 }));
 
+vi.mock('@laila/metrics', () => ({
+  recordCount: vi.fn(),
+  recordDuration: vi.fn(),
+  recordBytes: vi.fn(),
+  flushMetrics: vi.fn().mockResolvedValue(undefined),
+}));
+
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
