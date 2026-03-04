@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Web Worker Dagre Layout
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** websocket-engineer
 - **Parent User Story:** [Implement Graph Performance & Extras](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,7 +20,7 @@ For dependency graphs with more than 200 nodes, offload the Dagre layout computa
 // Web Worker that computes Dagre layout positions for large graphs.
 // Receives serialized nodes and edges, computes layout, returns positioned nodes.
 
-import Dagre from "@dagrejs/dagre";
+import Dagre from '@dagrejs/dagre';
 
 /**
  * Worker message protocol:
@@ -66,7 +66,7 @@ import Dagre from "@dagrejs/dagre";
 self.onmessage = (event: MessageEvent) => {
   const { type, payload } = event.data;
 
-  if (type === "compute-layout") {
+  if (type === 'compute-layout') {
     try {
       const startTime = performance.now();
       const graph = new Dagre.graphlib.Graph();
@@ -100,17 +100,14 @@ self.onmessage = (event: MessageEvent) => {
 
       const duration = performance.now() - startTime;
       self.postMessage({
-        type: "layout-complete",
+        type: 'layout-complete',
         payload: { positions, duration },
       });
     } catch (error) {
       self.postMessage({
-        type: "layout-error",
+        type: 'layout-error',
         payload: {
-          message:
-            error instanceof Error
-              ? error.message
-              : "Unknown layout error",
+          message: error instanceof Error ? error.message : 'Unknown layout error',
         },
       });
     }
@@ -125,9 +122,9 @@ self.onmessage = (event: MessageEvent) => {
 // Hook that manages layout computation, choosing between
 // synchronous (small graphs) and Web Worker (large graphs).
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import type { Node, Edge } from "@xyflow/react";
-import { computeDagreLayout } from "@/lib/graph/dagre-layout";
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import type { Node, Edge } from '@xyflow/react';
+import { computeDagreLayout } from '@/lib/graph/dagre-layout';
 
 /**
  * useDagreLayout(nodes: Node[], edges: Edge[], options?):

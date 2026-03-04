@@ -12,6 +12,8 @@ import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
+import { GraphFullscreenToggle } from './graph-fullscreen-toggle';
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -39,13 +41,23 @@ const ZOOM_EPSILON = 0.001;
  * 4. Divider
  * 5. Fit View  — animates viewport to show all nodes
  * 6. Reset     — restores graph to initial viewport state
+ * 7. Divider
+ * 8. Fullscreen toggle — enters/exits fullscreen mode
  */
 interface GraphCanvasControlsProps {
   /** Called after the reset action to clear external interaction state. */
   onReset?: () => void;
+  /** Whether the graph container is currently in fullscreen mode. */
+  isFullscreen: boolean;
+  /** Callback to toggle fullscreen mode for the graph container. */
+  onFullscreenToggle: () => void;
 }
 
-export const GraphCanvasControls = ({ onReset }: GraphCanvasControlsProps) => {
+export const GraphCanvasControls = ({
+  onReset,
+  isFullscreen,
+  onFullscreenToggle,
+}: GraphCanvasControlsProps) => {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
   const { zoom } = useViewport();
 
@@ -72,7 +84,7 @@ export const GraphCanvasControls = ({ onReset }: GraphCanvasControlsProps) => {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="absolute bottom-4 left-4 z-10 flex items-center gap-0.5 rounded-lg border border-zinc-200 bg-white px-1 py-1 shadow-md">
+      <div className="absolute bottom-4 left-4 z-20 flex items-center gap-0.5 rounded-lg border border-zinc-200 bg-white px-1 py-1 shadow-md">
         {/* Zoom Out */}
         <Tooltip>
           <TooltipTrigger asChild>
@@ -132,6 +144,12 @@ export const GraphCanvasControls = ({ onReset }: GraphCanvasControlsProps) => {
           </TooltipTrigger>
           <TooltipContent side="top">Reset</TooltipContent>
         </Tooltip>
+
+        {/* Divider */}
+        <div className="mx-1 h-6 border-l border-zinc-200" />
+
+        {/* Fullscreen Toggle */}
+        <GraphFullscreenToggle isFullscreen={isFullscreen} onToggle={onFullscreenToggle} />
       </div>
     </TooltipProvider>
   );

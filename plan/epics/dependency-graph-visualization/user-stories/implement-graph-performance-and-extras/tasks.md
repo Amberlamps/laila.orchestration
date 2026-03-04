@@ -4,19 +4,19 @@
 
 - **Title:** Implement Graph Performance & Extras
 - **Description:** Performance optimization and additional features for the dependency graph visualization. Includes offloading Dagre layout computation to a Web Worker for graphs with more than 200 nodes, a ReactFlow minimap for large graph navigation, a fullscreen mode for focused graph analysis, and an always-visible graph legend showing status color mappings.
-- **Status:** Not Started
+- **Status:** Complete
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
 - **Total Tasks:** 4
 - **Dependencies:** Implement ReactFlow Graph Foundation
 
 ## Tasks
 
-| Task | Description | Status | Assigned Agent | Dependencies |
-| --- | --- | --- | --- | --- |
-| [Implement Web Worker Dagre Layout](./implement-web-worker-dagre-layout.md) | Offload Dagre layout computation to a Web Worker for graphs with >200 nodes to avoid blocking the main thread | Not Started | websocket-engineer | None |
-| [Implement Minimap Component](./implement-minimap-component.md) | ReactFlow minimap showing viewport position within the full graph, 160x100px, bottom-right corner | Not Started | frontend-developer | None |
-| [Implement Fullscreen Mode](./implement-fullscreen-mode.md) | Toggle to expand graph to fill the viewport with toolbar and Escape to exit | Not Started | frontend-developer | None |
-| [Implement Graph Legend](./implement-graph-legend.md) | Always-visible horizontal legend showing status color and label pairs | Not Started | ui-designer | None |
+| Task                                                                        | Description                                                                                                   | Status   | Assigned Agent     | Dependencies |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------- | ------------------ | ------------ |
+| [Implement Web Worker Dagre Layout](./implement-web-worker-dagre-layout.md) | Offload Dagre layout computation to a Web Worker for graphs with >200 nodes to avoid blocking the main thread | Complete | websocket-engineer | None         |
+| [Implement Minimap Component](./implement-minimap-component.md)             | ReactFlow minimap showing viewport position within the full graph, 160x100px, bottom-right corner             | Complete | frontend-developer | None         |
+| [Implement Fullscreen Mode](./implement-fullscreen-mode.md)                 | Toggle to expand graph to fill the viewport with toolbar and Escape to exit                                   | Complete | frontend-developer | None         |
+| [Implement Graph Legend](./implement-graph-legend.md)                       | Always-visible horizontal legend showing status color and label pairs                                         | Complete | ui-designer        | None         |
 
 ## Dependency Graph
 
