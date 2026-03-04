@@ -16,7 +16,6 @@ interface UploadArchiveParams {
   events: AuditEvent[];
   partitionDate: { year: string; month: string; day: string };
   batchTimestamp: number;
-  sequenceNumber: number;
 }
 
 /** Result of a successful S3 upload. */
@@ -40,12 +39,12 @@ interface UploadResult {
  * @returns The S3 key and size in bytes of the uploaded object
  */
 export async function uploadArchive(params: UploadArchiveParams): Promise<UploadResult> {
-  const { bucketName, events, partitionDate, batchTimestamp, sequenceNumber } = params;
+  const { bucketName, events, partitionDate, batchTimestamp } = params;
 
   const ndjson = events.map((event) => JSON.stringify(event)).join('\n');
   const body = Buffer.from(ndjson, 'utf-8');
 
-  const key = `audit/${partitionDate.year}/${partitionDate.month}/${partitionDate.day}/events-${String(batchTimestamp)}-${String(sequenceNumber)}.ndjson`;
+  const key = `audit/${partitionDate.year}/${partitionDate.month}/${partitionDate.day}/events-${String(batchTimestamp)}.ndjson`;
 
   await s3Client.send(
     new PutObjectCommand({

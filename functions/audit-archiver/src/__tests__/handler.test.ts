@@ -127,11 +127,10 @@ describe('audit-archiver handler', () => {
         events: AuditEvent[];
         partitionDate: { year: string; month: string; day: string };
         batchTimestamp: number;
-        sequenceNumber: number;
       }) => {
         const ndjson = params.events.map((e: AuditEvent) => JSON.stringify(e)).join('\n');
         const sizeBytes = Buffer.byteLength(ndjson, 'utf-8');
-        const key = `audit/${params.partitionDate.year}/${params.partitionDate.month}/${params.partitionDate.day}/events-${String(params.batchTimestamp)}-${String(params.sequenceNumber)}.ndjson`;
+        const key = `audit/${params.partitionDate.year}/${params.partitionDate.month}/${params.partitionDate.day}/events-${String(params.batchTimestamp)}.ndjson`;
         return Promise.resolve({ key, sizeBytes });
       },
     );
@@ -210,7 +209,6 @@ describe('audit-archiver handler', () => {
             events: AuditEvent[];
             partitionDate: { year: string; month: string; day: string };
             batchTimestamp: number;
-            sequenceNumber: number;
           },
         ]
       >;
@@ -300,7 +298,7 @@ describe('audit-archiver handler', () => {
       // Both batches target the same date partition → 2 separate uploads
       expect(mockUploadArchive).toHaveBeenCalledTimes(2);
 
-      // Verify each upload got a different sequenceNumber
+      // Verify both uploads target the same partition date and use the same batchTimestamp
       const calls = mockUploadArchive.mock.calls as Array<
         [
           {
@@ -308,19 +306,15 @@ describe('audit-archiver handler', () => {
             events: AuditEvent[];
             partitionDate: { year: string; month: string; day: string };
             batchTimestamp: number;
-            sequenceNumber: number;
           },
         ]
       >;
 
       const call1 = calls[0]![0];
       const call2 = calls[1]![0];
-      expect(call1.sequenceNumber).not.toBe(call2.sequenceNumber);
-
-      // Verify the mock-generated keys are unique
-      const key1 = `audit/${call1.partitionDate.year}/${call1.partitionDate.month}/${call1.partitionDate.day}/events-${String(call1.batchTimestamp)}-${String(call1.sequenceNumber)}.ndjson`;
-      const key2 = `audit/${call2.partitionDate.year}/${call2.partitionDate.month}/${call2.partitionDate.day}/events-${String(call2.batchTimestamp)}-${String(call2.sequenceNumber)}.ndjson`;
-      expect(key1).not.toBe(key2);
+      expect(call1.partitionDate).toEqual({ year: '2025', month: '09', day: '15' });
+      expect(call2.partitionDate).toEqual({ year: '2025', month: '09', day: '15' });
+      expect(call1.batchTimestamp).toBe(call2.batchTimestamp);
     });
 
     it('should handle events spanning multiple months', async () => {

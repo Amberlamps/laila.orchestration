@@ -70,7 +70,6 @@ export const handler = async (event: ScheduledEvent, context: Context): Promise<
   let totalSizeBytes = 0;
   const partitions: string[] = [];
   const batchTimestamp = Date.now();
-  let sequenceNumber = 0;
 
   for await (const batch of scanExpiredEvents(cutoffTimestamp, tableName)) {
     log.debug({ batchSize: batch.length }, 'Processing batch of expired events');
@@ -85,14 +84,11 @@ export const handler = async (event: ScheduledEvent, context: Context): Promise<
         continue;
       }
 
-      sequenceNumber += 1;
-
       const result = await uploadArchive({
         bucketName,
         events,
         partitionDate: { year, month, day },
         batchTimestamp,
-        sequenceNumber,
       });
 
       log.info(
