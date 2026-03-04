@@ -28,6 +28,7 @@ interface SerializableSeedData {
   tasks?: Array<[string, Record<string, unknown>]>;
   workers?: Array<[string, Record<string, unknown>]>;
   personas?: Array<[string, Record<string, unknown>]>;
+  attempts?: Array<Record<string, unknown>>;
   auditLog?: Array<Record<string, unknown>>;
 }
 
@@ -79,6 +80,7 @@ export const test = base.extend<TestFixtures>({
         if (seedData.tasks) store.tasks = new Map(seedData.tasks);
         if (seedData.workers) store.workers = new Map(seedData.workers);
         if (seedData.personas) store.personas = new Map(seedData.personas);
+        if (seedData.attempts) store.attempts = seedData.attempts;
         if (seedData.auditLog) store.auditLog = seedData.auditLog;
         window.__mswSeedData(store as Partial<TestDataStore>);
       }, data);

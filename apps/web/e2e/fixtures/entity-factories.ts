@@ -7,6 +7,7 @@ export {
   createMockTask,
   createMockWorker,
   createMockPersona,
+  createMockAttempt,
   createMockAuditLogEntry,
   createMockProjectPlan,
   type MockProject,
@@ -15,5 +16,6 @@ export {
   type MockTask,
   type MockWorker,
   type MockPersona,
+  type MockAttempt,
   type MockAuditLogEntry,
 } from '../../src/mocks/entity-factories';

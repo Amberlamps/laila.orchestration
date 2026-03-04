@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Manual Worker Unassignment
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Work Execution & Status Progression E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,12 +20,12 @@ Implement E2E tests for the manual worker unassignment flow. Navigate to a story
 // E2E tests for manual worker unassignment.
 // Verifies the human-initiated unassignment flow, including
 // confirmation dialog, status reset, and attempt logging.
-import { test, expect } from "../fixtures";
-import { StoryDetailPage } from "../page-objects";
-import { handleConfirmationModal, triggerQueryRefetch } from "../utils";
+import { test, expect } from '../fixtures';
+import { StoryDetailPage } from '../page-objects';
+import { handleConfirmationModal, triggerQueryRefetch } from '../utils';
 
-test.describe("Manual Worker Unassignment", () => {
-  test("unassign worker resets story and logs attempt", async ({
+test.describe('Manual Worker Unassignment', () => {
+  test('unassign worker resets story and logs attempt', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -33,54 +33,54 @@ test.describe("Manual Worker Unassignment", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
+    await storyDetail.goto('in-progress-story-id');
 
     // Verify the story is in-progress with an assigned worker.
-    await storyDetail.expectStatus("In Progress");
-    await storyDetail.expectAssignedWorker("Test Worker");
+    await storyDetail.expectStatus('In Progress');
+    await storyDetail.expectAssignedWorker('Test Worker');
 
     // Click "Unassign Worker" button.
     await storyDetail.unassignWorkerButton.click();
 
     // Verify the confirmation dialog appears.
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText(/unassign/i);
     await expect(dialog).toContainText(/Test Worker/i);
 
     // Confirm the unassignment.
-    await dialog.getByRole("button", { name: /confirm/i }).click();
+    await dialog.getByRole('button', { name: /confirm/i }).click();
 
     // Verify the success toast.
-    await storyDetail.expectSuccessToast("unassigned");
+    await storyDetail.expectSuccessToast('unassigned');
 
     // Verify the story status resets to Not Started.
-    await storyDetail.expectStatus("Not Started");
+    await storyDetail.expectStatus('Not Started');
 
     // Verify the worker assignment badge is cleared.
     await expect(storyDetail.assignedWorkerBadge).not.toBeVisible();
   });
 
-  test("cancel unassignment keeps story in-progress", async ({
+  test('cancel unassignment keeps story in-progress', async ({
     authenticatedPage: page,
     seedData,
   }) => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
-    await storyDetail.expectStatus("In Progress");
+    await storyDetail.goto('in-progress-story-id');
+    await storyDetail.expectStatus('In Progress');
 
     // Click unassign then cancel.
     await storyDetail.unassignWorkerButton.click();
-    await handleConfirmationModal(page, { action: "cancel" });
+    await handleConfirmationModal(page, { action: 'cancel' });
 
     // Verify the story remains in-progress.
-    await storyDetail.expectStatus("In Progress");
-    await storyDetail.expectAssignedWorker("Test Worker");
+    await storyDetail.expectStatus('In Progress');
+    await storyDetail.expectAssignedWorker('Test Worker');
   });
 
-  test("unassigned attempt appears in Attempt History", async ({
+  test('unassigned attempt appears in Attempt History', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -89,18 +89,18 @@ test.describe("Manual Worker Unassignment", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("manually-unassigned-story-id");
+    await storyDetail.goto('manually-unassigned-story-id');
 
     // Open the Attempt History tab.
     const attemptRows = await storyDetail.getAttemptHistoryRows();
 
     // Verify the unassigned attempt is logged.
     await expect(attemptRows.first()).toBeVisible();
-    await expect(attemptRows.first()).toContainText("Unassigned");
-    await expect(attemptRows.first()).toContainText("Test Worker");
+    await expect(attemptRows.first()).toContainText('Unassigned');
+    await expect(attemptRows.first()).toContainText('Test Worker');
   });
 
-  test("freed worker can pick up new work after unassignment", async ({
+  test('freed worker can pick up new work after unassignment', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -109,26 +109,26 @@ test.describe("Manual Worker Unassignment", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
+    await storyDetail.goto('in-progress-story-id');
 
     // Unassign the worker from the first story.
     await storyDetail.unassignWorker();
 
     // Simulate the freed worker requesting new work.
     await page.evaluate(async () => {
-      await fetch("/api/v1/work/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workerId: "test-worker-id" }),
+      await fetch('/api/v1/work/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workerId: 'test-worker-id' }),
       });
     });
 
     await triggerQueryRefetch(page);
 
     // Navigate to the second story and verify it was assigned.
-    await storyDetail.goto("available-story-id");
-    await storyDetail.expectStatus("In Progress");
-    await storyDetail.expectAssignedWorker("Test Worker");
+    await storyDetail.goto('available-story-id');
+    await storyDetail.expectStatus('In Progress');
+    await storyDetail.expectAssignedWorker('Test Worker');
   });
 });
 ```

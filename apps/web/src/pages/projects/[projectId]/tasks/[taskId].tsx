@@ -274,9 +274,14 @@ const DependenciesCard = ({
   dependents: TaskSummary[];
   projectId: string;
 }) => (
-  <Card>
+  <Card data-testid="dependencies-section">
     <CardHeader>
-      <CardTitle className="text-lg">Dependencies</CardTitle>
+      <div className="flex items-center justify-between">
+        <CardTitle className="text-lg">Dependencies</CardTitle>
+        <Button variant="outline" size="sm" disabled>
+          Add Dependency
+        </Button>
+      </div>
     </CardHeader>
     <CardContent>
       {dependencies.length > 0 && (
@@ -498,7 +503,6 @@ const TaskDetailPage: NextPageWithLayout = () => {
     Array.isArray(taskRecord.dependents) ? taskRecord.dependents : []
   ) as TaskSummary[];
 
-  const hasDependencies = dependencies.length > 0 || dependents.length > 0;
   const badgeStatus = mapApiWorkStatus(task.workStatus);
   const readOnly = isTaskReadOnly(task.workStatus);
 
@@ -540,18 +544,22 @@ const TaskDetailPage: NextPageWithLayout = () => {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-zinc-900">{task.title}</h1>
+            <h1 data-testid="entity-heading" className="text-2xl font-semibold text-zinc-900">
+              {task.title}
+            </h1>
             {readOnly && (
               <Lock
+                data-testid="lock-icon"
                 className="h-5 w-5 text-zinc-400"
                 aria-label="Read-only: task is in progress or complete"
               />
             )}
           </div>
-          {!readOnly && (
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
+              disabled={readOnly}
               onClick={() => {
                 setEditModalOpen(true);
               }}
@@ -559,11 +567,22 @@ const TaskDetailPage: NextPageWithLayout = () => {
               <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
               Edit
             </Button>
-          )}
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              className="text-red-500 hover:bg-red-50 hover:text-red-600"
+              aria-label="Delete task"
+            >
+              Delete
+            </Button>
+          </div>
         </div>
         <div className="mt-2 flex items-center gap-3">
-          <StatusBadge status={badgeStatus} />
-          <span className="text-sm">
+          <span data-testid="status-badge">
+            <StatusBadge status={badgeStatus} />
+          </span>
+          <span data-testid="persona-badge" className="text-sm">
             <span className="text-zinc-500">Persona: </span>
             {task.personaId !== null && persona ? (
               <Link
@@ -597,14 +616,12 @@ const TaskDetailPage: NextPageWithLayout = () => {
         {/* References card (hidden when empty) */}
         {hasReferences && <ReferencesCard references={task.references} />}
 
-        {/* Dependencies card (hidden when no dependencies in either direction) */}
-        {hasDependencies && (
-          <DependenciesCard
-            dependencies={dependencies}
-            dependents={dependents}
-            projectId={projectId}
-          />
-        )}
+        {/* Dependencies card */}
+        <DependenciesCard
+          dependencies={dependencies}
+          dependents={dependents}
+          projectId={projectId}
+        />
 
         {/* Persona card (collapsible) */}
         {hasPersona && (

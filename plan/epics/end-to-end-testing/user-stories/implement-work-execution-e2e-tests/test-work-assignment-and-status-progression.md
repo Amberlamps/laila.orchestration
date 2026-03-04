@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Work Assignment and Status Progression
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Work Execution & Status Progression E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,20 +20,12 @@ Implement E2E tests for the complete work assignment and status progression life
 // E2E tests for work assignment and cascading status progression.
 // Simulates the full lifecycle: publish → worker requests work →
 // task completions → story completes → project completes.
-import { test, expect } from "../fixtures";
-import {
-  DashboardPage,
-  ProjectDetailPage,
-  StoryDetailPage,
-} from "../page-objects";
-import {
-  waitForPollingRefresh,
-  triggerQueryRefetch,
-  expectStatusBadge,
-} from "../utils";
+import { test, expect } from '../fixtures';
+import { DashboardPage, ProjectDetailPage, StoryDetailPage } from '../page-objects';
+import { waitForPollingRefresh, triggerQueryRefetch, expectStatusBadge } from '../utils';
 
-test.describe("Work Assignment and Status Progression", () => {
-  test("full work lifecycle: assign → task completions → story completes → project completes", async ({
+test.describe('Work Assignment and Status Progression', () => {
+  test('full work lifecycle: assign → task completions → story completes → project completes', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -45,8 +37,8 @@ test.describe("Work Assignment and Status Progression", () => {
 
     // Step 1: Verify the story is in Not Started status.
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("seeded-story-id");
-    await storyDetail.expectStatus("Not Started");
+    await storyDetail.goto('seeded-story-id');
+    await storyDetail.expectStatus('Not Started');
 
     // Step 2: Simulate a worker requesting work via the API.
     // This is done by triggering the MSW work-request handler
@@ -54,26 +46,26 @@ test.describe("Work Assignment and Status Progression", () => {
     await page.evaluate(async () => {
       // Simulate the worker's POST /api/v1/work/request call.
       // In a real scenario, this would come from an external agent.
-      await fetch("/api/v1/work/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workerId: "test-worker-id" }),
+      await fetch('/api/v1/work/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workerId: 'test-worker-id' }),
       });
     });
 
     // Step 3: Wait for TanStack Query polling to pick up the change.
     // The story status should transition from Not Started to In Progress.
     await triggerQueryRefetch(page);
-    await storyDetail.goto("seeded-story-id");
-    await storyDetail.expectStatus("In Progress");
-    await storyDetail.expectAssignedWorker("Test Worker");
+    await storyDetail.goto('seeded-story-id');
+    await storyDetail.expectStatus('In Progress');
+    await storyDetail.expectAssignedWorker('Test Worker');
 
     // Step 4: Simulate task completions in sequence.
     // Complete Task 1 → unblocks Task 2.
     await page.evaluate(async () => {
-      await fetch("/api/v1/tasks/task-1-id/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/v1/tasks/task-1-id/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
     });
 
@@ -81,21 +73,21 @@ test.describe("Work Assignment and Status Progression", () => {
 
     // Verify Task 1 is completed and Task 2 is now unblocked (not-started).
     await storyDetail.tasksTab.click();
-    const task1Row = storyDetail.tasksTable.getByRole("row", {
+    const task1Row = storyDetail.tasksTable.getByRole('row', {
       name: /Setup Database Schema/,
     });
-    await expect(task1Row).toContainText("Completed");
+    await expect(task1Row).toContainText('Completed');
 
-    const task2Row = storyDetail.tasksTable.getByRole("row", {
+    const task2Row = storyDetail.tasksTable.getByRole('row', {
       name: /Implement API Endpoint/,
     });
-    await expect(task2Row).toContainText("Not Started");
+    await expect(task2Row).toContainText('Not Started');
 
     // Complete Task 2 → unblocks Task 3.
     await page.evaluate(async () => {
-      await fetch("/api/v1/tasks/task-2-id/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/v1/tasks/task-2-id/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
     });
 
@@ -103,25 +95,25 @@ test.describe("Work Assignment and Status Progression", () => {
 
     // Complete Task 3 → all tasks done → story auto-completes.
     await page.evaluate(async () => {
-      await fetch("/api/v1/tasks/task-3-id/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/v1/tasks/task-3-id/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
     });
 
     await triggerQueryRefetch(page);
-    await storyDetail.goto("seeded-story-id");
+    await storyDetail.goto('seeded-story-id');
 
     // Step 5: Verify story auto-completed.
-    await storyDetail.expectStatus("Completed");
+    await storyDetail.expectStatus('Completed');
 
     // Step 6: Verify project and epic also completed.
     const projectDetail = new ProjectDetailPage(page);
-    await projectDetail.goto("seeded-project-id");
-    await projectDetail.expectStatus("Completed");
+    await projectDetail.goto('seeded-project-id');
+    await projectDetail.expectStatus('Completed');
   });
 
-  test("dashboard widgets update during work progression", async ({
+  test('dashboard widgets update during work progression', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -132,24 +124,24 @@ test.describe("Work Assignment and Status Progression", () => {
     await dashboard.goto();
 
     // Verify the in-progress stories widget shows the correct count.
-    await dashboard.expectWidgetValue("in-progress-stories", "1");
-    await dashboard.expectWidgetValue("active-projects", "1");
+    await dashboard.expectWidgetValue('in-progress-stories', '1');
+    await dashboard.expectWidgetValue('active-projects', '1');
 
     // Simulate story completion via API.
     await page.evaluate(async () => {
-      await fetch("/api/v1/stories/seeded-story-id/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/v1/stories/seeded-story-id/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
     });
 
     await triggerQueryRefetch(page);
 
     // Verify widgets update to reflect the completion.
-    await dashboard.expectWidgetValue("in-progress-stories", "0");
+    await dashboard.expectWidgetValue('in-progress-stories', '0');
   });
 
-  test("cascading unblock updates blocked tasks to not-started", async ({
+  test('cascading unblock updates blocked tasks to not-started', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -158,39 +150,39 @@ test.describe("Work Assignment and Status Progression", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("seeded-story-id");
+    await storyDetail.goto('seeded-story-id');
     await storyDetail.tasksTab.click();
 
     // Verify initial states.
-    const taskA = storyDetail.tasksTable.getByRole("row", { name: /Task A/ });
-    const taskB = storyDetail.tasksTable.getByRole("row", { name: /Task B/ });
-    const taskC = storyDetail.tasksTable.getByRole("row", { name: /Task C/ });
-    await expect(taskA).toContainText("Not Started");
-    await expect(taskB).toContainText("Blocked");
-    await expect(taskC).toContainText("Blocked");
+    const taskA = storyDetail.tasksTable.getByRole('row', { name: /Task A/ });
+    const taskB = storyDetail.tasksTable.getByRole('row', { name: /Task B/ });
+    const taskC = storyDetail.tasksTable.getByRole('row', { name: /Task C/ });
+    await expect(taskA).toContainText('Not Started');
+    await expect(taskB).toContainText('Blocked');
+    await expect(taskC).toContainText('Blocked');
 
     // Complete Task A.
     await page.evaluate(async () => {
-      await fetch("/api/v1/tasks/task-a-id/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/v1/tasks/task-a-id/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
     });
 
     await triggerQueryRefetch(page);
-    await storyDetail.goto("seeded-story-id");
+    await storyDetail.goto('seeded-story-id');
     await storyDetail.tasksTab.click();
 
     // Task A completed, Task B unblocked, Task C still blocked (depends on B).
-    await expect(
-      storyDetail.tasksTable.getByRole("row", { name: /Task A/ })
-    ).toContainText("Completed");
-    await expect(
-      storyDetail.tasksTable.getByRole("row", { name: /Task B/ })
-    ).toContainText("Not Started");
-    await expect(
-      storyDetail.tasksTable.getByRole("row", { name: /Task C/ })
-    ).toContainText("Blocked");
+    await expect(storyDetail.tasksTable.getByRole('row', { name: /Task A/ })).toContainText(
+      'Completed',
+    );
+    await expect(storyDetail.tasksTable.getByRole('row', { name: /Task B/ })).toContainText(
+      'Not Started',
+    );
+    await expect(storyDetail.tasksTable.getByRole('row', { name: /Task C/ })).toContainText(
+      'Blocked',
+    );
   });
 });
 ```

@@ -285,8 +285,15 @@ function ProjectHeader({
         {/* Left: Name, badge, description */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-[30px] leading-tight font-bold text-zinc-900">{name}</h1>
-            <StatusBadge status={badgeStatus} />
+            <h1
+              data-testid="entity-heading"
+              className="text-[30px] leading-tight font-bold text-zinc-900"
+            >
+              {name}
+            </h1>
+            <span data-testid="status-badge">
+              <StatusBadge status={badgeStatus} />
+            </span>
           </div>
 
           {description && (

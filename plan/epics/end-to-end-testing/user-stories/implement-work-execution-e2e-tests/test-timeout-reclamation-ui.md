@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Timeout Reclamation UI
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Work Execution & Status Progression E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,12 +20,12 @@ Implement E2E tests for the timeout reclamation UI. Assign a story to a worker, 
 // E2E tests for timeout reclamation.
 // Verifies that timed-out stories are reclaimed automatically,
 // the timeout banner appears, and the attempt is logged.
-import { test, expect } from "../fixtures";
-import { StoryDetailPage } from "../page-objects";
-import { triggerQueryRefetch } from "../utils";
+import { test, expect } from '../fixtures';
+import { StoryDetailPage } from '../page-objects';
+import { triggerQueryRefetch } from '../utils';
 
-test.describe("Timeout Reclamation", () => {
-  test("timed-out story shows reclamation banner and resets", async ({
+test.describe('Timeout Reclamation', () => {
+  test('timed-out story shows reclamation banner and resets', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -35,35 +35,35 @@ test.describe("Timeout Reclamation", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("in-progress-story-id");
-    await storyDetail.expectStatus("In Progress");
+    await storyDetail.goto('in-progress-story-id');
+    await storyDetail.expectStatus('In Progress');
 
     // Simulate the timeout reclamation background job running.
     // This would normally be triggered by the scheduler, but in
     // E2E tests we call the reclamation endpoint directly.
     await page.evaluate(async () => {
-      await fetch("/api/v1/admin/reclaim-timed-out", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/v1/admin/reclaim-timed-out', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
     });
 
     // Wait for the UI to reflect the reclamation.
     await triggerQueryRefetch(page);
-    await storyDetail.goto("in-progress-story-id");
+    await storyDetail.goto('in-progress-story-id');
 
     // Verify the timeout reclamation banner is displayed.
     await expect(storyDetail.timeoutBanner).toBeVisible();
     await expect(storyDetail.timeoutBanner).toContainText(/timed out/i);
 
     // Verify the story status is reset to Not Started.
-    await storyDetail.expectStatus("Not Started");
+    await storyDetail.expectStatus('Not Started');
 
     // Verify the worker assignment is cleared.
     await expect(storyDetail.assignedWorkerBadge).not.toBeVisible();
   });
 
-  test("timed-out attempt is logged in Attempt History", async ({
+  test('timed-out attempt is logged in Attempt History', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -71,20 +71,20 @@ test.describe("Timeout Reclamation", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("story-with-timeout-history-id");
+    await storyDetail.goto('story-with-timeout-history-id');
 
     // Open the Attempt History tab.
     const attemptRows = await storyDetail.getAttemptHistoryRows();
 
     // Verify the timed-out attempt is logged with the correct outcome.
     await expect(attemptRows.first()).toBeVisible();
-    await expect(attemptRows.first()).toContainText("Timed Out");
+    await expect(attemptRows.first()).toContainText('Timed Out');
 
     // Verify the attempt includes the worker name and duration.
-    await expect(attemptRows.first()).toContainText("Test Worker");
+    await expect(attemptRows.first()).toContainText('Test Worker');
   });
 
-  test("reclaimed story can be picked up by another worker", async ({
+  test('reclaimed story can be picked up by another worker', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -92,24 +92,24 @@ test.describe("Timeout Reclamation", () => {
     seedData({});
 
     const storyDetail = new StoryDetailPage(page);
-    await storyDetail.goto("reclaimed-story-id");
-    await storyDetail.expectStatus("Not Started");
+    await storyDetail.goto('reclaimed-story-id');
+    await storyDetail.expectStatus('Not Started');
 
     // Simulate a different worker requesting work.
     await page.evaluate(async () => {
-      await fetch("/api/v1/work/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workerId: "worker-2-id" }),
+      await fetch('/api/v1/work/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workerId: 'worker-2-id' }),
       });
     });
 
     await triggerQueryRefetch(page);
-    await storyDetail.goto("reclaimed-story-id");
+    await storyDetail.goto('reclaimed-story-id');
 
     // Verify the story is re-assigned to the new worker.
-    await storyDetail.expectStatus("In Progress");
-    await storyDetail.expectAssignedWorker("Worker 2");
+    await storyDetail.expectStatus('In Progress');
+    await storyDetail.expectAssignedWorker('Worker 2');
   });
 });
 ```

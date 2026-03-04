@@ -520,7 +520,7 @@ export function DeleteStoryButton({
             </Button>
           </button>
         </TooltipTrigger>
-        <TooltipContent>Cannot delete story with in-progress work</TooltipContent>
+        <TooltipContent>Cannot delete story while it is in progress</TooltipContent>
       </Tooltip>
     );
   }

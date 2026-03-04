@@ -177,7 +177,7 @@ const TimelineEntry = ({ attempt }: { attempt: AttemptEntry }) => {
   const isActive = attempt.reason === null;
 
   return (
-    <div className="relative mb-6 last:mb-0">
+    <div data-testid="attempt-history-row" className="relative mb-6 last:mb-0">
       {/* Timeline dot */}
       <div
         className={`absolute top-1 left-[-25px] h-2.5 w-2.5 rounded-full ${config.dotColor} ${isActive ? 'animate-pulse' : ''}`}

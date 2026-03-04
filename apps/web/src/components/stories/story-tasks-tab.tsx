@@ -150,7 +150,10 @@ const computeExecutionOrder = (tasks: TaskRow[]): Map<string, number> => {
 
 /** Read-only banner shown when the story is in_progress or complete. */
 const ReadOnlyBanner = ({ status }: { status: 'in progress' | 'complete' }) => (
-  <div className="mb-4 flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+  <div
+    data-testid="read-only-banner"
+    className="mb-4 flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
+  >
     <Lock className="h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
     <p className="text-sm text-amber-700">
       This story is currently {status}. Tasks cannot be modified.
@@ -394,34 +397,36 @@ function StoryTasksTab({
       </div>
 
       {/* Task table */}
-      <EntityTable<TaskRow>
-        columns={taskColumns}
-        data={tasks}
-        getRowKey={(row) => row.id}
-        loading={tasksLoading}
-        page={page}
-        pageSize={PAGE_SIZE}
-        totalCount={totalCount}
-        onPageChange={setPage}
-        onSort={handleSort}
-        {...(sortBy != null ? { sortBy, sortDirection } : {})}
-        onRowClick={(row) => {
-          void router.push(`/projects/${projectId}/tasks/${row.id}`);
-        }}
-        emptyState={
-          <EmptyState
-            icon={(props: { className?: string }) => <ClipboardList {...props} />}
-            title="No tasks defined"
-            description="This story doesn't have any tasks yet. Add a task to get started."
-            {...(!readOnly && onCreateTask
-              ? {
-                  actionLabel: '+ Add Task',
-                  onAction: onCreateTask,
-                }
-              : {})}
-          />
-        }
-      />
+      <div data-testid="tasks-table">
+        <EntityTable<TaskRow>
+          columns={taskColumns}
+          data={tasks}
+          getRowKey={(row) => row.id}
+          loading={tasksLoading}
+          page={page}
+          pageSize={PAGE_SIZE}
+          totalCount={totalCount}
+          onPageChange={setPage}
+          onSort={handleSort}
+          {...(sortBy != null ? { sortBy, sortDirection } : {})}
+          onRowClick={(row) => {
+            void router.push(`/projects/${projectId}/tasks/${row.id}`);
+          }}
+          emptyState={
+            <EmptyState
+              icon={(props: { className?: string }) => <ClipboardList {...props} />}
+              title="No tasks defined"
+              description="This story doesn't have any tasks yet. Add a task to get started."
+              {...(!readOnly && onCreateTask
+                ? {
+                    actionLabel: '+ Add Task',
+                    onAction: onCreateTask,
+                  }
+                : {})}
+            />
+          }
+        />
+      </div>
     </div>
   );
 }

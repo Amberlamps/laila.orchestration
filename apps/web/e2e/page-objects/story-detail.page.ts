@@ -7,6 +7,7 @@ import { BasePage } from './base.page';
 export class StoryDetailPage extends BasePage {
   readonly heading: Locator;
   readonly statusBadge: Locator;
+  readonly editButton: Locator;
   readonly publishButton: Locator;
   readonly deleteButton: Locator;
   readonly createTaskButton: Locator;
@@ -24,14 +25,15 @@ export class StoryDetailPage extends BasePage {
     super(page);
     this.heading = page.getByTestId('entity-heading');
     this.statusBadge = page.getByTestId('status-badge');
+    this.editButton = page.getByRole('button', { name: /^edit$/i });
     this.publishButton = page.getByRole('button', { name: /publish/i });
     this.deleteButton = page.getByRole('button', { name: /delete/i });
-    this.createTaskButton = page.getByRole('button', { name: /create task/i });
+    this.createTaskButton = page.getByRole('button', { name: /new task/i });
     this.tasksTab = page.getByRole('tab', { name: /tasks/i });
     this.tasksTable = page.getByTestId('tasks-table');
     this.attemptHistoryTab = page.getByRole('tab', { name: /attempt history/i });
     this.assignedWorkerBadge = page.getByTestId('assigned-worker');
-    this.unassignWorkerButton = page.getByRole('button', { name: /unassign worker/i });
+    this.unassignWorkerButton = page.getByRole('button', { name: /^unassign$/i });
     this.resetButton = page.getByRole('button', { name: /reset/i });
     this.failedErrorMessage = page.getByTestId('failed-error-message');
     this.readOnlyBanner = page.getByTestId('read-only-banner');
@@ -75,11 +77,11 @@ export class StoryDetailPage extends BasePage {
     return this;
   }
 
-  /** Click the "Unassign Worker" button and confirm the dialog. */
+  /** Click the "Unassign" button and confirm the dialog. */
   async unassignWorker(): Promise<this> {
     await this.unassignWorkerButton.click();
     const dialog = this.page.getByRole('dialog');
-    await dialog.getByRole('button', { name: /confirm/i }).click();
+    await dialog.getByRole('button', { name: /unassign worker/i }).click();
     await this.expectSuccessToast('unassigned');
     return this;
   }
