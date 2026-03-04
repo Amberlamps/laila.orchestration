@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Domain and SSL
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** terraform-engineer
 - **Parent User Story:** [Configure Production Environment](./tasks.md)
 - **Parent Epic:** [AWS Infrastructure & Deployment](../../user-stories.md)
