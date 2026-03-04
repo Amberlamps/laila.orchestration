@@ -14,7 +14,14 @@
  * with DELETION_BLOCKED if any exist, including the count of active tasks.
  */
 
-import { createPersonaRepository, getDb } from '@laila/database';
+import {
+  createPersonaRepository,
+  getDb,
+  tasksTable,
+  userStoriesTable,
+  epicsTable,
+  projectsTable,
+} from '@laila/database';
 import {
   updatePersonaSchema,
   NotFoundError,
@@ -22,7 +29,11 @@ import {
   DomainErrorCode,
   ValidationError,
 } from '@laila/shared';
+import { and, eq, isNull, notInArray } from 'drizzle-orm';
 import { z } from 'zod';
+
+/** Terminal task statuses — tasks in these states are not "active". */
+const TERMINAL_STATUSES = ['done', 'failed', 'skipped'] as const;
 
 import { withErrorHandler } from '@/lib/api/error-handler';
 import { withValidation } from '@/lib/api/validation';
@@ -48,11 +59,11 @@ const personaIdParamsSchema = z.object({
 // ---------------------------------------------------------------------------
 
 /**
- * Returns a single persona with usage statistics:
- * - Total tasks referencing this persona
- * - Active (non-terminal, non-deleted) tasks referencing this persona
+ * Returns a single persona with usage statistics and active task assignments:
+ * - Task counts (active vs total)
+ * - Active task assignments with parent story and project context
  *
- * Response: 200 with { data: { ...persona, taskCounts: { active, total } } }
+ * Response: 200 with { data: { ...persona, taskCounts, activeTaskAssignments } }
  * Throws: 404 NotFoundError with PERSONA_NOT_FOUND if persona does not exist
  */
 const handleGetDetail = withErrorHandler(
@@ -75,7 +86,35 @@ const handleGetDetail = withErrorHandler(
           );
         }
 
-        res.status(200).json({ data: result });
+        // Fetch active task assignments with parent story and project context
+        const assignments = await db
+          .select({
+            taskId: tasksTable.id,
+            taskTitle: tasksTable.title,
+            storyId: userStoriesTable.id,
+            storyTitle: userStoriesTable.title,
+            projectId: projectsTable.id,
+            projectName: projectsTable.name,
+          })
+          .from(tasksTable)
+          .innerJoin(userStoriesTable, eq(tasksTable.userStoryId, userStoriesTable.id))
+          .innerJoin(epicsTable, eq(userStoriesTable.epicId, epicsTable.id))
+          .innerJoin(projectsTable, eq(epicsTable.projectId, projectsTable.id))
+          .where(
+            and(
+              eq(tasksTable.tenantId, tenantId),
+              eq(tasksTable.personaId, id),
+              isNull(tasksTable.deletedAt),
+              notInArray(tasksTable.workStatus, [...TERMINAL_STATUSES]),
+            ),
+          );
+
+        res.status(200).json({
+          data: {
+            ...result,
+            activeTaskAssignments: assignments,
+          },
+        });
       },
     ),
   ),

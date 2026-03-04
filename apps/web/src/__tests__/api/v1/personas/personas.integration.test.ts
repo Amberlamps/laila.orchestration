@@ -158,10 +158,44 @@ vi.mock('@/lib/middleware/api-key-validator', () => ({
 }));
 
 /**
- * Mock @laila/database -- provides mock persona/project repository factories and getDb.
+ * Mock drizzle-orm -- the detail handler uses eq/and/isNull/notInArray for a raw
+ * DB query. Mock them so they don't throw on non-Column arguments.
  */
+vi.mock('drizzle-orm', () => ({
+  eq: vi.fn(),
+  and: vi.fn(),
+  isNull: vi.fn(),
+  notInArray: vi.fn(),
+}));
+
+/**
+ * Mock @laila/database -- provides mock persona/project repository factories and getDb.
+ * The detail handler also does a raw db.select() chain for active task assignments,
+ * so getDb must return a chainable mock, and the table symbols must be exported.
+ */
+const mockDbChain = (() => {
+  const chain: Record<string, ReturnType<typeof vi.fn>> = {};
+  chain.select = vi.fn(() => chain);
+  chain.from = vi.fn(() => chain);
+  chain.innerJoin = vi.fn(() => chain);
+  chain.where = vi.fn(() => Promise.resolve([]));
+  return chain;
+})();
+
 vi.mock('@laila/database', () => ({
-  getDb: vi.fn(() => ({})),
+  getDb: vi.fn(() => mockDbChain),
+  tasksTable: {
+    id: 'id',
+    title: 'title',
+    userStoryId: 'userStoryId',
+    tenantId: 'tenantId',
+    personaId: 'personaId',
+    deletedAt: 'deletedAt',
+    workStatus: 'workStatus',
+  },
+  userStoriesTable: { id: 'id', title: 'title', epicId: 'epicId' },
+  epicsTable: { id: 'id', projectId: 'projectId' },
+  projectsTable: { id: 'id', name: 'name' },
   createPersonaRepository: vi.fn(() => ({
     create: mockPersonaRepoCreate,
     update: mockPersonaRepoUpdate,
