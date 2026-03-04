@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Configure Audit Archiver Build
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Audit Archiver Lambda](./tasks.md)
 - **Parent Epic:** [Background Jobs & Scheduled Tasks](../../user-stories.md)
@@ -52,14 +52,14 @@ Configure the tsup build for the audit archiver Lambda function. The build produ
 // tsup build configuration for Lambda deployment.
 // Same pattern as other Lambda functions.
 
-import { defineConfig } from "tsup";
+import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ["src/handler.ts"],
-  format: ["esm"],
-  target: "node22",
-  platform: "node",
-  outDir: "dist",
+  entry: ['src/handler.ts'],
+  format: ['esm'],
+  target: 'node22',
+  platform: 'node',
+  outDir: 'dist',
   clean: true,
   bundle: true,
   treeshake: true,

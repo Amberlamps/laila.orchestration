@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Create Audit Archiver Handler
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** backend-developer
 - **Parent User Story:** [Implement Audit Archiver Lambda](./tasks.md)
 - **Parent Epic:** [Background Jobs & Scheduled Tasks](../../user-stories.md)
@@ -22,10 +22,10 @@ Create the Lambda handler at `functions/audit-archiver/src/handler.ts` that arch
 // Exports audit events older than 90 days from DynamoDB to S3
 // as newline-delimited JSON, partitioned by year/month/day.
 
-import type { ScheduledEvent, Context } from "aws-lambda";
-import { scanExpiredEvents } from "./dynamo";
-import { uploadArchive } from "./s3";
-import { logger } from "./logger";
+import type { ScheduledEvent, Context } from 'aws-lambda';
+import { scanExpiredEvents } from './dynamo';
+import { uploadArchive } from './s3';
+import { logger } from './logger';
 
 interface ArchiveResult {
   eventsArchived: number;
@@ -48,10 +48,7 @@ interface ArchiveResult {
  * 5. Optionally delete archived events from DynamoDB (or rely on TTL)
  * 6. Return summary: events archived, files written, total size
  */
-export const handler = async (
-  event: ScheduledEvent,
-  context: Context
-): Promise<ArchiveResult> => {
+export const handler = async (event: ScheduledEvent, context: Context): Promise<ArchiveResult> => {
   // Implementation here
 };
 ```
@@ -63,28 +60,24 @@ export const handler = async (
 // DynamoDB query functions for scanning expired audit events.
 // Handles pagination for large result sets using LastEvaluatedKey.
 
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {
-  DynamoDBDocumentClient,
-  ScanCommand,
-  type ScanCommandInput,
-} from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, ScanCommand, type ScanCommandInput } from '@aws-sdk/lib-dynamodb';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
 interface AuditEvent {
-  pk: string;          // Partition key: "EVENT#{eventId}"
-  sk: string;          // Sort key: "TS#{isoTimestamp}"
-  eventType: string;   // e.g., "story.assigned", "task.completed"
+  pk: string; // Partition key: "EVENT#{eventId}"
+  sk: string; // Sort key: "TS#{isoTimestamp}"
+  eventType: string; // e.g., "story.assigned", "task.completed"
   projectId: string;
   entityId: string;
   entityType: string;
   userId: string | null;
   agentId: string | null;
   metadata: Record<string, unknown>;
-  timestamp: string;   // ISO 8601
-  ttl: number;         // Unix epoch seconds for DynamoDB TTL
+  timestamp: string; // ISO 8601
+  ttl: number; // Unix epoch seconds for DynamoDB TTL
 }
 
 /**
@@ -99,16 +92,16 @@ interface AuditEvent {
  */
 export async function* scanExpiredEvents(
   cutoffTimestamp: string,
-  tableName: string
+  tableName: string,
 ): AsyncGenerator<AuditEvent[], void, unknown> {
   let lastEvaluatedKey: Record<string, unknown> | undefined;
 
   do {
     const params: ScanCommandInput = {
       TableName: tableName,
-      FilterExpression: "#ts < :cutoff",
-      ExpressionAttributeNames: { "#ts": "timestamp" },
-      ExpressionAttributeValues: { ":cutoff": cutoffTimestamp },
+      FilterExpression: '#ts < :cutoff',
+      ExpressionAttributeNames: { '#ts': 'timestamp' },
+      ExpressionAttributeValues: { ':cutoff': cutoffTimestamp },
       ExclusiveStartKey: lastEvaluatedKey,
       Limit: 1000, // Process in batches of 1000
     };
@@ -131,7 +124,7 @@ export async function* scanExpiredEvents(
 // Events are stored as newline-delimited JSON (NDJSON) files,
 // partitioned by year/month/day for efficient Athena querying.
 
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const s3Client = new S3Client({});
 
@@ -153,8 +146,8 @@ export async function uploadArchive(params: {
   const { bucketName, events, partitionDate, batchTimestamp } = params;
 
   // Serialize events as NDJSON: one JSON object per line
-  const ndjson = events.map((event) => JSON.stringify(event)).join("\n");
-  const body = Buffer.from(ndjson, "utf-8");
+  const ndjson = events.map((event) => JSON.stringify(event)).join('\n');
+  const body = Buffer.from(ndjson, 'utf-8');
 
   const key = `audit/${partitionDate.year}/${partitionDate.month}/${partitionDate.day}/events-${batchTimestamp}.ndjson`;
 
@@ -163,10 +156,10 @@ export async function uploadArchive(params: {
       Bucket: bucketName,
       Key: key,
       Body: body,
-      ContentType: "application/x-ndjson",
+      ContentType: 'application/x-ndjson',
       // Server-side encryption with S3-managed keys
-      ServerSideEncryption: "AES256",
-    })
+      ServerSideEncryption: 'AES256',
+    }),
   );
 
   return { key, sizeBytes: body.byteLength };
@@ -185,18 +178,16 @@ export async function uploadArchive(params: {
  * Returns a Map where keys are "YYYY/MM/DD" strings
  * and values are arrays of events for that date.
  */
-export function groupByDate(
-  events: AuditEvent[]
-): Map<string, AuditEvent[]> {
+export function groupByDate(events: AuditEvent[]): Map<string, AuditEvent[]> {
   const groups = new Map<string, AuditEvent[]>();
 
   for (const event of events) {
     const date = new Date(event.timestamp);
     const key = [
       date.getUTCFullYear().toString(),
-      (date.getUTCMonth() + 1).toString().padStart(2, "0"),
-      date.getUTCDate().toString().padStart(2, "0"),
-    ].join("/");
+      (date.getUTCMonth() + 1).toString().padStart(2, '0'),
+      date.getUTCDate().toString().padStart(2, '0'),
+    ].join('/');
 
     const existing = groups.get(key) ?? [];
     existing.push(event);
