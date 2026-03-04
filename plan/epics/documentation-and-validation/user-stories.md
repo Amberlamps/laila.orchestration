@@ -10,10 +10,10 @@
 
 ## User Stories
 
-| User Story                                                                                | Description                                                                                        | Status      | Tasks   | Dependencies                     |
-| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------- | ------- | -------------------------------- |
-| [Generate Comprehensive README.md](./user-stories/generate-comprehensive-readme/tasks.md) | Write all README sections: overview, prerequisites, installation, development, testing, deployment | Complete    | 4 tasks | None                             |
-| [Validate README.md Instructions](./user-stories/validate-readme-instructions/tasks.md)   | Run every command from the README and verify it works correctly                                    | Not Started | 6 tasks | Generate Comprehensive README.md |
+| User Story                                                                                | Description                                                                                        | Status                      | Tasks   | Dependencies                     |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------- | ------- | -------------------------------- |
+| [Generate Comprehensive README.md](./user-stories/generate-comprehensive-readme/tasks.md) | Write all README sections: overview, prerequisites, installation, development, testing, deployment | Complete                    | 4 tasks | None                             |
+| [Validate README.md Instructions](./user-stories/validate-readme-instructions/tasks.md)   | Run every command from the README and verify it works correctly                                    | In Progress (laila-agent-2) | 6 tasks | Generate Comprehensive README.md |
 
 ## Dependency Graph
 
