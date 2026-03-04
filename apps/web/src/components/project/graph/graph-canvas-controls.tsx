@@ -12,6 +12,8 @@ import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
+import { GraphFullscreenToggle } from './graph-fullscreen-toggle';
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -43,9 +45,17 @@ const ZOOM_EPSILON = 0.001;
 interface GraphCanvasControlsProps {
   /** Called after the reset action to clear external interaction state. */
   onReset?: () => void;
+  /** Whether the graph container is currently in fullscreen mode. */
+  isFullscreen: boolean;
+  /** Callback to toggle fullscreen mode on/off. */
+  onToggleFullscreen: () => void;
 }
 
-export const GraphCanvasControls = ({ onReset }: GraphCanvasControlsProps) => {
+export const GraphCanvasControls = ({
+  onReset,
+  isFullscreen,
+  onToggleFullscreen,
+}: GraphCanvasControlsProps) => {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
   const { zoom } = useViewport();
 
@@ -132,6 +142,12 @@ export const GraphCanvasControls = ({ onReset }: GraphCanvasControlsProps) => {
           </TooltipTrigger>
           <TooltipContent side="top">Reset</TooltipContent>
         </Tooltip>
+
+        {/* Divider */}
+        <div className="mx-1 h-6 border-l border-zinc-200" />
+
+        {/* Fullscreen Toggle */}
+        <GraphFullscreenToggle isFullscreen={isFullscreen} onToggle={onToggleFullscreen} />
       </div>
     </TooltipProvider>
   );

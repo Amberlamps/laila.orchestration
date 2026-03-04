@@ -15,17 +15,21 @@ import { ReactFlow, Background, BackgroundVariant, useReactFlow } from '@xyflow/
 import '@xyflow/react/dist/style.css';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useDagreLayout } from '@/hooks/use-dagre-layout';
 import { useEdgeHighlight } from '@/hooks/use-edge-highlight';
+import { useFullscreen } from '@/hooks/use-fullscreen';
 import { useGraphEpicFilter } from '@/hooks/use-graph-epic-filter';
 import { useGraphStatusFilter } from '@/hooks/use-graph-status-filter';
 import { useGraphTooltip } from '@/hooks/use-graph-tooltip';
 import { useGraphViewLevel } from '@/hooks/use-graph-view-level';
-import { computeDagreLayout } from '@/lib/graph/dagre-layout';
 import { transformToGraphData } from '@/lib/graph/transform-graph-data';
 import { useProjectGraph } from '@/lib/query-hooks';
 
 import { GraphCanvasControls } from './graph-canvas-controls';
 import { GraphEpicFilter } from './graph-epic-filter';
+import { GraphLayoutLoading } from './graph-layout-loading';
+import { GraphLegend } from './graph-legend';
+import { GraphMinimap } from './graph-minimap';
 import { GraphNodeTooltip } from './graph-node-tooltip';
 import { GraphStatusFilter } from './graph-status-filter';
 import { GraphViewLevelToggle } from './graph-view-level-toggle';
@@ -97,6 +101,25 @@ export const DependencyGraphContainer = ({ projectId }: DependencyGraphContainer
   const reactFlowInstance = useReactFlow();
 
   // ---------------------------------------------------------------------------
+  // Fullscreen
+  // ---------------------------------------------------------------------------
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
+
+  // Re-fit the graph when entering/exiting fullscreen so it adjusts to new dimensions
+  const prevFullscreenRef = useRef(isFullscreen);
+
+  useEffect(() => {
+    if (prevFullscreenRef.current !== isFullscreen) {
+      prevFullscreenRef.current = isFullscreen;
+      requestAnimationFrame(() => {
+        void reactFlowInstance.fitView(FIT_VIEW_ANIMATED);
+      });
+    }
+  }, [isFullscreen, reactFlowInstance]);
+
+  // ---------------------------------------------------------------------------
   // Step 1: Transform API data into ReactFlow format (no layout yet)
   // ---------------------------------------------------------------------------
 
@@ -155,20 +178,10 @@ export const DependencyGraphContainer = ({ projectId }: DependencyGraphContainer
 
   // ---------------------------------------------------------------------------
   // Step 5: Dagre layout (on the final filtered set)
+  // Uses Web Worker for graphs with > 200 nodes; sync for smaller graphs.
   // ---------------------------------------------------------------------------
 
-  const { layoutNodes, layoutEdges } = useMemo(() => {
-    if (filteredNodes.length === 0) {
-      return { layoutNodes: [] as Node[], layoutEdges: [] as Edge[] };
-    }
-
-    const { nodes: positioned, edges: finalEdges } = computeDagreLayout(
-      filteredNodes,
-      filteredEdges,
-    );
-
-    return { layoutNodes: positioned, layoutEdges: finalEdges };
-  }, [filteredNodes, filteredEdges]);
+  const { layoutNodes, layoutEdges, isComputing } = useDagreLayout(filteredNodes, filteredEdges);
 
   // ---------------------------------------------------------------------------
   // Step 6: Fit view after view level change
@@ -263,7 +276,10 @@ export const DependencyGraphContainer = ({ projectId }: DependencyGraphContainer
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="flex h-full min-h-[600px] w-full flex-col">
+    <div
+      ref={containerRef}
+      className={`flex h-full min-h-[600px] w-full flex-col${isFullscreen ? 'bg-white' : ''}`}
+    >
       {/* Toolbar: filters and view level toggle */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 px-2 py-2">
         <GraphStatusFilter
@@ -304,10 +320,19 @@ export const DependencyGraphContainer = ({ projectId }: DependencyGraphContainer
           proOptions={{ hideAttribution: true }}
         >
           <Background variant={BackgroundVariant.Dots} />
-          <GraphCanvasControls onReset={handleReset} />
+          <GraphMinimap />
+          <GraphCanvasControls
+            onReset={handleReset}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
+          />
         </ReactFlow>
+        {isComputing && <GraphLayoutLoading nodeCount={filteredNodes.length} />}
         {tooltipData !== null && <GraphNodeTooltip data={tooltipData} position={tooltipPosition} />}
       </div>
+
+      {/* Status color legend */}
+      <GraphLegend />
     </div>
   );
 };
