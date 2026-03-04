@@ -28,6 +28,7 @@ import { evaluateDependents } from './evaluator';
 import { isAlreadyProcessed, recordProcessed } from './idempotency';
 import { createInvocationLogger } from './logger';
 import { propagateToStory, propagateToEpic } from './propagator';
+import { statusChangeEventSchema } from './types';
 
 import type { StatusChangeEvent, PropagationResult } from './types';
 import type { SQSEvent, SQSBatchResponse, SQSBatchItemFailure, Context } from 'aws-lambda';
@@ -70,7 +71,8 @@ export const handler = async (event: SQSEvent, context: Context): Promise<SQSBat
 
   for (const record of event.Records) {
     try {
-      const statusChange: StatusChangeEvent = JSON.parse(record.body) as StatusChangeEvent;
+      const parsed: unknown = JSON.parse(record.body);
+      const statusChange: StatusChangeEvent = statusChangeEventSchema.parse(parsed);
 
       log.info(
         {
@@ -255,7 +257,10 @@ const processStatusChange = async (
       );
     }
   } else {
-    // statusChange.eventType === 'story.completed'
+    // TypeScript narrows eventType to 'story.completed' here. Upstream Zod
+    // validation (statusChangeEventSchema.parse) rejects unsupported event
+    // types before this function is reached, so this branch is safe.
+
     // Propagate to parent epic
     const epicResult = await propagateToEpic(
       db,

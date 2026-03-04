@@ -5,36 +5,40 @@
  * modules. All types use strict typing (no `any`).
  */
 
+import { workStatusSchema } from '@laila/shared';
+import { z } from 'zod';
+
 import type { WorkStatus } from '@laila/shared';
 
 // ---------------------------------------------------------------------------
 // SQS message types
 // ---------------------------------------------------------------------------
 
+/** All supported event types for status change events. */
+export const SUPPORTED_EVENT_TYPES = ['task.completed', 'task.failed', 'story.completed'] as const;
+
+/**
+ * Zod schema for runtime validation of SQS message bodies.
+ * Throws a ZodError when the payload is missing required fields or has
+ * invalid values, causing the message to land in batchItemFailures.
+ */
+export const statusChangeEventSchema = z.object({
+  eventId: z.string().min(1),
+  eventType: z.enum(SUPPORTED_EVENT_TYPES),
+  projectId: z.string().min(1),
+  entityId: z.string().min(1),
+  entityType: z.enum(['task', 'story']),
+  newStatus: workStatusSchema,
+  previousStatus: workStatusSchema,
+  timestamp: z.string().min(1),
+  tenantId: z.string().min(1),
+});
+
 /**
  * SQS message body for a status change event.
  * Published by the task completion endpoint when a task status changes.
  */
-export interface StatusChangeEvent {
-  /** Idempotency key -- prevents duplicate processing */
-  eventId: string;
-  /** Type of event that triggered the status change */
-  eventType: 'task.completed' | 'task.failed' | 'story.completed';
-  /** The project this event belongs to */
-  projectId: string;
-  /** The task/story that changed status */
-  entityId: string;
-  /** Whether the changed entity is a task or story */
-  entityType: 'task' | 'story';
-  /** The new status of the entity */
-  newStatus: WorkStatus;
-  /** The status before the change */
-  previousStatus: WorkStatus;
-  /** ISO 8601 timestamp of the event */
-  timestamp: string;
-  /** Tenant ID for multi-tenant isolation */
-  tenantId: string;
-}
+export type StatusChangeEvent = z.infer<typeof statusChangeEventSchema>;
 
 // ---------------------------------------------------------------------------
 // Evaluation types

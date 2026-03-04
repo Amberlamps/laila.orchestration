@@ -901,6 +901,116 @@ describe('status-propagation handler', () => {
       expect(mockIsAlreadyProcessed).toHaveBeenCalledTimes(1);
     });
 
+    it('should reject payload missing required fields via schema validation', async () => {
+      const { handler } = await import('../handler');
+
+      // Valid JSON but missing required fields (no eventId, entityId, etc.)
+      const incompleteRecord = createSQSRecord({
+        body: JSON.stringify({ eventType: 'task.completed' }),
+        messageId: 'msg-incomplete',
+      });
+
+      const sqsEvent = createSQSEvent([incompleteRecord]);
+
+      const result: SQSBatchResponse = await handler(sqsEvent, createMockContext());
+
+      expect(result.batchItemFailures).toHaveLength(1);
+      expect(result.batchItemFailures[0]?.itemIdentifier).toBe('msg-incomplete');
+      // Should NOT reach idempotency check or processing
+      expect(mockIsAlreadyProcessed).not.toHaveBeenCalled();
+      expect(mockRecordProcessed).not.toHaveBeenCalled();
+    });
+
+    it('should reject payload with unsupported eventType via schema validation', async () => {
+      const { handler } = await import('../handler');
+
+      const invalidEvent = {
+        eventId: 'evt-bad-type',
+        eventType: 'epic.completed',
+        projectId: 'project-1',
+        entityId: 'epic-1',
+        entityType: 'epic',
+        newStatus: 'done',
+        previousStatus: 'in_progress',
+        timestamp: new Date().toISOString(),
+        tenantId: 'tenant-1',
+      };
+
+      const record = createSQSRecord({
+        body: JSON.stringify(invalidEvent),
+        messageId: 'msg-bad-type',
+      });
+
+      const sqsEvent = createSQSEvent([record]);
+
+      const result: SQSBatchResponse = await handler(sqsEvent, createMockContext());
+
+      expect(result.batchItemFailures).toHaveLength(1);
+      expect(result.batchItemFailures[0]?.itemIdentifier).toBe('msg-bad-type');
+      // Should NOT reach processing
+      expect(mockIsAlreadyProcessed).not.toHaveBeenCalled();
+      expect(mockEvaluateDependents).not.toHaveBeenCalled();
+      expect(mockRecordProcessed).not.toHaveBeenCalled();
+    });
+
+    it('should reject payload with invalid newStatus via schema validation', async () => {
+      const { handler } = await import('../handler');
+
+      const invalidEvent = {
+        eventId: 'evt-bad-status',
+        eventType: 'task.completed',
+        projectId: 'project-1',
+        entityId: 'task-1',
+        entityType: 'task',
+        newStatus: 'invalid_status',
+        previousStatus: 'in_progress',
+        timestamp: new Date().toISOString(),
+        tenantId: 'tenant-1',
+      };
+
+      const record = createSQSRecord({
+        body: JSON.stringify(invalidEvent),
+        messageId: 'msg-bad-status',
+      });
+
+      const sqsEvent = createSQSEvent([record]);
+
+      const result: SQSBatchResponse = await handler(sqsEvent, createMockContext());
+
+      expect(result.batchItemFailures).toHaveLength(1);
+      expect(result.batchItemFailures[0]?.itemIdentifier).toBe('msg-bad-status');
+      expect(mockIsAlreadyProcessed).not.toHaveBeenCalled();
+    });
+
+    it('should reject payload with empty required string fields', async () => {
+      const { handler } = await import('../handler');
+
+      const invalidEvent = {
+        eventId: '',
+        eventType: 'task.completed',
+        projectId: 'project-1',
+        entityId: 'task-1',
+        entityType: 'task',
+        newStatus: 'done',
+        previousStatus: 'in_progress',
+        timestamp: new Date().toISOString(),
+        tenantId: 'tenant-1',
+      };
+
+      const record = createSQSRecord({
+        body: JSON.stringify(invalidEvent),
+        messageId: 'msg-empty-field',
+      });
+
+      const sqsEvent = createSQSEvent([record]);
+
+      const result: SQSBatchResponse = await handler(sqsEvent, createMockContext());
+
+      expect(result.batchItemFailures).toHaveLength(1);
+      expect(result.batchItemFailures[0]?.itemIdentifier).toBe('msg-empty-field');
+      expect(mockIsAlreadyProcessed).not.toHaveBeenCalled();
+    });
+
     it('should handle database errors gracefully', async () => {
       const { handler } = await import('../handler');
 
