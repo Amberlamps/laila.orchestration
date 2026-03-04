@@ -31,7 +31,7 @@ export const expectSuccessToast = async (
 ): Promise<void> => {
   const pattern =
     typeof messagePattern === 'string' ? new RegExp(messagePattern, 'i') : messagePattern;
-  const toast = page.getByRole('status').filter({ hasText: pattern });
+  const toast = page.getByRole('alert').filter({ hasText: pattern });
   await expect(toast).toBeVisible({ timeout: 5_000 });
 };
 

@@ -23,10 +23,8 @@ export class EpicDetailPage extends BasePage {
     this.storiesTable = page.getByTestId('stories-table');
   }
 
-  async goto(epicId?: string): Promise<this> {
-    if (epicId) {
-      await this.page.goto(`/epics/${epicId}`);
-    }
+  async goto(projectId: string, epicId: string): Promise<this> {
+    await this.page.goto(`/projects/${projectId}/epics/${epicId}`);
     await this.waitForPageLoad();
     return this;
   }
@@ -49,8 +47,12 @@ export class EpicDetailPage extends BasePage {
 
   async publish(): Promise<this> {
     await this.publishButton.click();
+    // The publish flow dialog first validates, then shows a confirm step.
+    // Wait for the "Publish Epic" button to appear after validation passes.
     const dialog = this.page.getByRole('dialog');
-    await dialog.getByRole('button', { name: /confirm/i }).click();
+    await dialog.getByRole('button', { name: /publish epic/i }).click();
+    // After successful publish, a success dialog appears with a "Done" button.
+    await dialog.getByRole('button', { name: /done/i }).click();
     await this.expectSuccessToast('published');
     return this;
   }

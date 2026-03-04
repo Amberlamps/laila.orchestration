@@ -566,6 +566,295 @@ export const apiHandlers: HttpHandler[] = [
     return HttpResponse.json({ data: { deleted: true } });
   }),
 
+  // ---- Validate Dependencies (cycle detection) ----
+
+  http.post('/api/v1/tasks/:id/validate-dependencies', async ({ params, request }) => {
+    const taskId = params.id as string;
+    const body = (await request.json()) as { dependencyIds: string[] };
+    const { dependencyIds } = body;
+
+    // Self-cycle check.
+    if (dependencyIds.includes(taskId)) {
+      const task = dataStore.tasks.get(taskId);
+      const taskName = task?.title ?? taskId;
+      return HttpResponse.json({
+        valid: false,
+        cyclePath: [taskName],
+        message: `Circular dependency detected: ${taskName} cannot depend on itself`,
+      });
+    }
+
+    // Build adjacency list from the data store, with the proposed deps applied.
+    const adjList = new Map<string, string[]>();
+    for (const [id, t] of dataStore.tasks) {
+      if (id === taskId) {
+        adjList.set(id, [...dependencyIds]);
+      } else {
+        adjList.set(id, [...t.dependsOn]);
+      }
+    }
+
+    // DFS cycle detection starting from taskId.
+    const visited = new Set<string>();
+    const inStack = new Set<string>();
+    const parentMap = new Map<string, string>();
+
+    const dfs = (node: string): string[] | null => {
+      visited.add(node);
+      inStack.add(node);
+
+      const neighbors = adjList.get(node) ?? [];
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor)) {
+          parentMap.set(neighbor, node);
+          const result = dfs(neighbor);
+          if (result) return result;
+        } else if (inStack.has(neighbor)) {
+          // Found a cycle — reconstruct the path.
+          const path: string[] = [];
+          let current = node;
+          path.push(current);
+          while (current !== neighbor) {
+            const p = parentMap.get(current);
+            if (p === undefined) break;
+            current = p;
+            path.push(current);
+          }
+          path.reverse();
+          return path.map((id) => dataStore.tasks.get(id)?.title ?? id);
+        }
+      }
+
+      inStack.delete(node);
+      return null;
+    };
+
+    const cyclePath = dfs(taskId);
+
+    if (cyclePath) {
+      return HttpResponse.json({
+        valid: false,
+        cyclePath,
+        message: `Circular dependency detected: ${cyclePath.join(' \u2192 ')}`,
+      });
+    }
+
+    return HttpResponse.json({ valid: true });
+  }),
+
+  // ---- Validate: always returns valid (publish handlers do real validation) ----
+
+  http.post('/api/v1/projects/:projectId/epics/:epicId/stories/:storyId/validate', () => {
+    return HttpResponse.json({ data: { valid: true, issues: [] } });
+  }),
+
+  http.post('/api/v1/projects/:projectId/epics/:epicId/validate', () => {
+    return HttpResponse.json({ data: { valid: true, issues: [] } });
+  }),
+
+  http.post('/api/v1/projects/:id/validate', () => {
+    return HttpResponse.json({ data: { valid: true, issues: [] } });
+  }),
+
+  // ---- Publish: Story ----
+
+  http.post('/api/v1/projects/:projectId/epics/:epicId/stories/:storyId/publish', ({ params }) => {
+    const storyId = params.storyId as string;
+    const story = dataStore.stories.get(storyId);
+    if (!story) return new HttpResponse(null, { status: 404 });
+
+    // Validate story is in draft status.
+    if (story.status !== 'draft') {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'INVALID_STATUS_TRANSITION',
+            message: `Cannot publish story: current status is '${story.status}', expected 'draft'`,
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    // Validate all tasks have persona and acceptance criteria.
+    const storyTasks = Array.from(dataStore.tasks.values()).filter((t) => t.storyId === storyId);
+
+    if (storyTasks.length === 0) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: 'Story must have at least one task before publishing',
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const tasksWithoutPersona = storyTasks.filter((t) => !t.personaId);
+    if (tasksWithoutPersona.length > 0) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: `Cannot publish story: ${String(tasksWithoutPersona.length)} task(s) missing persona assignment`,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const tasksWithoutAC = storyTasks.filter((t) => t.acceptanceCriteria.length === 0);
+    if (tasksWithoutAC.length > 0) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: `Cannot publish story: ${String(tasksWithoutAC.length)} task(s) missing acceptance criteria`,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    // Transition story to ready.
+    story.status = 'ready';
+    story.updatedAt = timestamp();
+    dataStore.auditLog.push(
+      createMockAuditLogEntry({
+        action: 'story.published',
+        entityId: storyId,
+        entityName: story.title,
+        entityType: 'story',
+      }),
+    );
+    return HttpResponse.json({ data: story });
+  }),
+
+  // ---- Publish: Epic ----
+
+  http.post('/api/v1/projects/:projectId/epics/:epicId/publish', ({ params }) => {
+    const epicId = params.epicId as string;
+    const epic = dataStore.epics.get(epicId);
+    if (!epic) return new HttpResponse(null, { status: 404 });
+
+    // Validate epic is in draft status.
+    if (epic.status !== 'draft') {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'INVALID_STATUS_TRANSITION',
+            message: `Cannot publish epic: current status is '${epic.status}', expected 'draft'`,
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    // Validate all stories are in ready status.
+    const epicStories = Array.from(dataStore.stories.values()).filter((s) => s.epicId === epicId);
+
+    if (epicStories.length === 0) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: 'Epic must have at least one story before publishing',
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const nonReadyStories = epicStories.filter((s) => s.status !== 'ready');
+    if (nonReadyStories.length > 0) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: `Cannot publish epic: ${String(nonReadyStories.length)} stories are not ready`,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    // Transition epic to ready.
+    epic.status = 'ready';
+    epic.updatedAt = timestamp();
+    dataStore.auditLog.push(
+      createMockAuditLogEntry({
+        action: 'epic.published',
+        entityId: epicId,
+        entityName: epic.title,
+        entityType: 'epic',
+      }),
+    );
+    return HttpResponse.json({ data: epic });
+  }),
+
+  // ---- Publish: Project ----
+
+  http.post('/api/v1/projects/:id/publish', ({ params }) => {
+    const id = params.id as string;
+    const project = dataStore.projects.get(id);
+    if (!project) return new HttpResponse(null, { status: 404 });
+
+    // Validate project is in draft status.
+    if (project.status !== 'draft') {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'INVALID_STATUS_TRANSITION',
+            message: `Cannot publish project: current status is '${project.status}', expected 'draft'`,
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    // Validate all epics are in ready status.
+    const projectEpics = Array.from(dataStore.epics.values()).filter((e) => e.projectId === id);
+
+    if (projectEpics.length === 0) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: 'Project must have at least one epic before publishing',
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const nonReadyEpics = projectEpics.filter((e) => e.status !== 'ready');
+    if (nonReadyEpics.length > 0) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: `Cannot publish project: ${String(nonReadyEpics.length)} epics are not ready`,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    // Transition project to ready.
+    project.status = 'ready';
+    project.updatedAt = timestamp();
+    dataStore.auditLog.push(
+      createMockAuditLogEntry({
+        action: 'project.published',
+        entityId: id,
+        entityName: project.name,
+        entityType: 'project',
+      }),
+    );
+    return HttpResponse.json({ data: project });
+  }),
+
   // ---- Work Assignment (Orchestration) ----
 
   http.post('/api/v1/work/request', async ({ request }) => {

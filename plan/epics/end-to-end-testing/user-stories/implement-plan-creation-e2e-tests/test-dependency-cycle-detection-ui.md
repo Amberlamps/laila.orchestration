@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Test Dependency Cycle Detection UI
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** qa-expert
 - **Parent User Story:** [Implement Plan Creation & Publish E2E Tests](./tasks.md)
 - **Parent Epic:** [End-to-End Testing](../../user-stories.md)
@@ -20,14 +20,11 @@ Implement E2E tests for the dependency cycle detection UI. When a user attempts 
 // E2E tests for dependency cycle detection.
 // Verifies that the UI prevents circular dependencies and shows
 // the cycle path in an inline error message.
-import { test, expect } from "../fixtures";
-import {
-  StoryDetailPage,
-  TaskDetailPage,
-} from "../page-objects";
+import { test, expect } from '../fixtures';
+import { StoryDetailPage, TaskDetailPage } from '../page-objects';
 
-test.describe("Dependency Cycle Detection", () => {
-  test("adding circular dependency shows inline error with cycle path", async ({
+test.describe('Dependency Cycle Detection', () => {
+  test('adding circular dependency shows inline error with cycle path', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -41,26 +38,26 @@ test.describe("Dependency Cycle Detection", () => {
 
     // Navigate to Task C's detail page.
     const taskDetail = new TaskDetailPage(page);
-    await taskDetail.goto("task-c-id");
+    await taskDetail.goto('task-c-id');
 
     // Verify existing dependency (Task C → Task B).
-    await taskDetail.expectDependency("Task B - Implement API Endpoint");
+    await taskDetail.expectDependency('Task B - Implement API Endpoint');
 
     // Attempt to add a dependency on Task A, which would create a cycle:
     // Task A → Task B → Task C → Task A
-    await taskDetail.addDependency("Task A - Setup Database Schema");
+    await taskDetail.addDependency('Task A - Setup Database Schema');
 
     // Verify the cycle error is displayed inline.
     await taskDetail.expectCycleError();
 
     // Verify the error message shows the cycle path.
-    const cycleError = page.getByTestId("cycle-error");
-    await expect(cycleError).toContainText("Task A");
-    await expect(cycleError).toContainText("Task B");
-    await expect(cycleError).toContainText("Task C");
+    const cycleError = page.getByTestId('cycle-error');
+    await expect(cycleError).toContainText('Task A');
+    await expect(cycleError).toContainText('Task B');
+    await expect(cycleError).toContainText('Task C');
   });
 
-  test("circular dependency is not persisted after error", async ({
+  test('circular dependency is not persisted after error', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -68,40 +65,37 @@ test.describe("Dependency Cycle Detection", () => {
     seedData({});
 
     const taskDetail = new TaskDetailPage(page);
-    await taskDetail.goto("task-c-id");
+    await taskDetail.goto('task-c-id');
 
     // Attempt cycle: Task C → Task A.
-    await taskDetail.addDependency("Task A - Setup Database Schema");
+    await taskDetail.addDependency('Task A - Setup Database Schema');
     await taskDetail.expectCycleError();
 
     // Reload the page to verify the dependency was not saved.
     await page.reload();
-    await taskDetail.goto("task-c-id");
+    await taskDetail.goto('task-c-id');
 
     // Task C should only have Task B as a dependency, not Task A.
-    await taskDetail.expectDependency("Task B - Implement API Endpoint");
-    const dependencySection = page.getByTestId("dependencies-section");
-    await expect(dependencySection).not.toContainText("Task A");
+    await taskDetail.expectDependency('Task B - Implement API Endpoint');
+    const dependencySection = page.getByTestId('dependencies-section');
+    await expect(dependencySection).not.toContainText('Task A');
   });
 
-  test("self-dependency is rejected", async ({
-    authenticatedPage: page,
-    seedData,
-  }) => {
+  test('self-dependency is rejected', async ({ authenticatedPage: page, seedData }) => {
     // Attempt to add a task as a dependency on itself.
     seedData({});
 
     const taskDetail = new TaskDetailPage(page);
-    await taskDetail.goto("task-a-id");
+    await taskDetail.goto('task-a-id');
 
     // Try to add Task A as its own dependency.
-    await taskDetail.addDependency("Task A - Setup Database Schema");
+    await taskDetail.addDependency('Task A - Setup Database Schema');
 
     // Verify the error is displayed (self-dependency is a trivial cycle).
     await taskDetail.expectCycleError();
   });
 
-  test("valid dependency is accepted after cycle error is dismissed", async ({
+  test('valid dependency is accepted after cycle error is dismissed', async ({
     authenticatedPage: page,
     seedData,
   }) => {
@@ -109,22 +103,22 @@ test.describe("Dependency Cycle Detection", () => {
     seedData({});
 
     const taskDetail = new TaskDetailPage(page);
-    await taskDetail.goto("task-c-id");
+    await taskDetail.goto('task-c-id');
 
     // First, trigger a cycle error.
-    await taskDetail.addDependency("Task A - Setup Database Schema");
+    await taskDetail.addDependency('Task A - Setup Database Schema');
     await taskDetail.expectCycleError();
 
     // Dismiss the error (click away or close).
-    await page.keyboard.press("Escape");
+    await page.keyboard.press('Escape');
 
     // Now add a valid dependency (e.g., on a new unrelated Task D).
     // This verifies the UI recovers from the error state.
-    await taskDetail.addDependency("Task D - Deploy to Staging");
-    await taskDetail.expectDependency("Task D - Deploy to Staging");
+    await taskDetail.addDependency('Task D - Deploy to Staging');
+    await taskDetail.expectDependency('Task D - Deploy to Staging');
 
     // Verify no cycle error this time.
-    const cycleError = page.getByTestId("cycle-error");
+    const cycleError = page.getByTestId('cycle-error');
     await expect(cycleError).not.toBeVisible();
   });
 });

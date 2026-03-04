@@ -38,10 +38,8 @@ export class StoryDetailPage extends BasePage {
     this.timeoutBanner = page.getByTestId('timeout-reclamation-banner');
   }
 
-  async goto(storyId?: string): Promise<this> {
-    if (storyId) {
-      await this.page.goto(`/stories/${storyId}`);
-    }
+  async goto(projectId: string, storyId: string): Promise<this> {
+    await this.page.goto(`/projects/${projectId}/stories/${storyId}`);
     await this.waitForPageLoad();
     return this;
   }
@@ -67,8 +65,12 @@ export class StoryDetailPage extends BasePage {
 
   async publish(): Promise<this> {
     await this.publishButton.click();
+    // The publish flow dialog first validates, then shows a confirm step.
+    // Wait for the "Publish Story" button to appear after validation passes.
     const dialog = this.page.getByRole('dialog');
-    await dialog.getByRole('button', { name: /confirm/i }).click();
+    await dialog.getByRole('button', { name: /publish story/i }).click();
+    // After successful publish, a success dialog appears with a "Done" button.
+    await dialog.getByRole('button', { name: /done/i }).click();
     await this.expectSuccessToast('published');
     return this;
   }

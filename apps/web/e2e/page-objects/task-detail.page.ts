@@ -28,10 +28,8 @@ export class TaskDetailPage extends BasePage {
     this.cycleErrorMessage = page.getByTestId('cycle-error');
   }
 
-  async goto(taskId?: string): Promise<this> {
-    if (taskId) {
-      await this.page.goto(`/tasks/${taskId}`);
-    }
+  async goto(projectId: string, taskId: string): Promise<this> {
+    await this.page.goto(`/projects/${projectId}/tasks/${taskId}`);
     await this.waitForPageLoad();
     return this;
   }
