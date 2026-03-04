@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Audit Entry Component
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Audit Log UI](./tasks.md)
 - **Parent Epic:** [Audit Log & Activity Feed](../../user-stories.md)
@@ -20,17 +20,13 @@ Implement a shared `AuditEntry` component that renders a single audit event row.
 // Shared component for rendering a single audit event row.
 // Used across multiple pages and sections for consistent audit display.
 
-import { memo } from "react";
-import Link from "next/link";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import { Bot, User, Settings, ExternalLink } from "lucide-react";
-import { formatRelativeTime } from "@/lib/format-relative-time";
-import { cn } from "@/lib/utils";
-import type { AuditEvent } from "@laila/shared";
+import { memo } from 'react';
+import Link from 'next/link';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Bot, User, Settings, ExternalLink } from 'lucide-react';
+import { formatRelativeTime } from '@/lib/format-relative-time';
+import { cn } from '@/lib/utils';
+import type { AuditEvent } from '@laila/shared';
 
 /**
  * AuditEntry renders a single audit event as a horizontal row:

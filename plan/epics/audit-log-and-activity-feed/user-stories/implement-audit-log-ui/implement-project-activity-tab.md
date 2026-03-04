@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Project Activity Tab
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Audit Log UI](./tasks.md)
 - **Parent Epic:** [Audit Log & Activity Feed](../../user-stories.md)
@@ -20,14 +20,14 @@ Implement the Activity tab within the project detail page that displays audit ev
 // Activity tab content for the project detail page.
 // Displays project-scoped audit events, newest first.
 
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { AuditEntry } from "@/components/audit/audit-entry";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { projectKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { Activity } from "lucide-react";
-import type { AuditEvent } from "@laila/shared";
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { AuditEntry } from '@/components/audit/audit-entry';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { projectKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { Activity } from 'lucide-react';
+import type { AuditEvent } from '@laila/shared';
 
 /**
  * ProjectActivityTab renders:

@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Audit Export Functionality
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** fullstack-developer
 - **Parent User Story:** [Implement Audit Log UI](./tasks.md)
 - **Parent Epic:** [Audit Log & Activity Feed](../../user-stories.md)
@@ -20,16 +20,16 @@ Implement export functionality for audit data, allowing users to download the cu
 // Export button with format selection dropdown for audit data.
 // Supports JSON and CSV export formats.
 
-import { useState, useCallback } from "react";
+import { useState, useCallback } from 'react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Download, FileJson, FileSpreadsheet, ChevronDown } from "lucide-react";
-import type { AuditEvent } from "@laila/shared";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Download, FileJson, FileSpreadsheet, ChevronDown } from 'lucide-react';
+import type { AuditEvent } from '@laila/shared';
 
 /**
  * AuditExportButton renders:

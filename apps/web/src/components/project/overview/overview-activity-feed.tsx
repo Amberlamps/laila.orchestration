@@ -14,7 +14,7 @@
 import { Activity, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-import { AuditEntryRow } from '@/components/audit/audit-entry-row';
+import { AuditEntry } from '@/components/audit/audit-entry';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProjectActivity } from '@/lib/query-hooks';
@@ -105,7 +105,7 @@ export function OverviewActivityFeed({ projectId }: OverviewActivityFeedProps) {
           {!isLoading && events.length > 0 && (
             <div className="divide-y divide-zinc-100">
               {events.map((event) => (
-                <AuditEntryRow key={event.eventId} event={event} />
+                <AuditEntry key={event.eventId} event={event} />
               ))}
             </div>
           )}
