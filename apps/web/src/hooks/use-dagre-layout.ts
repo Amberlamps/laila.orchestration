@@ -1,103 +1,99 @@
 /**
  * Hook that manages Dagre layout computation, choosing between
- * synchronous (small graphs <= 200 nodes) and Web Worker (large graphs > 200 nodes).
+ * synchronous (small graphs) and Web Worker (large graphs).
+ *
+ * Threshold: 200 nodes.
+ * - <= 200 nodes: synchronous via computeDagreLayout()
+ * - > 200 nodes: offloaded to a Web Worker
  *
  * Features:
- * - Transparent to consumers: returns the same shape regardless of sync/async path
  * - Layout caching via deterministic hash of node IDs + edge pairs
- * - Worker cleanup on unmount
- * - Stale response handling (ignores responses from outdated computations)
- * - Automatic fallback to sync on worker error with console.warn
+ * - Worker lifecycle: created lazily, terminated on unmount
+ * - Stale response handling via monotonic request IDs
+ * - Fallback to sync on Worker failure with console.warn
  *
  * @module use-dagre-layout
  */
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
-import { computeDagreLayout, DEFAULT_OPTIONS } from '@/lib/graph/dagre-layout';
+import { computeDagreLayout } from '@/lib/graph/dagre-layout';
 
 import type { DagreLayoutOptions } from '@/lib/graph/dagre-layout';
-import type {
-  LayoutWorkerRequest,
-  LayoutWorkerResponse,
-  WorkerNodeInput,
-  WorkerEdgeInput,
-} from '@/lib/graph/types';
+import type { LayoutCompleteMessage, LayoutErrorMessage } from '@/workers/dagre-layout.worker';
 import type { Node, Edge } from '@xyflow/react';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Node count threshold above which layout is offloaded to a Web Worker. */
+/** Node count threshold for offloading layout to Web Worker. */
 const WORKER_THRESHOLD = 200;
+
+/** Default node dimensions and spacing used by the layout algorithm. */
+const DEFAULT_NODE_WIDTH = 180;
+const DEFAULT_NODE_HEIGHT = 60;
+const DEFAULT_RANK_SEP = 100;
+const DEFAULT_NODE_SEP = 50;
 
 // ---------------------------------------------------------------------------
 // Cache key computation
 // ---------------------------------------------------------------------------
 
-/**
- * Computes a deterministic hash string from the graph structure and layout
- * configuration. Includes sorted node IDs, sorted edge source-target pairs,
- * and all layout options (direction, rankSep, nodeSep, nodeWidth, nodeHeight)
- * so the cache is invalidated when any of these change.
- */
-const computeCacheKey = (
-  nodes: Node[],
-  edges: Edge[],
-  opts: Required<DagreLayoutOptions>,
-): string => {
-  const nodeIds = nodes
-    .map((n) => n.id)
-    .sort()
-    .join(',');
-
-  const edgePairs = edges
-    .map((e) => `${e.source}->${e.target}`)
-    .sort()
-    .join(',');
-
-  const optsPart = `${opts.direction}:${String(opts.rankSep)}:${String(opts.nodeSep)}:${String(opts.nodeWidth)}:${String(opts.nodeHeight)}`;
-
-  return `${nodeIds}|${edgePairs}|${optsPart}`;
-};
-
-// ---------------------------------------------------------------------------
-// Cached layout result
-// ---------------------------------------------------------------------------
-
-interface CachedLayout {
+/** Cached layout result stored in the ref. */
+interface LayoutCache {
   key: string;
   nodes: Node[];
   edges: Edge[];
 }
 
+/**
+ * Computes a deterministic cache key from node IDs and edge pairs.
+ * Sorts both collections to ensure stability regardless of insertion order.
+ */
+const computeCacheKey = (nodes: Node[], edges: Edge[]): string => {
+  const sortedNodeIds = nodes
+    .map((n) => n.id)
+    .sort()
+    .join(',');
+  const sortedEdgePairs = edges
+    .map((e) => `${e.source}->${e.target}`)
+    .sort()
+    .join(',');
+  return `${sortedNodeIds}|${sortedEdgePairs}`;
+};
+
 // ---------------------------------------------------------------------------
-// Hook return type
+// Worker output message type guard
 // ---------------------------------------------------------------------------
 
-interface UseDagreLayoutResult {
-  /** Nodes with computed layout positions. */
-  layoutNodes: Node[];
-  /** Edges (passed through unchanged). */
-  layoutEdges: Edge[];
-  /** Whether the Web Worker is currently computing the layout. */
-  isComputing: boolean;
-}
+type WorkerOutputMessage = LayoutCompleteMessage | LayoutErrorMessage;
+
+const isLayoutComplete = (msg: WorkerOutputMessage): msg is LayoutCompleteMessage =>
+  msg.type === 'layout-complete';
 
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
+interface UseDagreLayoutResult {
+  /** Nodes with computed positions. */
+  layoutNodes: Node[];
+  /** Edges (unchanged from input). */
+  layoutEdges: Edge[];
+  /** True while the Web Worker is computing layout. */
+  isComputing: boolean;
+}
+
 /**
  * Manages Dagre layout computation with automatic sync/async selection.
  *
- * For graphs with <= 200 nodes, computes layout synchronously using
- * `computeDagreLayout()`. For larger graphs, offloads computation to
- * a Web Worker to keep the main thread responsive.
+ * For graphs with <= 200 nodes, layout is computed synchronously.
+ * For larger graphs, layout is offloaded to a Web Worker to keep
+ * the main thread responsive.
  *
- * @param nodes - ReactFlow nodes (unpositioned).
- * @param edges - ReactFlow edges.
- * @param options - Optional Dagre layout configuration overrides.
+ * @param nodes - ReactFlow nodes to position.
+ * @param edges - ReactFlow edges defining relationships.
+ * @param options - Optional Dagre layout configuration.
  * @returns Layout result with positioned nodes, edges, and computing state.
  */
 export const useDagreLayout = (
@@ -106,72 +102,83 @@ export const useDagreLayout = (
   options?: DagreLayoutOptions,
 ): UseDagreLayoutResult => {
   const [isComputing, setIsComputing] = useState(false);
-  const [workerResult, setWorkerResult] = useState<CachedLayout | null>(null);
+  const [workerResult, setWorkerResult] = useState<{
+    nodes: Node[];
+    edges: Edge[];
+  } | null>(null);
 
-  // Refs for lifecycle management
   const workerRef = useRef<Worker | null>(null);
-  const cacheRef = useRef<CachedLayout | null>(null);
+  const cacheRef = useRef<LayoutCache | null>(null);
   const requestIdRef = useRef(0);
+  const mountedRef = useRef(true);
 
-  // Merge options with defaults for consistent use
-  const mergedOptions = useMemo(() => ({ ...DEFAULT_OPTIONS, ...options }), [options]);
-
-  // Compute cache key from current graph structure and layout options
-  const cacheKey = useMemo(
-    () => computeCacheKey(nodes, edges, mergedOptions),
-    [nodes, edges, mergedOptions],
-  );
+  // Compute the cache key for the current inputs
+  const cacheKey = useMemo(() => computeCacheKey(nodes, edges), [nodes, edges]);
 
   // ---------------------------------------------------------------------------
-  // Synchronous path (small graphs)
+  // Synchronous layout for small graphs
   // ---------------------------------------------------------------------------
 
-  const syncResult = useMemo((): UseDagreLayoutResult | null => {
+  const syncResult = useMemo(() => {
     if (nodes.length === 0) {
-      return { layoutNodes: [], layoutEdges: edges, isComputing: false };
+      return { nodes: [] as Node[], edges: [] as Edge[] };
     }
 
     if (nodes.length > WORKER_THRESHOLD) {
-      return null; // Will use worker path
+      return null;
     }
 
-    const { nodes: positioned, edges: finalEdges } = computeDagreLayout(nodes, edges, options);
+    // Check cache
+    const cached = cacheRef.current;
+    if (cached !== null && cached.key === cacheKey) {
+      return { nodes: cached.nodes, edges: cached.edges };
+    }
 
-    return { layoutNodes: positioned, layoutEdges: finalEdges, isComputing: false };
-  }, [nodes, edges, options]);
-
-  // ---------------------------------------------------------------------------
-  // Fallback to sync computation (used when worker fails)
-  // ---------------------------------------------------------------------------
-
-  const computeSyncFallback = useCallback((): CachedLayout => {
-    const { nodes: positioned, edges: finalEdges } = computeDagreLayout(nodes, edges, options);
-
-    const result: CachedLayout = {
-      key: cacheKey,
-      nodes: positioned,
-      edges: finalEdges,
-    };
-
-    cacheRef.current = result;
+    const result = computeDagreLayout(nodes, edges, options);
+    cacheRef.current = { key: cacheKey, nodes: result.nodes, edges: result.edges };
     return result;
   }, [nodes, edges, options, cacheKey]);
 
   // ---------------------------------------------------------------------------
-  // Worker path (large graphs)
+  // Fallback sync computation (used when Worker fails)
+  // ---------------------------------------------------------------------------
+
+  const computeFallbackSync = useCallback(() => {
+    const result = computeDagreLayout(nodes, edges, options);
+    cacheRef.current = { key: cacheKey, nodes: result.nodes, edges: result.edges };
+    setWorkerResult(result);
+    setIsComputing(false);
+  }, [nodes, edges, options, cacheKey]);
+
+  // ---------------------------------------------------------------------------
+  // Web Worker layout for large graphs
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    // Only use worker for large graphs
-    if (nodes.length <= WORKER_THRESHOLD || nodes.length === 0) {
-      return;
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    // Only use worker path for large graphs
+    if (nodes.length <= WORKER_THRESHOLD) {
+      return undefined;
     }
 
-    // Check cache first
-    if (cacheRef.current !== null && cacheRef.current.key === cacheKey) {
-      setWorkerResult(cacheRef.current);
+    if (nodes.length === 0) {
+      setWorkerResult({ nodes: [], edges: [] });
       setIsComputing(false);
-      return;
+      return undefined;
+    }
+
+    // Check cache
+    const cached = cacheRef.current;
+    if (cached !== null && cached.key === cacheKey) {
+      setWorkerResult({ nodes: cached.nodes, edges: cached.edges });
+      setIsComputing(false);
+      return undefined;
     }
 
     // Increment request ID for stale response detection
@@ -180,130 +187,98 @@ export const useDagreLayout = (
 
     setIsComputing(true);
 
-    // Create worker if it doesn't exist
+    // Create worker lazily
     if (workerRef.current === null) {
       try {
         workerRef.current = new Worker(
           new URL('../workers/dagre-layout.worker.ts', import.meta.url),
         );
-      } catch (workerCreationError) {
-        console.warn(
-          'Failed to create layout Web Worker, falling back to synchronous computation:',
-          workerCreationError,
-        );
-        const fallback = computeSyncFallback();
-        setWorkerResult(fallback);
-        setIsComputing(false);
-        return;
+      } catch {
+        console.warn('Failed to create Web Worker for layout computation, falling back to sync');
+        computeFallbackSync();
+        return undefined;
       }
     }
 
     const worker = workerRef.current;
 
-    // Set up message handler
-    const handleMessage = (event: MessageEvent<LayoutWorkerResponse>) => {
+    const direction = options?.direction ?? 'TB';
+    const nodeWidth = options?.nodeWidth ?? DEFAULT_NODE_WIDTH;
+    const nodeHeight = options?.nodeHeight ?? DEFAULT_NODE_HEIGHT;
+    const rankSep = options?.rankSep ?? DEFAULT_RANK_SEP;
+    const nodeSep = options?.nodeSep ?? DEFAULT_NODE_SEP;
+
+    // Handle worker responses
+    const handleMessage = (event: MessageEvent<WorkerOutputMessage>) => {
+      const msg = event.data;
+
       // Ignore stale responses
-      if (currentRequestId !== requestIdRef.current) {
+      if (msg.requestId !== currentRequestId) {
         return;
       }
 
-      const response = event.data;
+      if (!mountedRef.current) {
+        return;
+      }
 
-      if (response.type === 'layout-complete') {
-        const { positions, duration } = response.payload;
+      if (isLayoutComplete(msg)) {
+        const { positions } = msg.payload;
 
-        // Apply positions to nodes (convert from center to top-left)
-        const positioned = nodes.map((node): Node => {
+        // Apply positions to the original nodes (Dagre centers; shift to top-left)
+        const positionedNodes = nodes.map((node): Node => {
           const pos = positions[node.id];
-          if (!pos) {
+          if (pos === undefined) {
             return node;
           }
-
           return {
             ...node,
             position: {
-              x: pos.x - mergedOptions.nodeWidth / 2,
-              y: pos.y - mergedOptions.nodeHeight / 2,
+              x: pos.x - nodeWidth / 2,
+              y: pos.y - nodeHeight / 2,
             },
           };
         });
 
-        const result: CachedLayout = {
-          key: cacheKey,
-          nodes: positioned,
-          edges,
-        };
-
-        cacheRef.current = result;
+        const result = { nodes: positionedNodes, edges };
+        cacheRef.current = { key: cacheKey, nodes: positionedNodes, edges };
         setWorkerResult(result);
         setIsComputing(false);
-
-        console.debug(
-          `[dagre-layout] Worker computed layout for ${String(nodes.length)} nodes in ${String(Math.round(duration))}ms`,
-        );
       } else {
+        // Layout error — fall back to synchronous computation
         console.warn(
-          `[dagre-layout] Worker error: ${response.payload.message}. Falling back to synchronous computation.`,
+          `Web Worker layout failed: ${msg.payload.message}. Falling back to synchronous computation.`,
         );
-
-        const fallback = computeSyncFallback();
-        setWorkerResult(fallback);
-        setIsComputing(false);
+        computeFallbackSync();
       }
     };
 
-    const handleError = (errorEvent: ErrorEvent) => {
-      // Ignore stale errors
-      if (currentRequestId !== requestIdRef.current) {
+    const handleError = () => {
+      if (!mountedRef.current) {
         return;
       }
-
-      console.warn(
-        '[dagre-layout] Worker runtime error. Falling back to synchronous computation:',
-        errorEvent.message,
-      );
-
-      const fallback = computeSyncFallback();
-      setWorkerResult(fallback);
-      setIsComputing(false);
+      console.warn('Web Worker encountered an error. Falling back to synchronous computation.');
+      computeFallbackSync();
     };
 
     worker.addEventListener('message', handleMessage);
     worker.addEventListener('error', handleError);
 
-    // Serialize and send data to worker
-    const workerNodes: WorkerNodeInput[] = nodes.map((n) => ({
-      id: n.id,
-      width: mergedOptions.nodeWidth,
-      height: mergedOptions.nodeHeight,
-    }));
-
-    const workerEdges: WorkerEdgeInput[] = edges.map((e) => ({
-      source: e.source,
-      target: e.target,
-    }));
-
-    const message: LayoutWorkerRequest = {
+    // Post computation request to worker
+    worker.postMessage({
       type: 'compute-layout',
+      requestId: currentRequestId,
       payload: {
-        nodes: workerNodes,
-        edges: workerEdges,
-        options: {
-          direction: mergedOptions.direction,
-          rankSep: mergedOptions.rankSep,
-          nodeSep: mergedOptions.nodeSep,
-        },
+        nodes: nodes.map((n) => ({ id: n.id, width: nodeWidth, height: nodeHeight })),
+        edges: edges.map((e) => ({ source: e.source, target: e.target })),
+        options: { direction, rankSep, nodeSep },
       },
-    };
+    });
 
-    worker.postMessage(message);
-
-    // Cleanup listeners when effect re-runs or unmounts
     return () => {
       worker.removeEventListener('message', handleMessage);
       worker.removeEventListener('error', handleError);
     };
-  }, [nodes, edges, cacheKey, mergedOptions, computeSyncFallback]);
+  }, [nodes, edges, options, cacheKey, computeFallbackSync]);
 
   // ---------------------------------------------------------------------------
   // Worker cleanup on unmount
@@ -322,24 +297,19 @@ export const useDagreLayout = (
   // Return result
   // ---------------------------------------------------------------------------
 
-  // Small graph: use sync result directly
+  // Small graph: use synchronous result
   if (syncResult !== null) {
-    return syncResult;
-  }
-
-  // Large graph: use worker result if available, otherwise return empty with computing state
-  if (workerResult !== null && workerResult.key === cacheKey) {
     return {
-      layoutNodes: workerResult.nodes,
-      layoutEdges: workerResult.edges,
-      isComputing,
+      layoutNodes: syncResult.nodes,
+      layoutEdges: syncResult.edges,
+      isComputing: false,
     };
   }
 
-  // Worker is computing or hasn't returned yet
+  // Large graph: use worker result (or empty while computing)
   return {
-    layoutNodes: [],
-    layoutEdges: [],
-    isComputing: true,
+    layoutNodes: workerResult?.nodes ?? [],
+    layoutEdges: workerResult?.edges ?? [],
+    isComputing,
   };
 };

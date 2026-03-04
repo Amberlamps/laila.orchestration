@@ -1,12 +1,12 @@
 /**
- * GraphFullscreenToggle — button that toggles fullscreen mode for the graph container.
+ * GraphFullscreenToggle — button that toggles fullscreen mode for the
+ * graph container.
  *
- * Uses the browser Fullscreen API for native fullscreen behavior.
- * Rendered inside the graph canvas controls toolbar alongside zoom/pan buttons.
+ * Displays a Maximize icon when not in fullscreen and a Minimize icon
+ * when in fullscreen, with an appropriate tooltip for each state.
  *
- * - Icon: Maximize when not fullscreen, Minimize when fullscreen
- * - Tooltip: "Enter fullscreen" / "Exit fullscreen"
- * - Ghost variant, small size (consistent with other canvas controls)
+ * Uses the ghost variant and sm size to stay consistent with the other
+ * buttons in the canvas controls toolbar.
  */
 import { Maximize, Minimize } from 'lucide-react';
 
@@ -14,15 +14,19 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // ---------------------------------------------------------------------------
-// Component
+// Props
 // ---------------------------------------------------------------------------
 
 interface GraphFullscreenToggleProps {
   /** Whether the graph container is currently in fullscreen mode. */
   isFullscreen: boolean;
-  /** Callback invoked when the toggle button is clicked. */
+  /** Callback to toggle fullscreen on/off. */
   onToggle: () => void;
 }
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export const GraphFullscreenToggle = ({ isFullscreen, onToggle }: GraphFullscreenToggleProps) => {
   const label = isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen';

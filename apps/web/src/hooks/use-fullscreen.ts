@@ -1,21 +1,16 @@
-/**
- * Hook that manages fullscreen state for a given element ref.
- *
- * Wraps the browser Fullscreen API with React state management.
- * Listens for the "fullscreenchange" event to keep state in sync
- * with both programmatic and user-initiated fullscreen changes
- * (e.g. pressing Escape).
- *
- * @module use-fullscreen
- */
+'use client';
+
 import { useCallback, useEffect, useState } from 'react';
 
 import type { RefObject } from 'react';
 
+/**
+ * Return type for the useFullscreen hook.
+ */
 interface UseFullscreenReturn {
   /** Whether the referenced element is currently in fullscreen mode. */
   isFullscreen: boolean;
-  /** Toggles between entering and exiting fullscreen. */
+  /** Toggles fullscreen mode on/off for the referenced element. */
   toggleFullscreen: () => void;
   /** Enters fullscreen mode for the referenced element. */
   enterFullscreen: () => void;
@@ -24,17 +19,21 @@ interface UseFullscreenReturn {
 }
 
 /**
- * Manages fullscreen state for a given element.
+ * Hook that manages fullscreen state for a given element ref.
  *
- * @param elementRef - React ref pointing to the element to fullscreen.
- * @returns Fullscreen state and control methods.
+ * Wraps the browser Fullscreen API with React state management.
+ * Listens for the "fullscreenchange" event to keep state in sync
+ * with both programmatic and user-initiated fullscreen changes
+ * (e.g. pressing Escape).
+ *
+ * Cleanup:
+ * - Removes the "fullscreenchange" event listener on unmount.
+ * - Exits fullscreen if the component unmounts while in fullscreen.
  */
-export const useFullscreen = (elementRef: RefObject<HTMLElement | null>): UseFullscreenReturn => {
+export function useFullscreen(elementRef: RefObject<HTMLDivElement | null>): UseFullscreenReturn {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Sync state with the actual fullscreen element on any fullscreen change.
-  // Checks specifically that OUR element is the fullscreen element so the
-  // toggle state cannot become incorrect when another element enters fullscreen.
+  // Sync state with the actual fullscreen element
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(document.fullscreenElement === elementRef.current);
@@ -44,38 +43,35 @@ export const useFullscreen = (elementRef: RefObject<HTMLElement | null>): UseFul
 
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, [elementRef]);
 
-  // Exit fullscreen on unmount if OUR element is still the fullscreen element
-  useEffect(() => {
-    const element = elementRef.current;
-
-    return () => {
-      if (element !== null && document.fullscreenElement === element) {
-        void document.exitFullscreen().catch(() => {
-          // Swallow errors — element may already have been removed
-        });
+      // Exit fullscreen only if this component's element is the fullscreen element
+      if (document.fullscreenElement === elementRef.current) {
+        void document.exitFullscreen();
       }
     };
   }, [elementRef]);
 
   const enterFullscreen = useCallback(() => {
     const element = elementRef.current;
-    if (element === null) return;
+    if (!element) return;
 
-    void element.requestFullscreen().catch(() => {
-      // Fullscreen request may be blocked if not triggered by a user gesture
-    });
+    try {
+      void element.requestFullscreen();
+    } catch {
+      // Gracefully handle if requestFullscreen fails
+      // (e.g. missing user gesture or unsupported browser)
+    }
   }, [elementRef]);
 
   const exitFullscreen = useCallback(() => {
-    if (document.fullscreenElement !== elementRef.current) return;
+    if (document.fullscreenElement === null) return;
 
-    void document.exitFullscreen().catch(() => {
-      // Swallow errors — may already have exited
-    });
-  }, [elementRef]);
+    try {
+      void document.exitFullscreen();
+    } catch {
+      // Gracefully handle if exitFullscreen fails
+    }
+  }, []);
 
   const toggleFullscreen = useCallback(() => {
     if (isFullscreen) {
@@ -86,4 +82,4 @@ export const useFullscreen = (elementRef: RefObject<HTMLElement | null>): UseFul
   }, [isFullscreen, enterFullscreen, exitFullscreen]);
 
   return { isFullscreen, toggleFullscreen, enterFullscreen, exitFullscreen };
-};
+}
