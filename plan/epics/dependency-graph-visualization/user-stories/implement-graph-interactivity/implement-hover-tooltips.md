@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Hover Tooltips
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Graph Interactivity](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,9 +20,9 @@ Implement hover tooltips on graph nodes that display detailed entity information
 // Tooltip component displayed when hovering over a graph node.
 // Positioned near the hovered node with smart placement.
 
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Bot, ArrowDown, ArrowUp, Layers, BookOpen } from "lucide-react";
-import type { GraphNodeData } from "@laila/shared";
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Bot, ArrowDown, ArrowUp, Layers, BookOpen } from 'lucide-react';
+import type { GraphNodeData } from '@laila/shared';
 
 /**
  * GraphNodeTooltip renders:
@@ -65,8 +65,8 @@ import type { GraphNodeData } from "@laila/shared";
 // apps/web/src/hooks/use-graph-tooltip.ts
 // Hook that manages tooltip visibility and position based on node hover.
 
-import { useState, useCallback, useRef } from "react";
-import type { Node } from "@xyflow/react";
+import { useState, useCallback, useRef } from 'react';
+import type { Node } from '@xyflow/react';
 
 /**
  * useGraphTooltip():

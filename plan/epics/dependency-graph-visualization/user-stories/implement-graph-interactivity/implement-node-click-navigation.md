@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Node Click Navigation
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Graph Interactivity](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,9 +20,9 @@ Implement click-based navigation on graph nodes so that clicking a node navigate
 // Hook that handles node click events for navigation.
 // Uses Next.js router for client-side navigation.
 
-import { useCallback } from "react";
-import { useRouter } from "next/router";
-import type { Node } from "@xyflow/react";
+import { useCallback } from 'react';
+import { useRouter } from 'next/router';
+import type { Node } from '@xyflow/react';
 
 /**
  * useNodeNavigation(projectId: string):

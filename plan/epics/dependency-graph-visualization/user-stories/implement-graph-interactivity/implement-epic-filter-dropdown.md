@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Epic Filter Dropdown
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Graph Interactivity](./tasks.md)
 - **Parent Epic:** [Dependency Graph Visualization](../../user-stories.md)
@@ -20,17 +20,13 @@ Implement a dropdown control in the graph toolbar that allows users to filter th
 // Multi-select dropdown for filtering graph nodes by parent epic.
 // Renders in the graph toolbar alongside status filter chips.
 
-import { useState, useCallback } from "react";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronDown, Layers, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useCallback } from 'react';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChevronDown, Layers, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /**
  * GraphEpicFilter renders:
@@ -67,8 +63,8 @@ import { cn } from "@/lib/utils";
 // apps/web/src/hooks/use-graph-epic-filter.ts
 // Hook that manages epic filter state and computes visible nodes/edges.
 
-import { useState, useMemo, useCallback } from "react";
-import type { Node, Edge } from "@xyflow/react";
+import { useState, useMemo, useCallback } from 'react';
+import type { Node, Edge } from '@xyflow/react';
 
 /**
  * useGraphEpicFilter(allNodes: Node[], allEdges: Edge[]):

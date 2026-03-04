@@ -52,6 +52,14 @@ export const transformToGraphData = (
     statusById.set(node.id, node.status);
   }
 
+  // Count upstream (incoming) and downstream (outgoing) edges per node
+  const upstreamCounts = new Map<string, number>();
+  const downstreamCounts = new Map<string, number>();
+  for (const edge of apiData.edges) {
+    upstreamCounts.set(edge.target, (upstreamCounts.get(edge.target) ?? 0) + 1);
+    downstreamCounts.set(edge.source, (downstreamCounts.get(edge.source) ?? 0) + 1);
+  }
+
   const nodes: Node[] = apiData.nodes.map((node) => {
     const data: DependencyNodeData = {
       label: node.label,
@@ -59,6 +67,13 @@ export const transformToGraphData = (
       entityType: node.entityType,
       entityId: node.id,
       parentName: node.parentName,
+      storyId: node.storyId,
+      storyName: node.storyName,
+      epicId: node.epicId,
+      epicName: node.epicName,
+      upstreamCount: upstreamCounts.get(node.id) ?? 0,
+      downstreamCount: downstreamCounts.get(node.id) ?? 0,
+      workerName: node.workerName,
     };
 
     return {

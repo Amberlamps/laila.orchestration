@@ -25,6 +25,16 @@ export interface GraphNode {
   status: string;
   /** Optional parent entity name for context (e.g., epic name for a story). */
   parentName?: string;
+  /** ID of the parent story (for task nodes). */
+  storyId?: string;
+  /** Name of the parent story (for task nodes). */
+  storyName?: string;
+  /** ID of the parent epic (for task and story nodes). */
+  epicId?: string;
+  /** Name of the parent epic (for task and story nodes). */
+  epicName?: string;
+  /** Optional assigned worker name (present for in-progress entities). */
+  workerName?: string;
 }
 
 /** A directed edge in the dependency graph returned by the API. */
@@ -52,4 +62,18 @@ export interface DependencyNodeData extends Record<string, unknown> {
   entityType: GraphEntityType;
   entityId: string;
   parentName?: string | undefined;
+  /** ID of the parent story (for task nodes). */
+  storyId?: string | undefined;
+  /** Name of the parent story (for task nodes). */
+  storyName?: string | undefined;
+  /** ID of the parent epic (for task and story nodes). */
+  epicId?: string | undefined;
+  /** Name of the parent epic (for task and story nodes). */
+  epicName?: string | undefined;
+  /** Number of upstream dependencies (edges pointing to this node). */
+  upstreamCount?: number | undefined;
+  /** Number of downstream dependents (edges originating from this node). */
+  downstreamCount?: number | undefined;
+  /** Assigned worker name (for in-progress entities). */
+  workerName?: string | undefined;
 }
