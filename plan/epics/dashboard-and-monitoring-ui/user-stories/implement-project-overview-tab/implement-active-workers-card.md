@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Active Workers Card
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** frontend-developer
 - **Parent User Story:** [Implement Project Overview Tab](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,14 +20,14 @@ Implement a card on the project overview tab that displays all workers currently
 // Card displaying workers assigned to in-progress stories in a project.
 // Scoped to a single project (receives projectId as prop).
 
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { projectKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { formatElapsedTime } from "@/lib/format-elapsed-time";
-import Link from "next/link";
-import { Bot, Clock } from "lucide-react";
-import type { ActiveWorkerAssignment } from "@laila/shared";
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { projectKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { formatElapsedTime } from '@/lib/format-elapsed-time';
+import Link from 'next/link';
+import { Bot, Clock } from 'lucide-react';
+import type { ActiveWorkerAssignment } from '@laila/shared';
 
 /**
  * ActiveWorkersCard renders:
@@ -55,8 +55,7 @@ import type { ActiveWorkerAssignment } from "@laila/shared";
 const useProjectActiveWorkers = (projectId: string) => {
   return useQuery({
     queryKey: projectKeys.activeWorkers(projectId),
-    queryFn: () =>
-      apiClient.get(`/api/v1/projects/${projectId}/workers/active`),
+    queryFn: () => apiClient.get(`/api/v1/projects/${projectId}/workers/active`),
     enabled: !!projectId,
   });
 };

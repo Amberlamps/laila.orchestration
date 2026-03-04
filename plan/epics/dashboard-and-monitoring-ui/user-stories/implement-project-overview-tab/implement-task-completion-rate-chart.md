@@ -3,7 +3,7 @@
 ## Task Details
 
 - **Title:** Implement Task Completion Rate Chart
-- **Status:** Not Started
+- **Status:** Complete
 - **Assigned Agent:** ui-designer
 - **Parent User Story:** [Implement Project Overview Tab](./tasks.md)
 - **Parent Epic:** [Dashboard & Monitoring UI](../../user-stories.md)
@@ -20,7 +20,7 @@ Implement a cumulative line chart on the project overview tab showing the total 
 // Recharts line chart showing cumulative tasks completed over time.
 // X-axis: dates, Y-axis: cumulative count of completed tasks.
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 import {
   LineChart,
   Line,
@@ -30,13 +30,13 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
-} from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ChartTooltip } from "@/components/project/overview/chart-tooltip";
-import { projectKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { CheckCircle2 } from "lucide-react";
-import type { CompletionRateDataPoint } from "@laila/shared";
+} from 'recharts';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { ChartTooltip } from '@/components/project/overview/chart-tooltip';
+import { projectKeys } from '@/lib/query-keys';
+import { apiClient } from '@/lib/api-client';
+import { CheckCircle2 } from 'lucide-react';
+import type { CompletionRateDataPoint } from '@laila/shared';
 
 /**
  * TaskCompletionRateChart renders:
@@ -70,8 +70,7 @@ import type { CompletionRateDataPoint } from "@laila/shared";
 const useTaskCompletionRate = (projectId: string) => {
   return useQuery({
     queryKey: projectKeys.completionRate(projectId),
-    queryFn: () =>
-      apiClient.get(`/api/v1/projects/${projectId}/metrics/completion-rate`),
+    queryFn: () => apiClient.get(`/api/v1/projects/${projectId}/metrics/completion-rate`),
     enabled: !!projectId,
   });
 };

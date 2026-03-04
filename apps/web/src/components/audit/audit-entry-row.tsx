@@ -1,83 +1,84 @@
 /**
- * @module AuditEntryRow
+ * AuditEntryRow -- Reusable row component for displaying a single audit event.
  *
- * Reusable row component for displaying a single audit event entry.
- * Used in the dashboard Recent Activity snapshot and will be reused
- * in the full Audit Log page (Epic 12).
- *
- * Each row displays:
- * - Relative timestamp with absolute datetime tooltip on hover
- * - Actor with type-appropriate icon (Bot/User/System)
- * - Project name linked to the project detail page
+ * Renders:
+ * - Relative timestamp (e.g. "3 minutes ago") with absolute datetime tooltip
+ * - Actor with contextual icon: Bot for workers, User for humans, italic gray for "System"
  * - Human-readable action description
- * - Target entity type and name linked to the entity detail page
+ * - Target entity name as a link to its detail page
+ *
+ * @example
+ * ```tsx
+ * <AuditEntryRow
+ *   event={auditEvent}
+ *   projectId="proj-123"
+ * />
+ * ```
  */
-
+import { formatDistanceToNow } from 'date-fns';
 import { Bot, User } from 'lucide-react';
 import Link from 'next/link';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatAbsoluteTime, formatRelativeTime } from '@/lib/format-relative-time';
-
-import type { DashboardAuditEvent } from '@/lib/query-hooks';
 
 // ---------------------------------------------------------------------------
-// Human-readable action descriptions
+// Types
 // ---------------------------------------------------------------------------
 
-const ACTION_LABELS: Record<string, string> = {
-  created: 'created',
-  updated: 'updated',
-  deleted: 'deleted',
-  status_changed: 'changed status of',
-  assigned: 'assigned',
-  completed: 'completed',
-};
+/** Actor type for an audit event entry. */
+export type AuditActorType = 'worker' | 'user' | 'system';
 
-/**
- * Returns a human-readable action description for an audit event.
- *
- * If the action is "status_changed" and changes include a status field,
- * appends the new status value for clarity.
- */
-function getActionLabel(event: DashboardAuditEvent): string {
-  const base = ACTION_LABELS[event.action] ?? event.action;
+/** Entity types that can appear as targets of audit events. */
+export type AuditEntityType = 'project' | 'epic' | 'story' | 'task' | 'worker' | 'persona';
 
-  if (event.action === 'status_changed' && event.changes?.status) {
-    const newStatus = event.changes.status.after;
-    if (typeof newStatus === 'string') {
-      return `${base} to ${newStatus.replace(/_/g, ' ')}`;
-    }
-  }
-
-  if (event.action === 'updated' && event.changes) {
-    const changedFields = Object.keys(event.changes);
-    if (changedFields.length === 1 && changedFields[0]) {
-      return `updated ${changedFields[0].replace(/_/g, ' ')} of`;
-    }
-  }
-
-  return base;
+/** Shape of a single audit event as returned by the API. */
+export interface AuditEvent {
+  id: string;
+  timestamp: string;
+  actor_type: AuditActorType;
+  actor_name: string | null;
+  action: string;
+  entity_type: AuditEntityType;
+  entity_name: string | null;
+  entity_id: string;
 }
 
 // ---------------------------------------------------------------------------
-// Entity link construction
+// Props
 // ---------------------------------------------------------------------------
 
-/**
- * Constructs the URL path for a given entity based on its type and IDs.
- * Returns null if the entity type does not have a known detail page.
- */
-function getEntityLink(event: DashboardAuditEvent): string | null {
-  const { entityType, entityId, projectId } = event;
+export interface AuditEntryRowProps {
+  /** The audit event data to render. */
+  event: AuditEvent;
+  /** The project ID used to construct entity detail links. */
+  projectId: string;
+}
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const absoluteDateFormatter = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
+/**
+ * Builds the detail page URL for a given entity type and ID.
+ * Returns null for entity types that do not have a dedicated detail page
+ * or when the entity is the project itself.
+ */
+function buildEntityHref(
+  projectId: string,
+  entityType: AuditEntityType,
+  entityId: string,
+): string | null {
   switch (entityType) {
     case 'project':
-      return `/projects/${entityId}`;
+      return `/projects/${projectId}`;
     case 'epic':
       return `/projects/${projectId}/epics/${entityId}`;
     case 'story':
-    case 'user_story':
       return `/projects/${projectId}/stories/${entityId}`;
     case 'task':
       return `/projects/${projectId}/tasks/${entityId}`;
@@ -91,117 +92,80 @@ function getEntityLink(event: DashboardAuditEvent): string | null {
 }
 
 /**
- * Returns a display-friendly entity type label.
+ * Renders an icon and label for the actor of an audit event.
  */
-function getEntityTypeLabel(entityType: string): string {
-  switch (entityType) {
-    case 'project':
-      return 'project';
-    case 'epic':
-      return 'epic';
-    case 'story':
-    case 'user_story':
-      return 'story';
-    case 'task':
-      return 'task';
-    case 'worker':
-      return 'worker';
-    case 'persona':
-      return 'persona';
-    default:
-      return entityType.replace(/_/g, ' ');
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Actor display
-// ---------------------------------------------------------------------------
-
-interface ActorDisplayProps {
-  actorType: 'user' | 'worker' | 'system';
-  actorName: string;
-}
-
-function ActorDisplay({ actorType, actorName }: ActorDisplayProps) {
+function ActorDisplay({
+  actorType,
+  actorName,
+}: {
+  actorType: AuditActorType;
+  actorName: string | null;
+}) {
   if (actorType === 'system') {
     return <span className="text-sm text-zinc-500 italic">System</span>;
   }
 
+  const displayName = actorName ?? (actorType === 'worker' ? 'Worker' : 'User');
   const Icon = actorType === 'worker' ? Bot : User;
 
   return (
-    <span className="inline-flex items-center gap-1 text-sm text-zinc-700">
-      <Icon className="size-3.5 shrink-0" aria-hidden="true" />
-      <span className="truncate">{actorName}</span>
+    <span className="flex items-center gap-1 text-sm text-zinc-700">
+      <Icon className="h-3.5 w-3.5 flex-shrink-0 text-zinc-500" />
+      <span className="truncate">{displayName}</span>
     </span>
   );
 }
 
 // ---------------------------------------------------------------------------
-// AuditEntryRow component
+// Component
 // ---------------------------------------------------------------------------
 
-interface AuditEntryRowProps {
-  event: DashboardAuditEvent;
-}
+export function AuditEntryRow({ event, projectId }: AuditEntryRowProps) {
+  const eventDate = new Date(event.timestamp);
+  const relativeTime = formatDistanceToNow(eventDate, { addSuffix: true });
+  const absoluteTime = absoluteDateFormatter.format(eventDate);
 
-/**
- * Renders a single audit event as a compact row.
- *
- * Layout: [timestamp] [actor] [action] [entity type+name] in [project name]
- */
-export function AuditEntryRow({ event }: AuditEntryRowProps) {
-  const entityLink = getEntityLink(event);
-  const entityTypeLabel = getEntityTypeLabel(event.entityType);
-  const actionLabel = getActionLabel(event);
+  const entityHref = buildEntityHref(projectId, event.entity_type, event.entity_id);
+  const entityLabel = event.entity_name ?? event.entity_type;
 
   return (
-    <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 py-2.5 text-sm">
-      {/* Relative timestamp with absolute tooltip */}
-      <TooltipProvider delayDuration={200}>
+    <div className="flex items-start gap-3 border-b border-zinc-100 px-1 py-2.5 last:border-b-0">
+      {/* Timestamp */}
+      <TooltipProvider delayDuration={300}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <time dateTime={event.timestamp} className="shrink-0 text-xs text-zinc-400">
-              {formatRelativeTime(event.timestamp)}
+            <time dateTime={event.timestamp} className="w-24 flex-shrink-0 text-xs text-zinc-500">
+              {relativeTime}
             </time>
           </TooltipTrigger>
-          <TooltipContent side="top">{formatAbsoluteTime(event.timestamp)}</TooltipContent>
+          <TooltipContent side="top">
+            <p>{absoluteTime}</p>
+          </TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
-      {/* Actor */}
-      <ActorDisplay actorType={event.actorType} actorName={event.actorName} />
+      {/* Event details */}
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <div className="flex items-center gap-2">
+          <ActorDisplay actorType={event.actor_type} actorName={event.actor_name} />
+          <span className="text-sm text-zinc-600">{event.action}</span>
+        </div>
 
-      {/* Action */}
-      <span className="text-zinc-600">{actionLabel}</span>
-
-      {/* Target entity */}
-      <span className="inline-flex items-baseline gap-1">
-        <span className="text-zinc-500">{entityTypeLabel}</span>
-        {entityLink ? (
-          <Link
-            href={entityLink}
-            className="font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
-          >
-            {event.entityName}
-          </Link>
-        ) : (
-          <span className="font-medium text-zinc-800">{event.entityName}</span>
-        )}
-      </span>
-
-      {/* Project context (if entity is not the project itself) */}
-      {event.entityType !== 'project' && (
-        <span className="inline-flex items-baseline gap-1">
-          <span className="text-zinc-500">in</span>
-          <Link
-            href={`/projects/${event.projectId}`}
-            className="text-indigo-600 hover:text-indigo-800 hover:underline"
-          >
-            {event.projectName}
-          </Link>
-        </span>
-      )}
+        {/* Target entity */}
+        <div className="text-sm">
+          <span className="text-zinc-500">{event.entity_type}: </span>
+          {entityHref ? (
+            <Link
+              href={entityHref}
+              className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+            >
+              {entityLabel}
+            </Link>
+          ) : (
+            <span className="font-medium text-zinc-700">{entityLabel}</span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
