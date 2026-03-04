@@ -30,9 +30,9 @@ export class WorkerListPage extends BasePage {
     await modal.getByLabel(/name/i).fill(name);
     await modal.getByRole('button', { name: /create/i }).click();
 
-    // After creation, the API key is displayed in a monospace field.
+    // After creation, the API key is displayed inside a <code> element.
     // Capture it before the user closes the modal.
-    const apiKeyField = modal.getByTestId('api-key-display');
+    const apiKeyField = modal.locator('code');
     const apiKey = await apiKeyField.textContent();
     if (!apiKey) throw new Error('API key was not displayed after worker creation');
 

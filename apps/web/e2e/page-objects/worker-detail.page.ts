@@ -11,11 +11,15 @@ export class WorkerDetailPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByTestId('entity-heading');
+    this.heading = page.getByRole('heading', { level: 1 });
     this.addProjectAccessButton = page.getByRole('button', {
-      name: /add project access/i,
+      name: /add project/i,
     });
-    this.projectAccessTable = page.getByTestId('project-access-table');
+    // The project access table is a <Table> inside a Card with heading "Project Access".
+    // Identify it by its "Project Name" column header to distinguish from other tables.
+    this.projectAccessTable = page.getByRole('table').filter({
+      has: page.getByRole('columnheader', { name: /project name/i }),
+    });
     this.deleteButton = page.getByRole('button', { name: /delete/i });
   }
 
@@ -30,21 +34,21 @@ export class WorkerDetailPage extends BasePage {
   /** Add project access for this worker. */
   async addProjectAccess(projectName: string): Promise<this> {
     await this.addProjectAccessButton.click();
-    const dropdown = this.page.getByRole('listbox');
-    await dropdown.getByRole('option', { name: projectName }).click();
+    // The CMDK command palette opens in a popover with role="option" items.
+    const option = this.page.getByRole('option', { name: new RegExp(projectName) });
+    await option.click();
     await this.expectSuccessToast('access granted');
     return this;
   }
 
   /** Remove project access from this worker. */
   async removeProjectAccess(projectName: string): Promise<this> {
-    const row = this.projectAccessTable.getByRole('row', {
-      name: new RegExp(projectName),
+    // Each row has a remove button with aria-label "Remove project {name}".
+    const removeButton = this.page.getByRole('button', {
+      name: new RegExp(`remove project ${projectName}`, 'i'),
     });
-    await row.getByRole('button', { name: /remove/i }).click();
-    const dialog = this.page.getByRole('dialog');
-    await dialog.getByRole('button', { name: /confirm/i }).click();
-    await this.expectSuccessToast('access removed');
+    await removeButton.click();
+    await this.expectSuccessToast('access revoked');
     return this;
   }
 

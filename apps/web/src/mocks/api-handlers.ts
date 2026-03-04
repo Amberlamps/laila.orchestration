@@ -183,6 +183,52 @@ const enrichTask = (task: MockTask): Record<string, unknown> => {
   };
 };
 
+/**
+ * Resolves the project context for an audit log entity.
+ * Walks up the entity hierarchy (task -> story -> epic -> project)
+ * to find the owning project ID and name.
+ */
+const resolveProjectForEntity = (
+  entityType: string,
+  entityId: string,
+): { projectId: string; projectName: string } => {
+  const unknown = { projectId: '', projectName: '' };
+
+  if (entityType === 'project') {
+    const project = dataStore.projects.get(entityId);
+    return project ? { projectId: project.id, projectName: project.name } : unknown;
+  }
+
+  if (entityType === 'epic') {
+    const epic = dataStore.epics.get(entityId);
+    if (!epic) return unknown;
+    const project = dataStore.projects.get(epic.projectId);
+    return project ? { projectId: project.id, projectName: project.name } : unknown;
+  }
+
+  if (entityType === 'story') {
+    const story = dataStore.stories.get(entityId);
+    if (!story) return unknown;
+    const epic = dataStore.epics.get(story.epicId);
+    if (!epic) return unknown;
+    const project = dataStore.projects.get(epic.projectId);
+    return project ? { projectId: project.id, projectName: project.name } : unknown;
+  }
+
+  if (entityType === 'task') {
+    const task = dataStore.tasks.get(entityId);
+    if (!task) return unknown;
+    const story = dataStore.stories.get(task.storyId);
+    if (!story) return unknown;
+    const epic = dataStore.epics.get(story.epicId);
+    if (!epic) return unknown;
+    const project = dataStore.projects.get(epic.projectId);
+    return project ? { projectId: project.id, projectName: project.name } : unknown;
+  }
+
+  return unknown;
+};
+
 /** All MSW handlers for the /api/v1 REST API. */
 export const apiHandlers: HttpHandler[] = [
   // ---- Projects: full CRUD ----
@@ -1458,5 +1504,79 @@ export const apiHandlers: HttpHandler[] = [
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),
     });
+  }),
+
+  // ---- Audit Events (AuditEntryEvent shape for the audit page UI) ----
+
+  http.get('/api/v1/audit-events', () => {
+    const sorted = [...dataStore.auditLog].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    const events = sorted.map((entry) => {
+      const resolved = resolveProjectForEntity(entry.entityType, entry.entityId);
+      return {
+        eventId: entry.id,
+        entityType: entry.entityType,
+        entityId: entry.entityId,
+        entityName: entry.entityName,
+        action: entry.action,
+        actorType: 'user' as const,
+        actorId: entry.actorId,
+        actorName: entry.actorName,
+        projectId: resolved.projectId,
+        projectName: resolved.projectName,
+        timestamp: entry.createdAt,
+        metadata: entry.metadata as Record<string, string>,
+      };
+    });
+    // Return both `events` (for audit.tsx / project-activity-tab.tsx infinite queries)
+    // and `data` (for useDashboardActivity in query-hooks.ts which accesses `data?.data`).
+    return HttpResponse.json({ events, data: events });
+  }),
+
+  http.get('/api/v1/projects/:projectId/audit-events', ({ params }) => {
+    const projectId = params.projectId as string;
+    const project = dataStore.projects.get(projectId);
+    if (!project) return new HttpResponse(null, { status: 404 });
+
+    // Collect all entity IDs that belong to this project.
+    const projectEntityIds = new Set<string>([projectId]);
+    for (const [epicId, epic] of dataStore.epics) {
+      if (epic.projectId === projectId) {
+        projectEntityIds.add(epicId);
+        for (const [storyId, story] of dataStore.stories) {
+          if (story.epicId === epicId) {
+            projectEntityIds.add(storyId);
+            for (const [taskId, task] of dataStore.tasks) {
+              if (task.storyId === storyId) {
+                projectEntityIds.add(taskId);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const sorted = [...dataStore.auditLog]
+      .filter((entry) => projectEntityIds.has(entry.entityId))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    const events = sorted.map((entry) => ({
+      eventId: entry.id,
+      entityType: entry.entityType,
+      entityId: entry.entityId,
+      entityName: entry.entityName,
+      action: entry.action,
+      actorType: 'user' as const,
+      actorId: entry.actorId,
+      actorName: entry.actorName,
+      projectId,
+      projectName: project.name,
+      timestamp: entry.createdAt,
+      metadata: entry.metadata as Record<string, string>,
+    }));
+    // Return both `events` (for project-activity-tab.tsx infinite query)
+    // and `data` (for useProjectActivity in query-hooks.ts which accesses `data?.data`).
+    return HttpResponse.json({ events, data: events });
   }),
 ];

@@ -1,27 +1,112 @@
-# Test Persona CRUD and Deletion Guard
-
-## Task Details
-
-- **Title:** Test Persona CRUD and Deletion Guard
-- **Status:** Complete
-- **Assigned Agent:** qa-expert
-- **Parent User Story:** [Implement Entity Management E2E Tests](./tasks.md)
-- **Parent Epic:** [End-to-End Testing](../../user-stories.md)
-- **Dependencies:** None (depends on User Story: Set Up Playwright Infrastructure)
-
-## Description
-
-Implement E2E tests for the full persona CRUD lifecycle with deletion guard enforcement. Create a persona, verify it appears in the list, edit its title and description, verify the changes are persisted, attempt to delete a persona that has active task references, verify the deletion is blocked with an explanatory tooltip, remove the task references, and verify the deletion succeeds.
-
-### Test: Persona CRUD and Deletion Guard
-
-```typescript
 // apps/web/e2e/entity-management/persona-crud.spec.ts
 // E2E tests for persona CRUD operations with deletion guard.
 // Verifies create, read, update, delete, and the referential
 // integrity guard that prevents deleting personas with active tasks.
 import { test, expect } from '../fixtures';
+import {
+  createMockPersona,
+  createMockTask,
+  createMockStory,
+  createMockEpic,
+  createMockProject,
+} from '../fixtures/entity-factories';
 import { PersonaListPage } from '../page-objects';
+
+// ---------------------------------------------------------------------------
+// Seed data helpers
+// ---------------------------------------------------------------------------
+
+/** Helper to convert a typed entity to a [id, record] tuple for seedData. */
+function toEntry(entity: { id: string }): [string, Record<string, unknown>] {
+  return [entity.id, { ...entity }];
+}
+
+/**
+ * Builds a persona with no task references (safe to delete).
+ * Also includes a second persona referenced by tasks (cannot delete).
+ */
+function buildPersonaWithEditSeed() {
+  const persona = createMockPersona({
+    id: 'persona-backend',
+    title: 'Backend Developer',
+    description: 'Handles server-side logic',
+  });
+
+  return {
+    personas: [toEntry(persona)],
+  };
+}
+
+/**
+ * Builds a persona referenced by active tasks (deletion blocked)
+ * and an unreferenced persona (deletion allowed).
+ */
+function buildPersonaWithTaskReferencesSeed() {
+  const referencedPersona = createMockPersona({
+    id: 'persona-referenced',
+    title: 'Backend Developer',
+    description: 'Handles server-side logic',
+  });
+
+  const unusedPersona = createMockPersona({
+    id: 'persona-unused',
+    title: 'Unused Persona',
+    description: 'Not referenced by any tasks',
+  });
+
+  const project = createMockProject({
+    id: 'ref-project-id',
+    name: 'Reference Project',
+    status: 'draft',
+  });
+
+  const epic = createMockEpic({
+    id: 'ref-epic-id',
+    projectId: project.id,
+    title: 'Reference Epic',
+    status: 'draft',
+  });
+
+  const story = createMockStory({
+    id: 'ref-story-id',
+    epicId: epic.id,
+    title: 'Reference Story',
+    status: 'draft',
+  });
+
+  const task1 = createMockTask({
+    id: 'ref-task-1',
+    storyId: story.id,
+    title: 'Task 1',
+    personaId: referencedPersona.id,
+  });
+
+  const task2 = createMockTask({
+    id: 'ref-task-2',
+    storyId: story.id,
+    title: 'Task 2',
+    personaId: referencedPersona.id,
+  });
+
+  const task3 = createMockTask({
+    id: 'ref-task-3',
+    storyId: story.id,
+    title: 'Task 3',
+    personaId: referencedPersona.id,
+  });
+
+  return {
+    projects: [toEntry(project)],
+    epics: [toEntry(epic)],
+    stories: [toEntry(story)],
+    tasks: [toEntry(task1), toEntry(task2), toEntry(task3)],
+    personas: [toEntry(referencedPersona), toEntry(unusedPersona)],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
 test.describe('Persona CRUD and Deletion Guard', () => {
   test('create persona and verify in list', async ({ authenticatedPage: page }) => {
@@ -40,7 +125,7 @@ test.describe('Persona CRUD and Deletion Guard', () => {
 
   test('edit persona title and description', async ({ authenticatedPage: page, seedData }) => {
     // Seed a persona to edit.
-    seedData({});
+    await seedData(buildPersonaWithEditSeed());
 
     const personaList = new PersonaListPage(page);
     await personaList.goto();
@@ -66,8 +151,8 @@ test.describe('Persona CRUD and Deletion Guard', () => {
     authenticatedPage: page,
     seedData,
   }) => {
-    // Seed a persona that is referenced by one or more tasks.
-    seedData({});
+    // Seed a persona that is referenced by tasks.
+    await seedData(buildPersonaWithTaskReferencesSeed());
 
     const personaList = new PersonaListPage(page);
     await personaList.goto();
@@ -83,13 +168,16 @@ test.describe('Persona CRUD and Deletion Guard', () => {
     authenticatedPage: page,
     seedData,
   }) => {
-    // Seed a persona with no task references (or after references are removed).
-    seedData({});
+    // Seed personas: one referenced by tasks, one unreferenced.
+    await seedData(buildPersonaWithTaskReferencesSeed());
 
     const personaList = new PersonaListPage(page);
     await personaList.goto();
 
-    // Verify the persona has no active references (delete should work).
+    // Verify the unreferenced persona is in the list.
+    await personaList.expectPersonaInList('Unused Persona');
+
+    // Delete the unreferenced persona (should succeed).
     const deleted = await personaList.deletePersona('Unused Persona');
     expect(deleted).toBe(true);
 
@@ -102,7 +190,7 @@ test.describe('Persona CRUD and Deletion Guard', () => {
     seedData,
   }) => {
     // Seed a persona referenced by 3 tasks.
-    seedData({});
+    await seedData(buildPersonaWithTaskReferencesSeed());
 
     const personaList = new PersonaListPage(page);
     await personaList.goto();
@@ -117,7 +205,7 @@ test.describe('Persona CRUD and Deletion Guard', () => {
     const tooltip = page.getByRole('tooltip');
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText(/referenced by/i);
-    await expect(tooltip).toContainText(/3 tasks/i);
+    await expect(tooltip).toContainText(/3 task/i);
   });
 
   test('full CRUD lifecycle: create → read → update → delete', async ({
@@ -148,33 +236,3 @@ test.describe('Persona CRUD and Deletion Guard', () => {
     await personaList.expectPersonaNotInList('Platform Engineer');
   });
 });
-```
-
-## Acceptance Criteria
-
-- [ ] Test verifies creating a persona shows it in the personas list with a success toast
-- [ ] Test verifies editing a persona's title and description updates the list entry
-- [ ] Test verifies the old persona title disappears after editing
-- [ ] Test verifies attempting to delete a persona with active task references is blocked
-- [ ] Test verifies the deletion-blocked tooltip appears on hover with the referencing task count
-- [ ] Test verifies deleting a persona with no task references succeeds and removes it from the list
-- [ ] Test verifies the full CRUD lifecycle (create → read → update → delete) in a single flow
-- [ ] All tests pass in Chromium, Firefox, and WebKit browsers
-- [ ] No `any` types used in test code
-
-## Technical Notes
-
-- The deletion guard is enforced server-side: `DELETE /api/v1/personas/:id` returns a 409 Conflict when the persona is referenced by tasks. The client renders this as a disabled delete button with a tooltip.
-- The tooltip text includes the count of referencing tasks (e.g., "Referenced by 3 tasks") to help the user understand why deletion is blocked.
-- Persona editing uses a modal with pre-filled form fields. The POM `editPersona` method handles opening the edit modal, clearing the fields, and entering new values.
-- The MSW handler for persona deletion checks the in-memory data store for task references before allowing deletion.
-
-## References
-
-- **Project Setup Specification:** Section G.4 (End-to-End Testing — entity management)
-- **Functional Requirements:** FR-PERSONA-001 (persona CRUD), FR-PERSONA-002 (deletion guard for referenced personas)
-- **Design Specification:** Persona list page, edit modal, deletion guard tooltip
-
-## Estimated Complexity
-
-Medium — The CRUD operations are standard, but the deletion guard requires specific seed data (personas with and without task references) and tooltip assertion. The full lifecycle test validates the complete flow.
