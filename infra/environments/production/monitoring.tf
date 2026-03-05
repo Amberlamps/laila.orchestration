@@ -79,8 +79,8 @@ resource "aws_cloudwatch_dashboard" "main" {
         properties = {
           title = "DynamoDB Read/Write Units"
           metrics = [
-            ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "laila-works-audit-events"],
-            ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "laila-works-audit-events"],
+            ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "audit-events"],
+            ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "audit-events"],
           ]
           period = 300
           stat   = "Sum"

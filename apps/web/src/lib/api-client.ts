@@ -34,11 +34,11 @@ import type { paths } from '@laila/api-spec';
 /**
  * Singleton openapi-fetch client typed against the generated OpenAPI paths.
  *
- * Base URL defaults to "/api" (same-origin Next.js API routes in dev).
+ * Base URL defaults to "/api/v1" (same-origin Next.js API routes in dev).
  * In production, set NEXT_PUBLIC_API_BASE_URL to the deployed API origin.
  */
 export const apiClient = createClient<paths>({
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api',
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api/v1',
   credentials: 'include',
 });
 

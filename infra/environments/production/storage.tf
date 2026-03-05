@@ -3,7 +3,9 @@
 module "static_assets_bucket" {
   source = "../../modules/s3-bucket"
 
-  bucket_name = "laila-works-static-assets"
+  # S3 bucket names are globally unique across all AWS accounts/regions.
+  # Include region to support region migrations without name collisions.
+  bucket_name = "laila-works-static-assets-${var.aws_region}"
 
   # Static assets are immutable (hashed filenames), no need for versioning
   versioning_enabled = false

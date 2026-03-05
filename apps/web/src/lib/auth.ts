@@ -8,7 +8,13 @@
  *
  * @see https://better-auth.com/docs/reference/options
  */
-import { getDb, usersTable, sessionsTable, accountsTable } from '@laila/database';
+import {
+  getDb,
+  usersTable,
+  sessionsTable,
+  accountsTable,
+  verificationsTable,
+} from '@laila/database';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 
@@ -116,6 +122,10 @@ export const auth = betterAuth({
       sameSite: 'lax' as const,
       path: '/',
     },
+
+    database: {
+      generateId: () => crypto.randomUUID(),
+    },
   },
 
   // -------------------------------------------------------------------------
@@ -126,8 +136,9 @@ export const auth = betterAuth({
   // creating duplicate connection pools.
   //
   // Schema mapping: Better Auth expects model names "user", "session", and
-  // "account". Our Drizzle schema exports these as `usersTable`,
-  // `sessionsTable`, and `accountsTable` respectively.
+  // "account", and "verification". Our Drizzle schema exports these as
+  // `usersTable`, `sessionsTable`, `accountsTable`, and `verificationsTable`
+  // respectively.
   //
   // Provider is set to "pg" so the adapter uses PostgreSQL-specific query
   // patterns (e.g. RETURNING clauses, native UUID support).
@@ -139,6 +150,7 @@ export const auth = betterAuth({
       user: usersTable,
       session: sessionsTable,
       account: accountsTable,
+      verification: verificationsTable,
     },
   }),
 });

@@ -56,6 +56,25 @@ resource "aws_lambda_function_url" "nextjs" {
   authorization_type = "NONE"
 }
 
+# With NONE auth, Lambda still checks the resource-based policy.
+# This permission grants public invocation access to the function URL.
+resource "aws_lambda_permission" "function_url_public" {
+  statement_id           = "AllowPublicFunctionURL"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = module.nextjs_lambda.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+
+# Lambda Function URLs also require InvokeFunction permission.
+# Restrict this permission to invocations that come via the Function URL only.
+resource "aws_lambda_permission" "function_url_public_invoke" {
+  statement_id  = "AllowPublicFunctionURLInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = module.nextjs_lambda.function_name
+  principal     = "*"
+}
+
 # OAC kept temporarily — CloudFront distribution must propagate without the
 # OAC reference before this resource can be deleted. Remove in a follow-up
 # apply once the distribution update has completed.

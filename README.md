@@ -522,7 +522,7 @@ DATABASE_DIRECT_URL=$PROD_DATABASE_DIRECT_URL pnpm drizzle-kit push
 aws configure
 
 # 8. Upload static assets to S3
-aws s3 sync apps/web/.open-next/assets s3://laila-works-static-assets \
+aws s3 sync apps/web/.open-next/assets s3://laila-works-static-assets-eu-central-1 \
   --delete \
   --cache-control "public, max-age=31536000, immutable" \
   --exclude "*.html"
@@ -568,7 +568,7 @@ All environment variables are documented below. Copy `.env.example` to `.env.loc
 | `LOG_LEVEL`                 | No              | `info`         | pino log level: `debug`, `info`, `warn`, `error`                                                                          |
 | `API_KEY_HASH_ROUNDS`       | No              | `12`           | Number of bcrypt hash rounds for worker API key hashing                                                                   |
 | `APP_VERSION`               | No              | `unknown`      | Application version string returned by the health check endpoint                                                          |
-| `NEXT_PUBLIC_API_BASE_URL`  | No              | `/api`         | Base URL for API client requests. Override in production if the API is served from a different origin                     |
+| `NEXT_PUBLIC_API_BASE_URL`  | No              | `/api/v1`      | Base URL for API client requests. Override in production if the API is served from a different origin                     |
 | `NEXT_PUBLIC_API_MOCKING`   | No              | --             | Set to `enabled` to activate the MSW service worker for browser-based API mocking (used by Playwright e2e tests)          |
 | `SQS_QUEUE_URL`             | No              | --             | SQS queue URL for the status propagation health check. When unset, the SQS readiness check is skipped (local development) |
 

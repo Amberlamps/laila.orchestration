@@ -8,10 +8,11 @@
  * - GET  /api/auth/session          -- get current session
  * - POST /api/auth/signout          -- invalidate session
  *
- * @see https://better-auth.com/docs/integrations/next
+ * This project uses the Next.js Pages Router (`src/pages/api/*`), so we use
+ * Better Auth's Node integration adapter to expose a default request handler.
  */
-import { toNextJsHandler } from 'better-auth/next-js';
+import { toNodeHandler } from 'better-auth/node';
 
 import { auth } from '@/lib/auth';
 
-export default toNextJsHandler(auth);
+export default toNodeHandler(auth);

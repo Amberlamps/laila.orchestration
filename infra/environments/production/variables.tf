@@ -2,9 +2,9 @@
 # Input variables for the production environment.
 
 variable "aws_region" {
-  description = "AWS region for all resources"
+  description = "Primary AWS region for production application resources (Lambda, SSM, DynamoDB, SQS, etc.)"
   type        = string
-  default     = "us-east-1"
+  default     = "eu-central-1"
 }
 
 variable "alarm_email" {

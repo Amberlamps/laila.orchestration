@@ -29,15 +29,34 @@ module "nextjs_lambda" {
   timeout            = 30
 
   environment_variables = {
-    DATABASE_URL         = data.aws_ssm_parameter.database_url.value
-    BETTER_AUTH_SECRET   = data.aws_ssm_parameter.better_auth_secret.value
-    BETTER_AUTH_URL      = "https://${var.domain_name}"
-    GOOGLE_CLIENT_ID     = var.google_client_id
-    GOOGLE_CLIENT_SECRET = data.aws_ssm_parameter.google_client_secret.value
-    NEXT_PUBLIC_APP_URL  = "https://${var.domain_name}"
+    DATABASE_URL              = data.aws_ssm_parameter.database_url.value
+    BETTER_AUTH_SECRET        = data.aws_ssm_parameter.better_auth_secret.value
+    BETTER_AUTH_URL           = "https://${var.domain_name}"
+    GOOGLE_CLIENT_ID          = var.google_client_id
+    GOOGLE_CLIENT_SECRET      = data.aws_ssm_parameter.google_client_secret.value
+    NEXT_PUBLIC_APP_URL       = "https://${var.domain_name}"
+    DYNAMODB_AUDIT_TABLE_NAME = "audit-events"
   }
 
   ssm_parameter_arns = local.ssm_parameter_arns
+
+  additional_policies = {
+    dynamodb_describe_audit_table = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "dynamodb:DescribeTable",
+          ]
+          Resource = [
+            "arn:aws:dynamodb:${var.aws_region}:*:table/audit-events",
+            "arn:aws:dynamodb:${var.aws_region}:*:table/laila-works-audit-events",
+          ]
+        },
+      ]
+    })
+  }
 
   tags = local.tags
 }

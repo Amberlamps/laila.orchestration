@@ -16,7 +16,8 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TERRAFORM_DIR="$REPO_ROOT/infra/environments/production"
 ASSETS_DIR="$REPO_ROOT/apps/web/.open-next/assets"
-S3_BUCKET="laila-works-static-assets"
+AWS_REGION="${TF_VAR_aws_region:-eu-central-1}"
+S3_BUCKET="laila-works-static-assets-${AWS_REGION}"
 HEALTH_CHECK_URL="https://app.laila.works"
 
 # Default flags
@@ -60,6 +61,8 @@ aws sts get-caller-identity >/dev/null 2>&1 || fail "AWS credentials not configu
 
 echo "AWS Identity: $(aws sts get-caller-identity --query 'Arn' --output text)"
 echo "Repository:   $REPO_ROOT"
+echo "AWS Region:   $AWS_REGION"
+echo "S3 Bucket:    $S3_BUCKET"
 
 # --- Install dependencies ---
 

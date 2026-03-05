@@ -82,3 +82,20 @@ export const accountsTable = pgTable(
     uniqueIndex('accounts_provider_account_unique_idx').on(table.providerId, table.accountId),
   ],
 );
+
+// ---------------------------------------------------------------------------
+// Verification tokens (email verification, OAuth/linking flows)
+// ---------------------------------------------------------------------------
+
+export const verificationsTable = pgTable(
+  'verifications',
+  {
+    id: text('id').primaryKey(),
+    identifier: text('identifier').notNull(),
+    value: text('value').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('verifications_identifier_idx').on(table.identifier)],
+);

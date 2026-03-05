@@ -9,7 +9,8 @@ provider "aws" {
   }
 }
 
-# Additional provider for us-east-1 resources (ACM certificates for CloudFront)
+# Additional provider for us-east-1 resources that must live there
+# (ACM certificates for CloudFront).
 provider "aws" {
   alias  = "us_east_1"
   region = "us-east-1"

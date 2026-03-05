@@ -1108,8 +1108,8 @@ export const useWorkerProjects = (workerId: string) =>
   useQuery({
     queryKey: queryKeys.workers.projects(workerId),
     queryFn: async (): Promise<{ data: WorkerProjectAccess[] }> => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
-      const response = await fetch(`${baseUrl}/v1/workers/${workerId}/projects`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api/v1';
+      const response = await fetch(`${baseUrl}/workers/${workerId}/projects`, {
         credentials: 'include',
       });
       if (!response.ok) {
@@ -1135,8 +1135,8 @@ export const useAddWorkerProject = (workerId: string) => {
 
   return useMutation({
     mutationFn: async (projectId: string): Promise<{ data: WorkerProjectAccess }> => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
-      const response = await fetch(`${baseUrl}/v1/workers/${workerId}/projects/${projectId}`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api/v1';
+      const response = await fetch(`${baseUrl}/workers/${workerId}/projects/${projectId}`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -1218,10 +1218,10 @@ export const useRemoveWorkerProject = (workerId: string) => {
 
   return useMutation({
     mutationFn: async (params: { projectId: string; force?: boolean }): Promise<void> => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api/v1';
       const forceParam = params.force ? '?force=true' : '';
       const response = await fetch(
-        `${baseUrl}/v1/workers/${workerId}/projects/${params.projectId}${forceParam}`,
+        `${baseUrl}/workers/${workerId}/projects/${params.projectId}${forceParam}`,
         {
           method: 'DELETE',
           credentials: 'include',
@@ -1264,8 +1264,8 @@ export const useWorkerHistory = (workerId: string) =>
   useQuery({
     queryKey: queryKeys.workers.history(workerId),
     queryFn: async (): Promise<{ data: WorkHistoryRecord[] }> => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
-      const response = await fetch(`${baseUrl}/v1/workers/${workerId}/history`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api/v1';
+      const response = await fetch(`${baseUrl}/workers/${workerId}/history`, {
         credentials: 'include',
       });
       if (!response.ok) {

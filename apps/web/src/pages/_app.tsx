@@ -50,14 +50,40 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   // Start MSW in the browser when API mocking is enabled (E2E tests).
   // This runs before the app renders meaningful content, ensuring all
   // API requests are intercepted from the start.
-  const [mswReady, setMswReady] = useState(process.env.NEXT_PUBLIC_API_MOCKING !== 'enabled');
+  const isMockingEnabled = process.env.NEXT_PUBLIC_API_MOCKING === 'enabled';
+  const [mswReady, setMswReady] = useState(!isMockingEnabled);
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_API_MOCKING === 'enabled') {
-      void initMocking().then(() => {
-        setMswReady(true);
-      });
+    if (!isMockingEnabled) {
+      return;
     }
-  }, []);
+
+    let active = true;
+    const fallbackTimer = window.setTimeout(() => {
+      if (active) {
+        setMswReady(true);
+      }
+    }, 3000);
+
+    void initMocking()
+      .then(() => {
+        if (active) {
+          setMswReady(true);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setMswReady(true);
+        }
+      })
+      .finally(() => {
+        window.clearTimeout(fallbackTimer);
+      });
+
+    return () => {
+      active = false;
+      window.clearTimeout(fallbackTimer);
+    };
+  }, [isMockingEnabled]);
 
   // Wire up the Page Visibility API so polling pauses when the tab is hidden
   // and an immediate refetch fires when the tab becomes visible again.

@@ -93,3 +93,33 @@ data "aws_ssm_parameter" "google_client_secret" {
   name            = aws_ssm_parameter.google_client_secret.name
   with_decryption = true
 }
+
+# Fail fast if required secret/config parameters are still placeholder values.
+# This prevents deploying Lambdas with invalid runtime config that causes
+# 500s on auth and API endpoints.
+check "production_ssm_values" {
+  assert {
+    condition = (
+      startswith(data.aws_ssm_parameter.database_url.value, "postgres://") ||
+      startswith(data.aws_ssm_parameter.database_url.value, "postgresql://")
+    )
+    error_message = "SSM parameter /laila-works/production/DATABASE_URL must be a valid PostgreSQL URL (postgres:// or postgresql://), not a placeholder value."
+  }
+
+  assert {
+    condition = (
+      trimspace(data.aws_ssm_parameter.better_auth_secret.value) != "" &&
+      trimspace(data.aws_ssm_parameter.better_auth_secret.value) != "placeholder" &&
+      length(trimspace(data.aws_ssm_parameter.better_auth_secret.value)) >= 32
+    )
+    error_message = "SSM parameter /laila-works/production/BETTER_AUTH_SECRET must be a real secret (non-placeholder, at least 32 characters)."
+  }
+
+  assert {
+    condition = (
+      trimspace(data.aws_ssm_parameter.google_client_secret.value) != "" &&
+      trimspace(data.aws_ssm_parameter.google_client_secret.value) != "placeholder"
+    )
+    error_message = "SSM parameter /laila-works/production/GOOGLE_CLIENT_SECRET must be set to the real OAuth client secret, not placeholder."
+  }
+}
