@@ -36,6 +36,12 @@ variable "lambda_origin" {
   default = null
 }
 
+variable "lambda_origin_access_control_id" {
+  description = "OAC ID for Lambda Function URL origin (optional, enables IAM auth instead of public URL)"
+  type        = string
+  default     = null
+}
+
 variable "default_cache_policy_id" {
   description = "CloudFront cache policy ID for the default behavior"
   type        = string

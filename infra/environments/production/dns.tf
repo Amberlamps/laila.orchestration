@@ -1,12 +1,9 @@
-# Route 53 and ACM configuration for the laila.works custom domain.
+# Route 53 and ACM configuration for the app.laila.works custom domain.
 # ACM certificate must be in us-east-1 for CloudFront.
 
-# Route 53 hosted zone for the domain
-resource "aws_route53_zone" "main" {
-  name    = var.domain_name
-  comment = "Hosted zone for laila.works"
-
-  tags = local.tags
+# Look up the existing Route 53 hosted zone (laila.works)
+data "aws_route53_zone" "main" {
+  name = var.hosted_zone_name
 }
 
 # ACM certificate in us-east-1 (required for CloudFront)
@@ -39,7 +36,7 @@ resource "aws_route53_record" "cert_validation" {
   records         = [each.value.record]
   ttl             = 60
   type            = each.value.type
-  zone_id         = aws_route53_zone.main.zone_id
+  zone_id         = data.aws_route53_zone.main.zone_id
 }
 
 # Wait for certificate validation to complete
@@ -52,7 +49,7 @@ resource "aws_acm_certificate_validation" "main" {
 
 # A record (alias) pointing the domain to CloudFront
 resource "aws_route53_record" "cloudfront_alias" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = data.aws_route53_zone.main.zone_id
   name    = var.domain_name
   type    = "A"
 
@@ -65,7 +62,7 @@ resource "aws_route53_record" "cloudfront_alias" {
 
 # AAAA record for IPv6
 resource "aws_route53_record" "cloudfront_alias_ipv6" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = data.aws_route53_zone.main.zone_id
   name    = var.domain_name
   type    = "AAAA"
 

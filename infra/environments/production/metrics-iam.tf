@@ -35,10 +35,11 @@ resource "aws_iam_policy" "cloudwatch_custom_metrics" {
 
 locals {
   lambda_metrics_roles = {
-    timeout-checker    = var.timeout_checker_role_name
-    dag-reconciler     = var.dag_reconciler_role_name
-    audit-archiver     = var.audit_archiver_role_name
-    nextjs-api         = var.nextjs_api_role_name
+    timeout-checker      = module.timeout_checker_lambda.execution_role_name
+    dag-reconciler       = module.dag_reconciler_lambda.execution_role_name
+    audit-archiver       = module.audit_archiver_lambda.execution_role_name
+    nextjs-api           = module.nextjs_lambda.execution_role_name
+    status-propagation   = module.status_propagation_lambda.execution_role_name
   }
 }
 

@@ -10,32 +10,61 @@ variable "aws_region" {
 variable "alarm_email" {
   description = "Email address for CloudWatch alarm notifications (requires manual confirmation)"
   type        = string
+  default     = "alexander.behrens.84@gmail.com"
 }
 
 # ---------------------------------------------------------------------------
-# Lambda execution role names (for IAM policy attachments)
+# Domain configuration
 # ---------------------------------------------------------------------------
 
-variable "timeout_checker_role_name" {
-  description = "IAM role name for the timeout-checker Lambda function"
+variable "domain_name" {
+  description = "Custom domain name for the production application (e.g. app.laila.works)"
   type        = string
-  default     = "laila-works-timeout-checker-role"
+  default     = "app.laila.works"
 }
 
-variable "dag_reconciler_role_name" {
-  description = "IAM role name for the dag-reconciler Lambda function"
+variable "google_client_id" {
+  description = "Google OAuth Client ID (public value, embedded in OAuth redirect URLs)"
   type        = string
-  default     = "laila-works-dag-reconciler-role"
+  default     = "208919207990-5v1m1ns96b2maskq2mruqodbs7fbmobi.apps.googleusercontent.com"
 }
 
-variable "audit_archiver_role_name" {
-  description = "IAM role name for the audit-archiver Lambda function"
+variable "hosted_zone_name" {
+  description = "Route 53 hosted zone name (parent domain)"
   type        = string
-  default     = "laila-works-audit-archiver-role"
+  default     = "laila.works"
 }
 
-variable "nextjs_api_role_name" {
-  description = "IAM role name for the Next.js API Lambda function"
+# ---------------------------------------------------------------------------
+# Lambda deployment packages (paths to zip files)
+# ---------------------------------------------------------------------------
+
+variable "nextjs_deployment_package" {
+  description = "Path to the Next.js Lambda deployment package (zip file)"
   type        = string
-  default     = "laila-works-nextjs-role"
+  default     = "../../../deploy/functions/nextjs-server.zip"
+}
+
+variable "timeout_checker_package" {
+  description = "Path to the timeout-checker Lambda deployment package (zip file)"
+  type        = string
+  default     = "../../../deploy/functions/timeout-checker.zip"
+}
+
+variable "dag_reconciler_package" {
+  description = "Path to the dag-reconciler Lambda deployment package (zip file)"
+  type        = string
+  default     = "../../../deploy/functions/dag-reconciler.zip"
+}
+
+variable "audit_archiver_package" {
+  description = "Path to the audit-archiver Lambda deployment package (zip file)"
+  type        = string
+  default     = "../../../deploy/functions/audit-archiver.zip"
+}
+
+variable "status_propagation_package" {
+  description = "Path to the status-propagation Lambda deployment package (zip file)"
+  type        = string
+  default     = "../../../deploy/functions/status-propagation.zip"
 }

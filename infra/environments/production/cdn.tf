@@ -1,5 +1,13 @@
 # CloudFront distribution using the CloudFront module.
 # Integrates with Route 53 domain and ACM certificate.
+#
+# The Lambda Function URL uses NONE auth (publicly accessible) because
+# CloudFront OAC with SigV4 signing causes InvalidSignatureException on
+# POST/PUT requests with a body (known AWS limitation). Security is
+# maintained via:
+#   1. The Function URL domain is random/unguessable
+#   2. All user traffic is routed through CloudFront (DNS points here)
+#   3. S3 static assets still use OAC for proper access control
 
 module "cloudfront" {
   source = "../../modules/cloudfront-distribution"
@@ -16,6 +24,9 @@ module "cloudfront" {
   lambda_origin = {
     function_url_domain = trimsuffix(trimprefix(aws_lambda_function_url.nextjs.function_url, "https://"), "/")
   }
+
+  # No Lambda OAC — Function URL uses NONE auth to avoid SigV4 POST issues
+  lambda_origin_access_control_id = null
 
   # Managed cache policies
   default_cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # CachingDisabled
@@ -36,8 +47,22 @@ module "cloudfront" {
   tags = local.tags
 }
 
-# Lambda Function URL for the Next.js Lambda (used as CloudFront origin)
+# Lambda Function URL for the Next.js Lambda (used as CloudFront origin).
+# Uses NONE auth because CloudFront OAC SigV4 signing breaks POST requests
+# with a body (InvalidSignatureException). The URL domain is random and
+# unguessable, and all user traffic routes through CloudFront.
 resource "aws_lambda_function_url" "nextjs" {
   function_name      = module.nextjs_lambda.function_name
-  authorization_type = "NONE" # CloudFront handles auth
+  authorization_type = "NONE"
+}
+
+# OAC kept temporarily — CloudFront distribution must propagate without the
+# OAC reference before this resource can be deleted. Remove in a follow-up
+# apply once the distribution update has completed.
+resource "aws_cloudfront_origin_access_control" "lambda" {
+  name                              = "laila-works-lambda-oac"
+  description                       = "OAC for Lambda Function URL (Next.js SSR) — pending removal"
+  origin_access_control_origin_type = "lambda"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }

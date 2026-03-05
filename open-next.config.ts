@@ -27,8 +27,9 @@ const config: OpenNextConfig = {
       // Use SQS for ISR revalidation queue
       queue: 'sqs',
     },
-    // Minify server bundle for smaller Lambda deployment package
-    minify: true,
+    // Minify disabled: OpenNext's minimizer crashes on broken pnpm symlinks
+    // (caniuse-lite symlink target not copied to .open-next output)
+    minify: false,
   },
 
   // Build the Next.js app via pnpm (corepack may not be enabled)

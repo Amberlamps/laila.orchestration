@@ -20,6 +20,7 @@ export default tseslint.config(
       "**/drizzle/**",
       "**/*.generated.*",
       "**/*.gen.*",
+      "**/.open-next/**",
       ".claude/**",
       "infra/**",
     ],

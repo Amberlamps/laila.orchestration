@@ -145,7 +145,7 @@ jobs:
       - name: Health check
         run: npx tsx scripts/health-check.ts
         env:
-          HEALTH_CHECK_URL: https://laila.works
+          HEALTH_CHECK_URL: https://app.laila.works
 
       # --- GitHub Deployment Status ---
       - name: Create deployment status (success)
@@ -159,7 +159,7 @@ jobs:
               deployment_id: ${{ steps.deployment.outputs.result }},
               state: 'success',
               description: 'Production deployment succeeded',
-              environment_url: 'https://laila.works',
+              environment_url: 'https://app.laila.works',
             });
 
       - name: Create deployment status (failure)

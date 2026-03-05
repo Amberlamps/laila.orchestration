@@ -17,12 +17,13 @@ resource "aws_cloudfront_distribution" "this" {
     origin_id                = "s3-static"
   }
 
-  # Lambda Function URL origin for SSR/API routes
+  # Lambda Function URL origin for SSR/API routes (OAC-authenticated)
   dynamic "origin" {
     for_each = var.lambda_origin != null ? [var.lambda_origin] : []
     content {
-      domain_name = origin.value.function_url_domain
-      origin_id   = "lambda-ssr"
+      domain_name              = origin.value.function_url_domain
+      origin_id                = "lambda-ssr"
+      origin_access_control_id = var.lambda_origin_access_control_id
 
       custom_origin_config {
         http_port              = 80
